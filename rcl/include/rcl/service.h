@@ -18,11 +18,8 @@
 #define RCL__SERVICE_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
-
-#include "rosidl_runtime_c/service_type_support_struct.h"
 
 #include "rcl/allocator.h"
 #include "rcl/event_callback.h"
@@ -32,57 +29,52 @@ extern "C"
 #include "rcl/service_introspection.h"
 #include "rcl/time.h"
 #include "rcl/visibility_control.h"
-
 #include "rmw/types.h"
+#include "rosidl_runtime_c/service_type_support_struct.h"
 
-/// Internal rcl implementation struct.
+/// 内部 rcl 实现结构体.
 typedef struct rcl_service_impl_s rcl_service_impl_t;
 
-/// Structure which encapsulates a ROS Service.
+/// 封装 ROS 服务的结构体.
 typedef struct rcl_service_s
 {
-  /// Pointer to the service implementation
+  /// 指向服务实现的指针
   rcl_service_impl_t * impl;
 } rcl_service_t;
 
-/// Options available for a rcl service.
+/// rcl 服务可用选项.
 typedef struct rcl_service_options_s
 {
-  /// Middleware quality of service settings for the service.
+  /// 服务的中间件质量服务设置.
   rmw_qos_profile_t qos;
-  /// Custom allocator for the service, used for incidental allocations.
-  /** For default behavior (malloc/free), see: rcl_get_default_allocator() */
+  /// 用于偶发分配的服务自定义分配器.
+  /** 默认行为（malloc/free）参见：rcl_get_default_allocator() */
   rcl_allocator_t allocator;
 } rcl_service_options_t;
 
-/// Return a rcl_service_t struct with members set to `NULL`.
+/// 返回一个成员设置为 `NULL` 的 rcl_service_t 结构体.
 /**
- * Should be called to get a null rcl_service_t before passing to
- * rcl_service_init().
+ * 在传递给 rcl_service_init() 之前，应该调用此函数以获取空的 rcl_service_t。
  *
- * \return A structure with a zero initialized service.
+ * \return 一个零初始化服务的结构体.
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_service_t
-rcl_get_zero_initialized_service(void);
+rcl_service_t rcl_get_zero_initialized_service(void);
 
-/// Initialize a rcl service.
+/// 初始化一个rcl服务。
 /**
- * After calling this function on a rcl_service_t, it can be used to take
- * requests of the given type to the given topic using rcl_take_request().
- * It can also send a response to a request using rcl_send_response().
+ * 在rcl_service_t上调用此函数后，可以使用rcl_take_request()处理给定类型的请求。
+ * 它还可以使用rcl_send_response()向请求发送响应。
  *
- * The given rcl_node_t must be valid and the resulting rcl_service_t is
- * only valid as long as the given rcl_node_t remains valid.
+ * 给定的rcl_node_t必须有效，且只有在给定的rcl_node_t保持有效时，结果rcl_service_t才有效。
  *
- * The rosidl_service_type_support_t is obtained on a per .srv type basis.
- * When the user defines a ROS service, code is generated which provides the
- * required rosidl_service_type_support_t object.
- * This object can be obtained using a language appropriate mechanism.
- * \todo TODO(wjwwood) write these instructions once and link to it instead
+ * rosidl_service_type_support_t是基于每个.srv类型获得的。
+ * 当用户定义一个ROS服务时，会生成提供所需rosidl_service_type_support_t对象的代码。
+ * 可以使用适合语言的机制获取此对象。
+ * \todo TODO(wjwwood) 编写一次这些说明并链接到它
  *
- * For C, a macro can be used (for example `example_interfaces/AddTwoInts`):
+ * 对于C，可以使用宏（例如`example_interfaces/AddTwoInts`）：
  *
  * ```c
  * #include <rosidl_runtime_c/service_type_support_struct.h>
@@ -91,7 +83,7 @@ rcl_get_zero_initialized_service(void);
  *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, srv, AddTwoInts);
  * ```
  *
- * For C++, a template function is used:
+ * 对于C++，使用模板函数：
  *
  * ```cpp
  * #include <rosidl_runtime_cpp/service_type_support.hpp>
@@ -101,19 +93,15 @@ rcl_get_zero_initialized_service(void);
  *   get_service_type_support_handle<example_interfaces::srv::AddTwoInts>();
  * ```
  *
- * The rosidl_service_type_support_t object contains service type specific
- * information used to send or take requests and responses.
+ * rosidl_service_type_support_t对象包含用于发送或接收请求和响应的服务类型特定信息。
  *
- * The topic name must be a c string which follows the topic and service name
- * format rules for unexpanded names, also known as non-fully qualified names:
+ * 主题名称必须是遵循未展开名称的主题和服务名称格式规则的c字符串，也称为非完全限定名称：
  *
  * \see rcl_expand_topic_name
  *
- * The options struct allows the user to set the quality of service settings as
- * well as a custom allocator which is used when initializing/finalizing the
- * service to allocate space for incidentals, e.g. the service name string.
+ * options结构允许用户设置服务质量设置以及在初始化/终止服务时用于分配杂项空间（例如服务名称字符串）的自定义分配器。
  *
- * Expected usage (for C services):
+ * 预期用法（对于C服务）：
  *
  * ```c
  * #include <rcl/rcl.h>
@@ -123,450 +111,397 @@ rcl_get_zero_initialized_service(void);
  * rcl_node_t node = rcl_get_zero_initialized_node();
  * rcl_node_options_t node_ops = rcl_node_get_default_options();
  * rcl_ret_t ret = rcl_node_init(&node, "node_name", "/my_namespace", &node_ops);
- * // ... error handling
+ * // ... 错误处理
  * const rosidl_service_type_support_t * ts =
  *   ROSIDL_GET_SRV_TYPE_SUPPORT(example_interfaces, srv, AddTwoInts);
  * rcl_service_t service = rcl_get_zero_initialized_service();
  * rcl_service_options_t service_ops = rcl_service_get_default_options();
  * ret = rcl_service_init(&service, &node, ts, "add_two_ints", &service_ops);
- * // ... error handling, and on shutdown do finalization:
+ * // ... 错误处理，并在关闭时进行最后处理：
  * ret = rcl_service_fini(&service, &node);
- * // ... error handling for rcl_service_fini()
+ * // ... rcl_service_fini()的错误处理
  * ret = rcl_node_fini(&node);
- * // ... error handling for rcl_node_fini()
+ * // ... rcl_node_fini()的错误处理
  * ```
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[out] service preallocated service structure
- * \param[in] node valid rcl node handle
- * \param[in] type_support type support object for the service's type
- * \param[in] service_name the name of the service
- * \param[in] options service options, including quality of service settings
- * \return #RCL_RET_OK if service was initialized successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ALREADY_INIT if the service is already initialized, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_SERVICE_NAME_INVALID if the given service name is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[out] service 预分配的服务结构
+ * \param[in] node 有效的rcl节点句柄
+ * \param[in] type_support 服务类型的类型支持对象
+ * \param[in] service_name 服务名称
+ * \param[in] options 包括服务质量设置的服务选项
+ * \return #RCL_RET_OK 如果服务成功初始化，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ALREADY_INIT 如果服务已经初始化，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_SERVICE_NAME_INVALID 如果给定的服务名称无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_service_init(
-  rcl_service_t * service,
-  const rcl_node_t * node,
-  const rosidl_service_type_support_t * type_support,
-  const char * service_name,
+rcl_ret_t rcl_service_init(
+  rcl_service_t * service, const rcl_node_t * node,
+  const rosidl_service_type_support_t * type_support, const char * service_name,
   const rcl_service_options_t * options);
 
-/// Finalize a rcl_service_t.
+/// 结束一个 rcl_service_t.
 /**
- * After calling, the node will no longer listen for requests for this service.
- * (assuming this is the only service of this type in this node).
+ * 调用后，节点将不再监听此服务的请求。
+ * （假设这是此节点中此类型的唯一服务）。
  *
- * After calling, calls to rcl_wait(), rcl_take_request(), and
- * rcl_send_response() will fail when using this service.
- * Additionally rcl_wait() will be interrupted if currently blocking.
- * However, the given node handle is still valid.
+ * 调用后，使用此服务时，rcl_wait()、rcl_take_request() 和
+ * rcl_send_response() 将失败。
+ * 此外，如果当前阻塞，rcl_wait() 也会被中断。
+ * 然而，给定的节点句柄仍然有效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[inout] service handle to the service to be deinitialized
- * \param[in] node a valid (not finalized) handle to the node used to create the service
- * \return #RCL_RET_OK if service was deinitialized successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_SERVICE_INVALID if the service is invalid, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[inout] service 要取消初始化的服务句柄
+ * \param[in] node 用于创建服务的有效（未完成）节点句柄
+ * \return #RCL_RET_OK 如果服务成功取消初始化, 或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效, 或者
+ * \return #RCL_RET_SERVICE_INVALID 如果服务无效, 或者
+ * \return #RCL_RET_NODE_INVALID 如果节点无效, 或者
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_service_fini(rcl_service_t * service, rcl_node_t * node);
+rcl_ret_t rcl_service_fini(rcl_service_t * service, rcl_node_t * node);
 
-/// Return the default service options in a rcl_service_options_t.
+/// 返回 rcl_service_options_t 中的默认服务选项。
 /**
- * The defaults are:
+ * 默认值为：
  *
  * - qos = rmw_qos_profile_services_default
  * - allocator = rcl_get_default_allocator()
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_service_options_t
-rcl_service_get_default_options(void);
+rcl_service_options_t rcl_service_get_default_options(void);
 
-/// Take a pending ROS request using a rcl service.
+/// 使用 rcl 服务获取一个挂起的 ROS 请求。
 /**
- * It is the job of the caller to ensure that the type of the ros_request
- * argument and the type associate with the service, via the type
- * support, match.
- * Passing a different type to rcl_take produces undefined behavior and cannot
- * be checked by this function and therefore no deliberate error will occur.
+ * 调用者有责任确保 ros_request 参数的类型与
+ * 通过类型支持关联的服务类型匹配。
+ * 将不同类型传递给 rcl_take 会产生未定义的行为，这不能
+ * 由此函数检查，因此不会发生故意的错误。
  *
- * TODO(jacquelinekay) blocking of take?
- * TODO(jacquelinekay) pre-, during-, and post-conditions for message ownership?
- * TODO(jacquelinekay) is rcl_take_request thread-safe?
- * TODO(jacquelinekay) Should there be an rcl_request_id_t?
+ * TODO(jacquelinekay) 获取阻塞？
+ * TODO(jacquelinekay) 消息所有权的前置条件、过程中和后置条件？
+ * TODO(jacquelinekay) rcl_take_request 是否线程安全？
+ * TODO(jacquelinekay) 应该有一个 rcl_request_id_t 吗？
  *
- * The ros_request pointer should point to an already allocated ROS request message
- * struct of the correct type, into which the taken ROS request will be copied
- * if one is available.
- * If taken is false after calling, then the ROS request will be unmodified.
+ * ros_request 指针应指向一个已分配的正确类型的 ROS 请求消息
+ * 结构，如果有可用的请求，则将获取到的 ROS 请求复制到其中。
+ * 如果调用后 taken 为 false，则 ROS 请求将保持不变。
  *
- * If allocation is required when taking the request, e.g. if space needs to
- * be allocated for a dynamically sized array in the target message, then the
- * allocator given in the service options is used.
+ * 如果在获取请求时需要分配内存，例如，如果需要为目标消息中的动态大小数组分配空间，
+ * 则使用服务选项中给定的分配器。
  *
- * request_header is a pointer to pre-allocated a rmw struct containing
- * meta-information about the request (e.g. the sequence number).
+ * request_header 是指向预先分配的包含请求元信息（如序列号）的 rmw 结构的指针。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Maybe [1]
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- * <i>[1] only if required when filling the request, avoided for fixed sizes</i>
+ * 分配内存          | 可能 [1]
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
+ * <i>[1] 仅在填充请求时需要时分配内存，对于固定大小避免使用</i>
  *
- * \param[in] service the handle to the service from which to take
- * \param[inout] request_header ptr to the struct holding metadata about the request
- * \param[inout] ros_request type-erased ptr to an allocated ROS request message
- * \return #RCL_RET_OK if the request was taken, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_SERVICE_INVALID if the service is invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_SERVICE_TAKE_FAILED if take failed but no error occurred
- *         in the middleware, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] service 要获取的服务句柄
+ * \param[inout] request_header 指向保存请求元数据的结构的指针
+ * \param[inout] ros_request 指向已分配的 ROS 请求消息的类型擦除指针
+ * \return #RCL_RET_OK 如果请求被获取, 或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效, 或者
+ * \return #RCL_RET_SERVICE_INVALID 如果服务无效, 或者
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败, 或者
+ * \return #RCL_RET_SERVICE_TAKE_FAILED 如果获取失败但中间件中没有错误发生, 或者
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_take_request_with_info(
-  const rcl_service_t * service,
-  rmw_service_info_t * request_header,
-  void * ros_request);
+rcl_ret_t rcl_take_request_with_info(
+  const rcl_service_t * service, rmw_service_info_t * request_header, void * ros_request);
 
-/// Backwards compatibility function to take a pending ROS request using a rcl service.
+/// 用于向后兼容的函数，通过 rcl 服务获取待处理的 ROS 请求。
 /**
- * This version takes a request ID only.  See rcl_take_request_with_info() for a full
- * explanation of what this does.
+ * 此版本仅接受请求 ID。有关此操作的完整说明，请参阅 rcl_take_request_with_info()。
  *
- * \param[in] service the handle to the service from which to take
- * \param[inout] request_header ptr to the struct holding the id of the request
- * \param[inout] ros_request type-erased ptr to an allocated ROS request message
- * \return #RCL_RET_OK if the request was taken, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_SERVICE_INVALID if the service is invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_SERVICE_TAKE_FAILED if take failed but no error occurred
- *         in the middleware, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] service 要获取请求的服务句柄
+ * \param[inout] request_header 指向保存请求 id 的结构体的指针
+ * \param[inout] ros_request 指向已分配的 ROS 请求消息的类型擦除指针
+ * \return #RCL_RET_OK 如果请求被成功获取，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_SERVICE_INVALID 如果服务无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_SERVICE_TAKE_FAILED 如果获取失败但中间件中没有错误发生，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_take_request(
-  const rcl_service_t * service,
-  rmw_request_id_t * request_header,
-  void * ros_request);
+rcl_ret_t rcl_take_request(
+  const rcl_service_t * service, rmw_request_id_t * request_header, void * ros_request);
 
-/// Send a ROS response to a client using a service.
+/// 使用服务将 ROS 响应发送给客户端。
 /**
- * It is the job of the caller to ensure that the type of the `ros_response`
- * parameter and the type associate with the service (via the type support)
- * match.
- * Passing a different type to send_response produces undefined behavior and
- * cannot be checked by this function and therefore no deliberate error will
- * occur.
+ * 调用者需要确保 `ros_response` 参数的类型与服务关联的类型（通过类型支持）匹配。
+ * 将不同类型传递给 send_response 会产生未定义的行为，并且此函数无法检查，因此不会出现故意的错误。
  *
- * send_response() is an non-blocking call.
+ * send_response() 是一个非阻塞调用。
  *
- * The ROS response message given by the `ros_response` void pointer is always
- * owned by the calling code, but should remain constant during
- * rcl_send_response().
+ * 由 `ros_response` void 指针给出的 ROS 响应消息始终由调用代码拥有，但在
+ * rcl_send_response()期间应保持不变。
  *
- * This function is thread safe so long as access to both the service and the
- * `ros_response` is synchronized.
- * That means that calling rcl_send_response() from multiple threads is
- * allowed, but calling rcl_send_response() at the same time as non-thread safe
- * service functions is not, e.g. calling rcl_send_response() and
- * rcl_service_fini() concurrently is not allowed.
- * The message cannot change during the rcl_send_response() call.
- * Before calling rcl_send_response() the message can change but after calling
- * rcl_send_response() it depends on RMW implementation behavior.
- * The same `ros_response`, however, can be passed to multiple calls of
- * rcl_send_response() simultaneously, even if the services differ.
- * The `ros_response` is unmodified by rcl_send_response().
+ * 只要对服务和 `ros_response` 的访问得到同步，此函数就是线程安全的。
+ * 这意味着允许从多个线程调用 rcl_send_response()，但与非线程安全的服务函数同时调用 rcl_send_response() 是不允许的，例如并发调用 rcl_send_response() 和 rcl_service_fini() 是不允许的。
+ * 在 rcl_send_response() 调用期间，消息不能更改。
+ * 在调用 rcl_send_response() 之前，消息可以更改，但在调用 rcl_send_response() 之后，它取决于 RMW 实现行为。
+ * 同一个 `ros_response` 可以同时传递给多个 rcl_send_response() 调用，即使服务不同。
+ * rcl_send_response() 不会修改 `ros_response`。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes [1]
- * Uses Atomics       | No
- * Lock-Free          | Yes
- * <i>[1] for unique pairs of services and responses, see above for more</i>
+ * 分配内存            | 否
+ * 线程安全            | 是 [1]
+ * 使用原子操作        | 否
+ * 无锁                | 是
+ * <i>[1] 对于唯一的服务和响应对，请参阅上文了解更多</i>
  *
- * \param[in] service handle to the service which will make the response
- * \param[inout] response_header ptr to the struct holding metadata about the request ID
- * \param[in] ros_response type-erased pointer to the ROS response message
- * \return #RCL_RET_OK if the response was sent successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_SERVICE_INVALID if the service is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] service 将进行响应的服务句柄
+ * \param[inout] response_header 指向保存关于请求 ID 元数据的结构体的指针
+ * \param[in] ros_response 指向 ROS 响应消息的类型擦除指针
+ * \return #RCL_RET_OK 如果响应成功发送，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_SERVICE_INVALID 如果服务无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_send_response(
-  const rcl_service_t * service,
-  rmw_request_id_t * response_header,
-  void * ros_response);
+rcl_ret_t rcl_send_response(
+  const rcl_service_t * service, rmw_request_id_t * response_header, void * ros_response);
 
-/// Get the topic name for the service.
+/// 获取服务的主题名称。
 /**
- * This function returns the service's internal topic name string.
- * This function can fail, and therefore return `NULL`, if the:
- *   - service is `NULL`
- *   - service is invalid (never called init, called fini, or invalid)
+ * 此函数返回服务的内部主题名称字符串。
+ * 如果以下情况之一成立，此函数可能失败，因此返回 `NULL`：
+ *   - 服务为 `NULL`
+ *   - 服务无效（从未调用 init、调用 fini 或无效）
  *
- * The returned string is only valid as long as the service is valid.
- * The value of the string may change if the topic name changes, and therefore
- * copying the string is recommended if this is a concern.
+ * 只要服务有效，返回的字符串就有效。
+ * 如果主题名称更改，字符串的值可能会更改，因此如果这是一个问题，请建议复制字符串。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] service the pointer to the service
- * \return name string if successful, otherwise `NULL`
+ * \param[in] service 服务指针
+ * \return 成功时的名称字符串，否则为 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const char *
-rcl_service_get_service_name(const rcl_service_t * service);
+const char * rcl_service_get_service_name(const rcl_service_t * service);
 
-/// Return the rcl service options.
+/// 返回 rcl 服务选项。
 /**
- * This function returns the service's internal options struct.
- * This function can fail, and therefore return `NULL`, if the:
- *   - service is `NULL`
- *   - service is invalid (never called init, called fini, or invalid)
+ * 此函数返回服务的内部选项结构体。
+ * 如果以下情况之一成立，此函数可能失败，因此返回 `NULL`：
+ *   - 服务为 `NULL`
+ *   - 服务无效（从未调用 init、调用 fini 或无效）
  *
- * The returned struct is only valid as long as the service is valid.
- * The values in the struct may change if the service's options change,
- * and therefore copying the struct is recommended if this is a concern.
+ * 只要服务有效，返回的结构体就有效。
+ * 如果服务选项更改，结构体中的值可能会更改，因此如果这是一个问题，请建议复制结构体。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] service pointer to the service
- * \return options struct if successful, otherwise `NULL`
+ * \param[in] service 服务指针
+ * \return 成功时的选项结构体，否则为 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const rcl_service_options_t *
-rcl_service_get_options(const rcl_service_t * service);
+const rcl_service_options_t * rcl_service_get_options(const rcl_service_t * service);
 
-/// Return the rmw service handle.
+/// 返回 rmw 服务句柄。
 /**
- * The handle returned is a pointer to the internally held rmw handle.
- * This function can fail, and therefore return `NULL`, if the:
- *   - service is `NULL`
- *   - service is invalid (never called init, called fini, or invalid)
+ * 返回的句柄是指向内部持有的 rmw 句柄的指针。
+ * 此函数可能失败，因此返回 `NULL`，如果：
+ *   - 服务为 `NULL`
+ *   - 服务无效（从未调用 init、调用 fini 或无效）
  *
- * The returned handle is made invalid if the service is finalized or if
- * rcl_shutdown() is called.
- * The returned handle is not guaranteed to be valid for the life time of the
- * service as it may be finalized and recreated itself.
- * Therefore it is recommended to get the handle from the service using
- * this function each time it is needed and avoid use of the handle
- * concurrently with functions that might change it.
+ * 如果服务被终止或调用 rcl_shutdown()，则返回的句柄将变为无效。
+ * 返回的句柄不能保证在服务的生命周期内一直有效，因为它可能被终止并重新创建。
+ * 因此建议每次需要时使用此函数从服务获取句柄，并避免与可能更改句柄的函数同时使用句柄。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] service pointer to the rcl service
- * \return rmw service handle if successful, otherwise `NULL`
+ * \param[in] service 指向 rcl 服务的指针
+ * \return 成功时的 rmw 服务句柄，否则为 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rmw_service_t *
-rcl_service_get_rmw_handle(const rcl_service_t * service);
+rmw_service_t * rcl_service_get_rmw_handle(const rcl_service_t * service);
 
-/// Check that the service is valid.
+/// 检查服务是否有效。
 /**
- * The bool returned is `false` if `service` is invalid.
- * The bool returned is `true` otherwise.
- * In the case where `false` is to be returned, an error message is set.
- * This function cannot fail.
+ * 如果 `service` 无效，则返回的布尔值为 `false`。
+ * 否则，返回的布尔值为 `true`。
+ * 在返回 `false` 的情况下，会设置错误消息。
+ * 此函数不能失败。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] service pointer to the rcl service
- * \return `true` if `service` is valid, otherwise `false`
+ * \param[in] service 指向 rcl 服务的指针
+ * \return 如果 `service` 有效，则为 `true`，否则为 `false`
  */
 RCL_PUBLIC
-bool
-rcl_service_is_valid(const rcl_service_t * service);
+bool rcl_service_is_valid(const rcl_service_t * service);
 
-/// Get the actual qos settings of the service's request subscription.
+/// 获取服务请求订阅的实际 qos 设置。
 /**
- * Used to get the actual qos settings of the service's request subscription.
- * The actual configuration applied when using RMW_*_SYSTEM_DEFAULT
- * can only be resolved after the creation of the service, and it
- * depends on the underlying rmw implementation.
- * If the underlying setting in use can't be represented in ROS terms,
- * it will be set to RMW_*_UNKNOWN.
- * The returned struct is only valid as long as the rcl_service_t is valid.
+ * 用于获取服务请求订阅的实际 qos 设置。
+ * 当使用 RMW_*_SYSTEM_DEFAULT 时，只有在创建服务后才能解析实际配置，
+ * 并且它取决于底层的 rmw 实现。
+ * 如果正在使用的底层设置无法用 ROS 术语表示，
+ * 它将被设置为 RMW_*_UNKNOWN。
+ * 返回的结构只有在 rcl_service_t 有效时才有效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] service pointer to the rcl service
- * \return qos struct if successful, otherwise `NULL`
+ * \param[in] service 指向 rcl 服务的指针
+ * \return 成功时的 qos 结构，否则为 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const rmw_qos_profile_t *
-rcl_service_request_subscription_get_actual_qos(const rcl_service_t * service);
+const rmw_qos_profile_t * rcl_service_request_subscription_get_actual_qos(
+  const rcl_service_t * service);
 
-/// Get the actual qos settings of the service's response publisher.
+/// 获取服务响应发布者的实际 qos 设置。
 /**
- * Used to get the actual qos settings of the service's response publisher.
- * The actual configuration applied when using RMW_*_SYSTEM_DEFAULT
- * can only be resolved after the creation of the service, and it
- * depends on the underlying rmw implementation.
- * If the underlying setting in use can't be represented in ROS terms,
- * it will be set to RMW_*_UNKNOWN.
- * The returned struct is only valid as long as the rcl_service_t is valid.
+ * 用于获取服务响应发布者的实际 qos 设置。
+ * 当使用 RMW_*_SYSTEM_DEFAULT 时，只有在创建服务后才能解析实际配置，
+ * 并且它取决于底层的 rmw 实现。
+ * 如果正在使用的底层设置无法用 ROS 术语表示，
+ * 它将被设置为 RMW_*_UNKNOWN。
+ * 返回的结构只有在 rcl_service_t 有效时才有效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] service pointer to the rcl service
- * \return qos struct if successful, otherwise `NULL`
+ * \param[in] service 指向 rcl 服务的指针
+ * \return 成功时的 qos 结构，否则为 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const rmw_qos_profile_t *
-rcl_service_response_publisher_get_actual_qos(const rcl_service_t * service);
+const rmw_qos_profile_t * rcl_service_response_publisher_get_actual_qos(
+  const rcl_service_t * service);
 
-/// Set the on new request callback function for the service.
+/// 为服务设置新请求回调函数。
 /**
- * This API sets the callback function to be called whenever the
- * service is notified about a new request.
+ * 此 API 将回调函数设置为在服务收到新请求时调用。
  *
- * \sa rmw_service_set_on_new_request_callback for details about this function.
+ * \sa rmw_service_set_on_new_request_callback 了解此函数的详细信息。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Maybe [1]
- * Lock-Free          | Maybe [1]
- * <i>[1] rmw implementation defined</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 可能 [1]
+ * 无锁              | 可能 [1]
+ * <i>[1] rmw 实现定义</i>
  *
- * \param[in] service The service on which to set the callback
- * \param[in] callback The callback to be called when new requests arrive, may be NULL
- * \param[in] user_data Given to the callback when called later, may be NULL
- * \return `RCL_RET_OK` if callback was set to the listener, or
- * \return `RCL_RET_INVALID_ARGUMENT` if `service` is NULL, or
- * \return `RCL_RET_UNSUPPORTED` if the API is not implemented in the dds implementation
+ * \param[in] service 要设置回调的服务
+ * \param[in] callback 当新请求到达时要调用的回调，可以为 NULL
+ * \param[in] user_data 后续调用时提供给回调的数据，可以为 NULL
+ * \return 如果回调已设置为监听器，则为 `RCL_RET_OK`，或
+ * \return 如果 `service` 为 NULL，则为 `RCL_RET_INVALID_ARGUMENT`，或
+ * \return 如果 API 在 dds 实现中未实现，则为 `RCL_RET_UNSUPPORTED`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_service_set_on_new_request_callback(
-  const rcl_service_t * service,
-  rcl_event_callback_t callback,
-  const void * user_data);
+rcl_ret_t rcl_service_set_on_new_request_callback(
+  const rcl_service_t * service, rcl_event_callback_t callback, const void * user_data);
 
-/// Configure service introspection features for the service.
+/// 为服务配置服务自省功能。
 /**
- * Enables or disables service introspection features for this service.
- * If the introspection state is RCL_SERVICE_INTROSPECTION_OFF, then introspection will
- * be disabled.  If the state is RCL_SERVICE_INTROSPECTION_METADATA, the client metadata
- * will be published.  If the state is RCL_SERVICE_INTROSPECTION_CONTENTS, then the client
- * metadata and service request and response contents will be published.
+ * 为此服务启用或禁用服务自省功能。
+ * 如果自省状态为 RCL_SERVICE_INTROSPECTION_OFF，则自省将被禁用。
+ * 如果状态为 RCL_SERVICE_INTROSPECTION_METADATA，则将发布客户端元数据。
+ * 如果状态为 RCL_SERVICE_INTROSPECTION_CONTENTS，则将发布客户端元数据以及服务请求和响应内容。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Maybe [1]
- * Lock-Free          | Maybe [1]
- * <i>[1] rmw implementation defined</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 可能 [1]
+ * 无锁              | 可能 [1]
+ * <i>[1] rmw 实现定义</i>
  *
- * \param[in] service service on which to configure service introspection
- * \param[in] node valid rcl_node_t to use to create the introspection publisher
- * \param[in] clock valid rcl_clock_t to use to generate the introspection timestamps
- * \param[in] type_support type support library associated with this service
- * \param[in] publisher_options options to use when creating the introspection publisher
- * \param[in] introspection_state rcl_service_introspection_state_t describing whether
- *            introspection should be OFF, METADATA, or CONTENTS
- * \return #RCL_RET_OK if the call was successful, or
- * \return #RCL_RET_ERROR if the event publisher is invalid, or
- * \return #RCL_RET_NODE_INVALID if the given node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if the client or node structure is invalid,
- * \return #RCL_RET_BAD_ALLOC if a memory allocation failed
+ * \param[in] service 要配置服务自省的服务
+ * \param[in] node 用于创建自省发布者的有效 rcl_node_t
+ * \param[in] clock 用于生成自省时间戳的有效 rcl_clock_t
+ * \param[in] type_support 与此服务关联的类型支持库
+ * \param[in] publisher_options 创建自省发布者时使用的选项
+ * \param[in] introspection_state 描述自省应为 OFF、METADATA 还是 CONTENTS 的 rcl_service_introspection_state_t
+ * \return 如果调用成功，则为 #RCL_RET_OK，或
+ * \return 如果事件发布者无效，则为 #RCL_RET_ERROR，或
+ * \return 如果给定节点无效，则为 #RCL_RET_NODE_INVALID，或
+ * \return 如果客户端或节点结构无效，则为 #RCL_RET_INVALID_ARGUMENT，
+ * \return 如果内存分配失败，则为 #RCL_RET_BAD_ALLOC
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_service_configure_service_introspection(
-  rcl_service_t * service,
-  rcl_node_t * node,
-  rcl_clock_t * clock,
+rcl_ret_t rcl_service_configure_service_introspection(
+  rcl_service_t * service, rcl_node_t * node, rcl_clock_t * clock,
   const rosidl_service_type_support_t * type_support,
   const rcl_publisher_options_t publisher_options,
   rcl_service_introspection_state_t introspection_state);

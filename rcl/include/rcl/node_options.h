@@ -18,47 +18,45 @@
 #define RCL__NODE_OPTIONS_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcl/allocator.h"
 #include "rcl/arguments.h"
-
 #include "rcl/domain_id.h"
 
-/// Constant which indicates that the default domain id should be used.
+/// 常量，表示应使用默认的域ID。
 #define RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID RCL_DEFAULT_DOMAIN_ID
 
-/// Structure which encapsulates the options for creating a rcl_node_t.
+/// 封装创建 rcl_node_t 选项的结构体。
 typedef struct rcl_node_options_s
 {
   // bool anonymous_name;
 
   // rmw_qos_profile_t parameter_qos;
 
-  /// If true, no parameter infrastructure will be setup.
+  /// 如果为 true，则不设置参数基础设施。
   // bool no_parameters;
 
-  /// Custom allocator used for internal allocations.
+  /// 用于内部分配的自定义分配器。
   rcl_allocator_t allocator;
 
-  /// If false then only use arguments in this struct, otherwise use global arguments also.
+  /// 如果为 false，则仅使用此结构中的参数，否则还使用全局参数。
   bool use_global_arguments;
 
-  /// Command line arguments that apply only to this node.
+  /// 仅适用于此节点的命令行参数。
   rcl_arguments_t arguments;
 
-  /// Flag to enable rosout for this node
+  /// 启用此节点的 rosout 标志
   bool enable_rosout;
 
-  /// Middleware quality of service settings for /rosout.
+  /// /rosout 的中间件服务质量设置。
   rmw_qos_profile_t rosout_qos;
 } rcl_node_options_t;
 
-/// Return the default node options in a rcl_node_options_t.
+/// 返回 rcl_node_options_t 中的默认节点选项。
 /**
- * The default values are:
+ * 默认值为：
  *
  * - allocator = rcl_get_default_allocator()
  * - use_global_arguments = true
@@ -66,59 +64,55 @@ typedef struct rcl_node_options_s
  * - arguments = rcl_get_zero_initialized_arguments()
  * - rosout_qos = rcl_qos_profile_rosout_default
  *
- * \return A structure with the default node options.
+ * \return 具有默认节点选项的结构体。
  */
 RCL_PUBLIC
-rcl_node_options_t
-rcl_node_get_default_options(void);
+rcl_node_options_t rcl_node_get_default_options(void);
 
-/// Copy one options structure into another.
+/// 将一个选项结构复制到另一个选项结构。
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] options The structure to be copied.
- *   Its allocator is used to copy memory into the new structure.
- * \param[out] options_out An options structure containing default values.
- * \return #RCL_RET_OK if the structure was copied successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] options 要复制的结构体。
+ *   其分配器用于将内存复制到新结构体中。
+ * \param[out] options_out 包含默认值的选项结构体。
+ * \return #RCL_RET_OK 如果结构体复制成功，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_node_options_copy(
-  const rcl_node_options_t * options,
-  rcl_node_options_t * options_out);
+rcl_ret_t rcl_node_options_copy(
+  const rcl_node_options_t * options, rcl_node_options_t * options_out);
 
-/// Finalize the given node_options.
+/// 结束给定的 node_options。
 /**
- * The given node_options must be non-`NULL` and valid, i.e. had
- * rcl_node_get_default_options() called on it but not this function yet.
+ * 给定的 node_options 必须为非 `NULL` 且有效，即在其上调用了
+ * rcl_node_get_default_options()，但尚未调用此函数。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Yes
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 是
+ * 无锁              | 是
  *
- * \param[inout] options object to be finalized
- * \return #RCL_RET_OK if setup is successful, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[inout] options 要结束的对象
+ * \return #RCL_RET_OK 如果设置成功，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_node_options_fini(rcl_node_options_t * options);
+rcl_ret_t rcl_node_options_fini(rcl_node_options_t * options);
 
 #ifdef __cplusplus
 }

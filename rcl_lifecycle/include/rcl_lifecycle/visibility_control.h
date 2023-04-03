@@ -26,31 +26,31 @@
 //     https://gcc.gnu.org/wiki/Visibility
 
 #if defined _WIN32 || defined __CYGWIN__
-  #ifdef __GNUC__
-    #define RCL_LIFECYCLE_EXPORT __attribute__ ((dllexport))
-    #define RCL_LIFECYCLE_IMPORT __attribute__ ((dllimport))
-  #else
-    #define RCL_LIFECYCLE_EXPORT __declspec(dllexport)
-    #define RCL_LIFECYCLE_IMPORT __declspec(dllimport)
-  #endif
-  #ifdef RCL_LIFECYCLE_BUILDING_DLL
-    #define RCL_LIFECYCLE_PUBLIC RCL_LIFECYCLE_EXPORT
-  #else
-    #define RCL_LIFECYCLE_PUBLIC RCL_LIFECYCLE_IMPORT
-  #endif
-  #define RCL_LIFECYCLE_PUBLIC_TYPE RCL_LIFECYCLE_PUBLIC
-  #define RCL_LIFECYCLE_LOCAL
+#ifdef __GNUC__
+#define RCL_LIFECYCLE_EXPORT __attribute__((dllexport))
+#define RCL_LIFECYCLE_IMPORT __attribute__((dllimport))
 #else
-  #define RCL_LIFECYCLE_EXPORT __attribute__ ((visibility("default")))
-  #define RCL_LIFECYCLE_IMPORT
-  #if __GNUC__ >= 4
-    #define RCL_LIFECYCLE_PUBLIC __attribute__ ((visibility("default")))
-    #define RCL_LIFECYCLE_LOCAL  __attribute__ ((visibility("hidden")))
-  #else
-    #define RCL_LIFECYCLE_PUBLIC
-    #define RCL_LIFECYCLE_LOCAL
-  #endif
-  #define RCL_LIFECYCLE_PUBLIC_TYPE
+#define RCL_LIFECYCLE_EXPORT __declspec(dllexport)
+#define RCL_LIFECYCLE_IMPORT __declspec(dllimport)
+#endif
+#ifdef RCL_LIFECYCLE_BUILDING_DLL
+#define RCL_LIFECYCLE_PUBLIC RCL_LIFECYCLE_EXPORT
+#else
+#define RCL_LIFECYCLE_PUBLIC RCL_LIFECYCLE_IMPORT
+#endif
+#define RCL_LIFECYCLE_PUBLIC_TYPE RCL_LIFECYCLE_PUBLIC
+#define RCL_LIFECYCLE_LOCAL
+#else
+#define RCL_LIFECYCLE_EXPORT __attribute__((visibility("default")))
+#define RCL_LIFECYCLE_IMPORT
+#if __GNUC__ >= 4
+#define RCL_LIFECYCLE_PUBLIC __attribute__((visibility("default")))
+#define RCL_LIFECYCLE_LOCAL __attribute__((visibility("hidden")))
+#else
+#define RCL_LIFECYCLE_PUBLIC
+#define RCL_LIFECYCLE_LOCAL
+#endif
+#define RCL_LIFECYCLE_PUBLIC_TYPE
 #endif
 
 #endif  // RCL_LIFECYCLE__VISIBILITY_CONTROL_H_

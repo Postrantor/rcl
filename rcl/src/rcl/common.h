@@ -16,15 +16,20 @@
 #define RCL__COMMON_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcl/types.h"
 
-/// Convenience function for converting common rmw_ret_t return codes to rcl.
-rcl_ret_t
-rcl_convert_rmw_ret_to_rcl_ret(rmw_ret_t rmw_ret);
+/**
+ * @brief 转换常见的 rmw_ret_t 返回代码为 rcl_ret_t 的便捷函数
+ *
+ * 该函数用于将 RMW 层的返回代码转换为 RCL 层的返回代码，以便在 ROS2 中进行错误处理。
+ *
+ * @param rmw_ret RMW 层的返回代码
+ * @return 对应的 RCL 层返回代码
+ */
+rcl_ret_t rcl_convert_rmw_ret_to_rcl_ret(rmw_ret_t rmw_ret);
 
 #ifdef __cplusplus
 }

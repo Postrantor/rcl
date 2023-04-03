@@ -18,213 +18,119 @@
 #define RCL__INIT_OPTIONS_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
-
-#include "rmw/init.h"
 
 #include "rcl/allocator.h"
 #include "rcl/macros.h"
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
+#include "rmw/init.h"
 
+/// rcl_init_options_impl_s 结构体的类型定义
 typedef struct rcl_init_options_impl_s rcl_init_options_impl_t;
 
-/// Encapsulation of init options and implementation defined init options.
+/**
+ * @brief 初始化选项和实现定义的初始化选项的封装。
+ */
 typedef struct rcl_init_options_s
 {
-  /// Implementation specific pointer.
+  /// 实现特定的指针。
   rcl_init_options_impl_t * impl;
 } rcl_init_options_t;
 
-/// Return a zero initialized rcl_init_options_t struct.
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_init_options_t
-rcl_get_zero_initialized_init_options(void);
-
-/// Initialize given init_options with the default values and implementation specific values.
 /**
- * The given allocator is used, if required, during setup of the init options,
- * but is also used during initialization.
- *
- * In either case the given allocator is stored in the returned init options.
- *
- * The `impl` pointer should not be changed manually.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Yes
- * Lock-Free          | Yes
- *
- * \param[inout] init_options object to be setup
- * \param[in] allocator to be used during setup and during initialization
- * \return #RCL_RET_OK if setup is successful, or
- * \return #RCL_RET_ALREADY_INIT if init_options has already be initialized, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * @brief 返回一个零初始化的 rcl_init_options_t 结构体。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_init_options_init(rcl_init_options_t * init_options, rcl_allocator_t allocator);
+rcl_init_options_t rcl_get_zero_initialized_init_options(void);
 
-/// Copy the given source init_options to the destination init_options.
 /**
- * The allocator from the source is used for any allocations and stored in the
- * destination.
+ * @brief 使用默认值和实现特定值初始化给定的 init_options。
  *
- * The destination should either be zero initialized with
- * rcl_get_zero_initialized_init_options() or should have had
- * rcl_init_options_fini() called on it.
- * Giving an already initialized init options for the destination will result
- * in a failure with return code #RCL_RET_ALREADY_INIT.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Yes
- * Lock-Free          | Yes
- *
- * \param[in] src rcl_init_options_t object to be copied from
- * \param[out] dst rcl_init_options_t object to be copied into
- * \return #RCL_RET_OK if the copy is successful, or
- * \return #RCL_RET_ALREADY_INIT if the dst has already be initialized, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * @param[inout] init_options 要设置的对象
+ * @param[in] allocator 在设置和初始化期间使用的分配器
+ * @return #RCL_RET_OK 如果设置成功，或
+ * @return #RCL_RET_ALREADY_INIT 如果 init_options 已经初始化，或
+ * @return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * @return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * @return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_init_options_copy(const rcl_init_options_t * src, rcl_init_options_t * dst);
+rcl_ret_t rcl_init_options_init(rcl_init_options_t * init_options, rcl_allocator_t allocator);
 
-/// Finalize the given init_options.
 /**
- * The given init_options must be non-`NULL` and valid, i.e. had
- * rcl_init_options_init() called on it but not this function yet.
+ * @brief 将给定的源 init_options 复制到目标 init_options。
  *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Yes
- * Lock-Free          | Yes
- *
- * \param[inout] init_options object to be setup
- * \return #RCL_RET_OK if setup is successful, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * @param[in] src 要从中复制的 rcl_init_options_t 对象
+ * @param[out] dst 要复制到的 rcl_init_options_t 对象
+ * @return #RCL_RET_OK 如果复制成功，或
+ * @return #RCL_RET_ALREADY_INIT 如果 dst 已经初始化，或
+ * @return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * @return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * @return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_init_options_fini(rcl_init_options_t * init_options);
+rcl_ret_t rcl_init_options_copy(const rcl_init_options_t * src, rcl_init_options_t * dst);
 
-/// Return the domain_id stored in the init options.
 /**
- * Get the domain id from the specified rcl_init_options_t object.
+ * @brief 结束给定的 init_options。
  *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] init_options object from which the domain id should be retrieved.
- * \param[out] domain_id domain id to be set in init_options object.
- * \return #RCL_RET_OK if successful, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid.
+ * @param[inout] init_options 要设置的对象
+ * @return #RCL_RET_OK 如果设置成功，或
+ * @return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * @return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_init_options_get_domain_id(const rcl_init_options_t * init_options, size_t * domain_id);
+rcl_ret_t rcl_init_options_fini(rcl_init_options_t * init_options);
 
-/// Set a domain id in the init options provided.
 /**
- * Store the domain id in the specified init_options object.
+ * @brief 返回 init_options 中存储的 domain_id。
  *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] init_options objects in which to set the specified domain id.
- * \param[in] domain_id domain id to be set in init_options object.
- * \return #RCL_RET_OK if successful, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid.
+ * @param[in] init_options 从中检索域 ID 的对象
+ * @param[out] domain_id 要在 init_options 对象中设置的域 ID
+ * @return #RCL_RET_OK 如果成功，或
+ * @return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_init_options_set_domain_id(rcl_init_options_t * init_options, size_t domain_id);
+rcl_ret_t rcl_init_options_get_domain_id(
+  const rcl_init_options_t * init_options, size_t * domain_id);
 
-/// Return the rmw init options which are stored internally.
 /**
- * This function can fail and return `NULL` if:
- *   - init_options is NULL
- *   - init_options is invalid, e.g. init_options->impl is NULL
+ * @brief 在提供的 init_options 中设置一个 domain id。
  *
- * If NULL is returned an error message will have been set.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | Yes
- * Lock-Free          | Yes
- *
- * \param[in] init_options object from which the rmw init options should be retrieved
- * \return pointer to the the rcl init options, or
- * \return `NULL` if there was an error
+ * @param[in] init_options 要设置指定域 ID 的对象
+ * @param[in] domain_id 要在 init_options 对象中设置的域 ID
+ * @return #RCL_RET_OK 如果成功，或
+ * @return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rmw_init_options_t *
-rcl_init_options_get_rmw_init_options(rcl_init_options_t * init_options);
+rcl_ret_t rcl_init_options_set_domain_id(rcl_init_options_t * init_options, size_t domain_id);
 
-/// Return the allocator stored in the init_options.
 /**
- * This function can fail and return `NULL` if:
- *   - init_options is NULL
- *   - init_options is invalid, e.g. init_options->impl is NULL
+ * @brief 返回存储在内部的 rmw 初始化选项。
  *
- * If NULL is returned an error message will have been set.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] init_options object from which the allocator should be retrieved
- * \return pointer to the rcl allocator, or
- * \return `NULL` if there was an error
+ * @param[in] init_options 从中检索 rmw 初始化选项的对象
+ * @return 指向 rcl 初始化选项的指针，或
+ * @return `NULL` 如果有错误
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const rcl_allocator_t *
-rcl_init_options_get_allocator(const rcl_init_options_t * init_options);
+rmw_init_options_t * rcl_init_options_get_rmw_init_options(rcl_init_options_t * init_options);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif  // RCL__INIT_OPTIONS_H_
+/**
+ * @brief 返回 init_options 中存储的分配器。
+ *
+ * @param[in] init_options 从中检索分配器的对象
+ * @return 指向 rcl 分配器的指针，或
+ * @return `NULL` 如果有错误
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+const rcl_allocator_t * rcl_init_options_get_allocator(const rcl_init_options_t * init_options);

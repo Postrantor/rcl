@@ -12,184 +12,168 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #ifndef RCL_LIFECYCLE__TRANSITION_MAP_H_
 #define RCL_LIFECYCLE__TRANSITION_MAP_H_
 
 #include "rcl/macros.h"
-
 #include "rcl_lifecycle/data_types.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-/// Initialize a rcl_lifecycle_state_init.
-/*
- * Should be called to get a null rcl_lifecycle_transition_map_t before passing to
- * rcl_lifecycle_register_state() or rcl_lifecycle_register_transition().
+/// 初始化 rcl_lifecycle_state_init。
+/**
+ * 在传递给 rcl_lifecycle_register_state() 或 rcl_lifecycle_register_transition() 之前，
+ * 应该调用此函数以获取空的 rcl_lifecycle_transition_map_t。
  *
- * \return rcl_lifecycle_transition_map_t a initilized struct
+ * \return rcl_lifecycle_transition_map_t 初始化后的结构体
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_lifecycle_transition_map_t
-rcl_lifecycle_get_zero_initialized_transition_map();
+rcl_lifecycle_transition_map_t rcl_lifecycle_get_zero_initialized_transition_map();
 
-/// Check if a transition map is active using a rcl_lifecycle_state_machine_t.
-/*
- * The function checks if the transition map is initialized. It returns `RCL_RET_OK`
- * if the transition map is initialized successfully or `RCL_RET_ERROR` if the transition
- * map is not initialized.
+/// 使用 rcl_lifecycle_state_machine_t 检查转换映射是否激活。
+/**
+ * 该函数检查转换映射是否已初始化。如果转换映射成功初始化，则返回 `RCL_RET_OK`；
+ * 如果转换映射未初始化，则返回 `RCL_RET_ERROR`。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] transition_map pointer to the transition map struct to check
- * \return `RCL_RET_OK` if the transition map is initialized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if the transition map is not initialized.
+ * \param[in] transition_map 要检查的转换映射结构体指针
+ * \return `RCL_RET_OK`，如果转换映射成功初始化，或
+ * \return `RCL_RET_INVALID_ARGUMENT`，如果任何参数无效，或
+ * \return `RCL_RET_ERROR`，如果转换映射未初始化。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_transition_map_is_initialized(
+rcl_ret_t rcl_lifecycle_transition_map_is_initialized(
   const rcl_lifecycle_transition_map_t * transition_map);
 
-/// Finalize a rcl_lifecycle_transition_map_t.
-/*
- * Calling this will set the rcl_lifecycle_transition_map_t struct into the an unitialized state that is
- * functionally the same as before rcl_lifecycle_register_state or
- * rcl_lifecycle_register_transition was called. This function make the rcl_lifecycle_transition_map_t invalid.
+/// 结束 rcl_lifecycle_transition_map_t。
+/**
+ * 调用此函数将 rcl_lifecycle_transition_map_t 结构体设置为未初始化状态，
+ * 该状态在功能上与调用 rcl_lifecycle_register_state 或
+ * rcl_lifecycle_register_transition 之前相同。此函数使 rcl_lifecycle_transition_map_t 无效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[inout] transition_map struct to be deinitialized
- * \param[in] allocator a valid allocator used to deinitialized the state machine
- * \return `RCL_RET_OK` if the state was deinitialized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[inout] transition_map 要取消初始化的结构体
+ * \param[in] allocator 用于取消初始化状态机的有效分配器
+ * \return `RCL_RET_OK`，如果状态成功取消初始化，或
+ * \return `RCL_RET_INVALID_ARGUMENT`，如果任何参数无效，或
+ * \return `RCL_RET_ERROR`，如果发生未指定的错误。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_transition_map_fini(
-  rcl_lifecycle_transition_map_t * transition_map,
+rcl_ret_t rcl_lifecycle_transition_map_fini(
+  rcl_lifecycle_transition_map_t * transition_map, const rcl_allocator_t * allocator);
+
+/// 注册状态
+/**
+ * 此函数在转换映射中注册新状态。
+ *
+ * <hr>
+ * 属性              | 符合性
+ * ------------------ | -------------
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
+ *
+ * \param[in] transition_map 要修改的转换映射
+ * \param[in] state 要注册的状态
+ * \param[in] allocator 用于注册状态机的有效分配器
+ * \return `RCL_RET_OK`，如果状态成功注册，或
+ * \return `RCL_RET_INVALID_ARGUMENT`，如果任何参数无效，或
+ * \return `RCL_RET_LIFECYCLE_STATE_REGISTERED`，如果状态已经注册。
+ */
+RCL_LIFECYCLE_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t rcl_lifecycle_register_state(
+  rcl_lifecycle_transition_map_t * transition_map, rcl_lifecycle_state_t state,
   const rcl_allocator_t * allocator);
 
-/// Register a state
-/*
- * This function registers a new state in the transition map.
+/// 注册转换
+/**
+ * 此函数在转换映射中注册新转换。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] transition_map to be modified
- * \param[in] state the state to register
- * \param[in] allocator a valid allocator used to register the state machine
- * \return `RCL_RET_OK` if the state was registered successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_LIFECYCLE_STATE_REGISTERED` if state is already registered.
+ * \param[in] transition_map 要修改的转换映射
+ * \param[in] transition 要注册的转换
+ * \param[in] allocator 用于注册状态机的有效分配器
+ * \return `RCL_RET_OK`，如果状态成功取消初始化，或
+ * \return `RCL_RET_BAD_ALLOC`，如果分配内存失败，或
+ * \return `RCL_RET_INVALID_ARGUMENT`，如果任何参数无效，或
+ * \return `RCL_RET_LIFECYCLE_STATE_NOT_REGISTERED`，如果状态未注册，或
+ * \return `RCL_RET_ERROR`，如果发生未指定的错误。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_register_state(
-  rcl_lifecycle_transition_map_t * transition_map,
-  rcl_lifecycle_state_t state,
+rcl_ret_t rcl_lifecycle_register_transition(
+  rcl_lifecycle_transition_map_t * transition_map, rcl_lifecycle_transition_t transition,
   const rcl_allocator_t * allocator);
 
-/// Register a transition
-/*
- * This function registers a new transition in the transition map.
+/// 根据状态 ID 从转换映射中获取状态
+/**
+ * 根据 `id` 返回内部生命周期状态结构体的指针。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] transition_map to be modified
- * \param[in] transition the transition to register
- * \param[in] allocator a valid allocator used to register the state machine
- * \return `RCL_RET_OK` if the state was deinitialized successfully, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_LIFECYCLE_STATE_NOT_REGISTERED` if state is not registered, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] transition_map 转换映射
+ * \param[in] state_id 状态 ID
+ * \return 指向 rcl_lifecycle_state_t 的指针，如果状态 ID 不存在，则为 NULL
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_register_transition(
-  rcl_lifecycle_transition_map_t * transition_map,
-  rcl_lifecycle_transition_t transition,
-  const rcl_allocator_t * allocator);
+rcl_lifecycle_state_t * rcl_lifecycle_get_state(
+  rcl_lifecycle_transition_map_t * transition_map, unsigned int state_id);
 
-/// Get the state from a transition map based on the state id
-/*
- * A pointer to the internally lifecycle state struct is returned based on the `id`.
+/// 根据状态 ID 从转换映射中获取状态
+/**
+ * 根据 `label` 返回内部生命周期转换结构体的指针。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] transition_map
- * \param[in] state_id
- * \return pointer to a rcl_lifecycle_state_t or NULL if the state id doesn't exist
+ * \param[in] transition_map 要修改的转换映射
+ * \param[in] state_id 用于获取要搜索的标签
+ * \return 指向 rcl_lifecycle_state_t 的指针，如果状态 ID 不存在，则为 NULL
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_lifecycle_state_t *
-rcl_lifecycle_get_state(
-  rcl_lifecycle_transition_map_t * transition_map,
-  unsigned int state_id);
-
-/// Get the state from a transition map based on the state id
-/*
- * A pointer to the internally lifecycle transition struct is returned based on the `label`.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] transition_map to be modified
- * \param[in] state_id used to get the label to search
- * \return pointer to a rcl_lifecycle_state_t or NULL if the state id doesn't exist
- */
-RCL_LIFECYCLE_PUBLIC
-RCL_WARN_UNUSED
-rcl_lifecycle_transition_t *
-rcl_lifecycle_get_transitions(
-  rcl_lifecycle_transition_map_t * transition_map,
-  unsigned int transition_id);
+rcl_lifecycle_transition_t * rcl_lifecycle_get_transitions(
+  rcl_lifecycle_transition_map_t * transition_map, unsigned int transition_id);
 
 #ifdef __cplusplus
 }

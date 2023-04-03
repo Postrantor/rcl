@@ -12,36 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// @file
-
 #ifndef RCL__EXPAND_TOPIC_NAME_H_
 #define RCL__EXPAND_TOPIC_NAME_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-#include "rcutils/types/string_map.h"
 #include "rcl/allocator.h"
 #include "rcl/macros.h"
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
+#include "rcutils/types/string_map.h"
 
-/// Expand a given topic name into a fully-qualified topic name.
+/// 将给定的主题名称扩展为完全限定的主题名称。
 /**
- * The input_topic_name, node_name, and node_namespace arguments must all be
- * valid, null terminated c strings.
- * The output_topic_name will not be assigned a value in the event of an error.
+ * input_topic_name、node_name 和 node_namespace 参数必须都是有效的、以空字符结尾的 C 字符串。
+ * 如果发生错误，output_topic_name 不会被赋值。
  *
- * The output_topic_name will be null terminated.
- * It is also allocated, so it needs to be deallocated, when it is no longer
- * needed, with the same allocator given to this function.
- * Make sure the `char *` which is passed for the output_topic_name does not
- * point to allocated memory before calling this function, because it will be
- * overwritten and therefore leaked if this function is successful.
+ * output_topic_name 将以空字符结尾。
+ * 它也是分配的，因此在不再需要时，需要使用传递给此函数的相同分配器进行释放。
+ * 在调用此函数之前，请确保传递给 output_topic_name 的 `char *` 不指向已分配的内存，
+ * 因为如果此函数成功，它将被覆盖并因此泄漏。
  *
- * Expected usage:
+ * 预期用法：
  *
  * ```c
  * rcl_allocator_t allocator = rcl_get_default_allocator();
@@ -49,11 +43,11 @@ extern "C"
  * rcutils_string_map_t substitutions_map = rcutils_get_zero_initialized_string_map();
  * rcutils_ret_t rcutils_ret = rcutils_string_map_init(&substitutions_map, 0, rcutils_allocator);
  * if (rcutils_ret != RCUTILS_RET_OK) {
- *   // ... error handling
+ *   // ... 错误处理
  * }
  * rcl_ret_t ret = rcl_get_default_topic_name_substitutions(&substitutions_map);
  * if (ret != RCL_RET_OK) {
- *   // ... error handling
+ *   // ... 错误处理
  * }
  * char * expanded_topic_name = NULL;
  * ret = rcl_expand_topic_name(
@@ -64,80 +58,74 @@ extern "C"
  *   allocator,
  *   &expanded_topic_name);
  * if (ret != RCL_RET_OK) {
- *   // ... error handling
+ *   // ... 错误处理
  * } else {
  *   RCUTILS_LOG_INFO_NAMED(ROS_PACKAGE_NAME, "Expanded topic name: %s", expanded_topic_name)
- *   // ... when done the output topic name needs to be deallocated:
+ *   // ... 完成后需要释放输出主题名称：
  *   allocator.deallocate(expanded_topic_name, allocator.state);
  * }
  * ```
  *
- * The input topic name is validated using rcl_validate_topic_name(),
- * but if it fails validation RCL_RET_TOPIC_NAME_INVALID is returned.
+ * 输入的主题名称使用 rcl_validate_topic_name() 进行验证，
+ * 但如果验证失败，则返回 RCL_RET_TOPIC_NAME_INVALID。
  *
- * The input node name is validated using rmw_validate_node_name(),
- * but if it fails validation RCL_RET_NODE_INVALID_NAME is returned.
+ * 输入的节点名称使用 rmw_validate_node_name() 进行验证，
+ * 但如果验证失败，则返回 RCL_RET_NODE_INVALID_NAME。
  *
- * The input node namespace is validated using rmw_validate_namespace(),
- * but if it fails validation RCL_RET_NODE_INVALID_NAMESPACE is returned.
+ * 输入的节点命名空间使用 rmw_validate_namespace() 进行验证，
+ * 但如果验证失败，则返回 RCL_RET_NODE_INVALID_NAMESPACE。
  *
- * In addition to what is given by rcl_get_default_topic_name_substitutions(),
- * there are there these substitutions:
+ * 除了由 rcl_get_default_topic_name_substitutions() 给出的内容外，
+ * 还有以下这些替换：
  *
- * - {node} -> the name of the node
- * - {namespace} -> the namespace of the node
- * - {ns} -> the namespace of the node
+ * - {node} -> 节点的名称
+ * - {namespace} -> 节点的命名空间
+ * - {ns} -> 节点的命名空间
  *
- * If an unknown substitution is used, RCL_RET_UNKNOWN_SUBSTITUTION is returned.
+ * 如果使用未知的替换，将返回 RCL_RET_UNKNOWN_SUBSTITUTION。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] input_topic_name topic name to be expanded
- * \param[in] node_name name of the node associated with the topic
- * \param[in] node_namespace namespace of the node associated with the topic
- * \param[in] substitutions string map with possible substitutions
- * \param[in] allocator the allocator to be used when creating the output topic
- * \param[out] output_topic_name output char * pointer
- * \return #RCL_RET_OK if the topic name was expanded successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_TOPIC_NAME_INVALID if the given topic name is invalid, or
- * \return #RCL_RET_NODE_INVALID_NAME if the name is invalid, or
- * \return #RCL_RET_NODE_INVALID_NAMESPACE if the namespace_ is invalid, or
- * \return #RCL_RET_UNKNOWN_SUBSTITUTION for unknown substitutions in name, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] input_topic_name 要扩展的主题名称
+ * \param[in] node_name 与主题关联的节点名称
+ * \param[in] node_namespace 与主题关联的节点命名空间
+ * \param[in] substitutions 可能替换的字符串映射
+ * \param[in] allocator 创建输出主题时要使用的分配器
+ * \param[out] output_topic_name 输出 char * 指针
+ * \return #RCL_RET_OK 如果主题名称扩展成功，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_TOPIC_NAME_INVALID 如果给定的主题名称无效，或
+ * \return #RCL_RET_NODE_INVALID_NAME 如果名称无效，或
+ * \return #RCL_RET_NODE_INVALID_NAMESPACE 如果命名空间无效，或
+ * \return #RCL_RET_UNKNOWN_SUBSTITUTION 对于名称中未知的替换，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_expand_topic_name(
-  const char * input_topic_name,
-  const char * node_name,
-  const char * node_namespace,
-  const rcutils_string_map_t * substitutions,
-  rcl_allocator_t allocator,
-  char ** output_topic_name);
+rcl_ret_t rcl_expand_topic_name(
+  const char * input_topic_name, const char * node_name, const char * node_namespace,
+  const rcutils_string_map_t * substitutions, rcl_allocator_t allocator, char ** output_topic_name);
 
-/// Fill a given string map with the default substitution pairs.
+/// 使用默认的替换对填充给定的字符串映射。
 /**
- * If the string map is not initialized RCL_RET_INVALID_ARGUMENT is returned.
+ * 如果字符串映射未初始化，则返回 RCL_RET_INVALID_ARGUMENT。
  *
- * \param[inout] string_map rcutils_string_map_t map to be filled with pairs
- * \return #RCL_RET_OK if successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[inout] string_map 要用对填充的 rcutils_string_map_t 映射
+ * \return #RCL_RET_OK 如果成功，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_default_topic_name_substitutions(rcutils_string_map_t * string_map);
+rcl_ret_t rcl_get_default_topic_name_substitutions(rcutils_string_map_t * string_map);
 
 #ifdef __cplusplus
 }

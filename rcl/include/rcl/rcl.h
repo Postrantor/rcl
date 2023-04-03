@@ -12,56 +12,56 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** \mainpage rcl: Common functionality for other ROS Client Libraries
+/** \mainpage rcl: 为其他ROS客户端库提供通用功能
  *
- * `rcl` consists of functions and structs (pure C) organized into ROS concepts:
+ * `rcl` 包含了按照ROS概念组织的函数和结构体（纯C）：
  *
- * - Nodes
+ * - 节点
  *   - rcl/node.h
- * - Publisher
+ * - 发布者
  *   - rcl/publisher.h
- * - Subscription
+ * - 订阅者
  *   - rcl/subscription.h
- * - Service Client
+ * - 服务客户端
  *   - rcl/client.h
- * - Service Server
+ * - 服务服务器
  *   - rcl/service.h
- * - Timer
+ * - 定时器
  *   - rcl/timer.h
  *
- * There are some functions for working with "Topics" and "Services":
+ * 还有一些用于处理 "主题" 和 "服务" 的函数：
  *
- * - A function to validate a topic or service name (not necessarily fully qualified):
+ * - 验证主题或服务名称的函数（不一定是完全限定名）：
  *   - rcl_validate_topic_name()
  *   - rcl/validate_topic_name.h
- * - A function to expand a topic or service name to a fully qualified name:
+ * - 将主题或服务名称扩展为完全限定名称的函数：
  *   - rcl_expand_topic_name()
  *   - rcl/expand_topic_name.h
  *
- * It also has some machinery that is necessary to wait on and act on these concepts:
+ * 它还具有一些等待和操作这些概念所必需的机制：
  *
- * - Initialization and shutdown management
+ * - 初始化和关闭管理
  *   - rcl/init.h
- * - Wait sets for waiting on messages/service requests and responses/timers to be ready
+ * - 等待集，用于等待消息/服务请求和响应/定时器准备就绪
  *   - rcl/wait.h
- * - Guard conditions for waking up wait sets asynchronously
+ * - 用于异步唤醒等待集的保护条件
  *   - rcl/guard_condition.h
- * - Functions for introspecting and getting notified of changes of the ROS graph
+ * - 用于内省和获取ROS图更改通知的函数
  *   - rcl/graph.h
  *
- * Further still there are some useful abstractions and utilities:
+ * 此外，还有一些有用的抽象和实用程序：
  *
- * - Allocator concept, which can be used to control allocation in `rcl_*` functions
+ * - 分配器概念，可用于控制 `rcl_*` 函数中的分配
  *   - rcl/allocator.h
- * - Concept of ROS Time and access to steady and system wall time
+ * - ROS时间概念以及对稳定和系统挂钟时间的访问
  *   - rcl/time.h
- * - Error handling functionality (C style)
+ * - 错误处理功能（C风格）
  *   - rcl/error_handling.h
- * - Macros
+ * - 宏
  *   - rcl/macros.h
- * - Return code types
+ * - 返回代码类型
  *   - rcl/types.h
- * - Macros for controlling symbol visibility on the library
+ * - 控制库上符号可见性的宏
  *   - rcl/visibility_control.h
  */
 
@@ -69,8 +69,7 @@
 #define RCL__RCL_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcl/init.h"

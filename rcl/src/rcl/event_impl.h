@@ -15,13 +15,30 @@
 #ifndef RCL__EVENT_IMPL_H_
 #define RCL__EVENT_IMPL_H_
 
+#include "rcl/event.h"
 #include "rmw/rmw.h"
 
-#include "rcl/event.h"
+/** \file rcl_event_impl_s.h
+ *  \brief 文件描述 (File description)
+ */
 
-struct rcl_event_impl_s
-{
+/**
+ * \struct rcl_event_impl_s
+ * \brief ROS2 RCL 事件实现结构体 (ROS2 RCL event implementation structure)
+ */
+struct rcl_event_impl_s {
+  /**
+   * \brief RMW 事件句柄 (RMW event handle)
+   *
+   * 用于与底层中间件通信的事件句柄 (Event handle for communication with the underlying middleware)
+   */
   rmw_event_t rmw_handle;
+
+  /**
+   * \brief 分配器 (Allocator)
+   *
+   * 用于内存管理的分配器 (Allocator for memory management)
+   */
   rcl_allocator_t allocator;
 };
 

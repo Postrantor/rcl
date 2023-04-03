@@ -12,25 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rcl/error_handling.h"
 #include "rcl/lexer.h"
 
-/* The lexer tries to find a lexeme in a string.
- * It looks at one character at a time, and uses that character's value to decide how to transition
- * a state machine.
- * A transition is taken if a character's ASCII value falls within its range.
- * There is never more than one matching transition.
+#include "rcl/error_handling.h"
+
+/* 词法分析器尝试在字符串中找到一个词素。
+ * 它一次查看一个字符，并使用该字符的值来决定如何转换状态机。
+ * 如果一个字符的ASCII值在其范围内，则进行转换。
+ * 永远不会有多个匹配的转换。
  *
- * If no transition matches then it uses a state's '<else,M>' transition.
- * Every state has exactly one '<else,M>' transition.
- * In the diagram below all states have an `<else,0>` to T_NONE unless otherwise specified.
+ * 如果没有匹配的转换，那么它将使用状态的'<else,M>'转换。
+ * 每个状态都有且仅有一个'<else,M>'转换。
+ * 在下面的图中，除非另有说明，否则所有状态都有一个`<else,0>`到T_NONE的转换。
  *
- * When a transition is taken it causes the lexer to move to another character in the string.
- * Normal transitions always move the lexer forwards one character.
- * '<else,M>' transitions may cause the lexer to move forwards 1, or backwards N.
- * The movement M is written as M = 1 + N so it can be stored in an unsigned integer.
- * For example, an `<else>` transition with M = 0 moves the lexer forwards 1 character, M = 1 keeps
- * the lexer at the current character, and M = 2 moves the lexer backwards one character.
+ * 当进行转换时，它会导致词法分析器在字符串中移动到另一个字符。
+ * 正常转换总是将词法分析器向前移动一个字符。
+ * '<else,M>'转换可能导致词法分析器向前移动1个或向后移动N个字符。
+ * 移动M被写成M = 1 + N，这样它就可以存储在一个无符号整数中。
+ * 例如，具有M = 0的`<else>`转换将词法分析器向前移动1个字符，M = 1保持词法分析器在当前字符，M =
+2将词法分析器向后移动一个字符。
 
 digraph remapping_lexer {
   rankdir=LR;
@@ -61,7 +61,7 @@ digraph remapping_lexer {
   node [shape = circle];
   S0 -> T_FORWARD_SLASH [ label = "/"];
   S0 -> T_DOT [ label = "."];
-  S0 -> S1 [ label = "\\"];
+  S0 -> S1 [ label = "\"];
   S0 -> S2 [ label = "~"];
   S0 -> S3 [ label = "_" ];
   S0 -> S9 [ label = "a-qs-zA-Z"];
@@ -138,27 +138,25 @@ digraph remapping_lexer {
 }
 */
 
-/// Represents a transition from one state to another
+/// 表示从一个状态到另一个状态的转换
 /// \internal
-typedef struct rcl_lexer_transition_s
-{
-  /// Index of a state to transition to
+typedef struct rcl_lexer_transition_s {
+  /// 转换到的状态的索引
   const unsigned char to_state;
-  /// Start of a range of chars (inclusive) which activates this transition
+  /// 激活此转换的字符范围的开始（包含）
   const char range_start;
-  /// End of a range of chars (inclusive) which activates this transition
+  /// 激活此转换的字符范围的结束（包含）
   const char range_end;
 } rcl_lexer_transition_t;
 
-/// Represents a non-terminal state
+/// 表示一个非终止状态
 /// \internal
-typedef struct rcl_lexer_state_s
-{
-  /// Transition to this state if no other transition matches
+typedef struct rcl_lexer_state_s {
+  /// 如果没有其他匹配的转换，则转换到此状态
   const unsigned char else_state;
-  /// Movement associated with taking else state
+  /// 与采用else状态相关的移动
   const unsigned char else_movement;
-  /// Transitions in the state machine (NULL value at end of array)
+  /// 状态机中的转换（数组末尾的NULL值）
   const rcl_lexer_transition_t transitions[12];
 } rcl_lexer_state_t;
 
@@ -220,21 +218,19 @@ typedef struct rcl_lexer_state_s
 #define T_NONE 53u
 #define T_DOT 54u
 
-// used to figure out if a state is terminal or not
-#define FIRST_TERMINAL T_TILDE_SLASH
-#define LAST_TERMINAL T_NONE
+// 用于判断状态是否为终止状态的宏定义
+#define FIRST_TERMINAL T_TILDE_SLASH  // 定义第一个终止状态为T_TILDE_SLASH
+#define LAST_TERMINAL T_NONE          // 定义最后一个终止状态为T_NONE
 
-// Used to mark where the last transition is in a state
-#define END_TRANSITIONS {0, '\0', '\0'}
+// 用于标记状态中最后一个转换的宏定义
+#define END_TRANSITIONS \
+  { 0, '\0', '\0' }  // 定义结束转换，包含三个元素：0, 空字符('\0'), 空字符('\0')
 
-static const rcl_lexer_state_t g_states[LAST_STATE + 1] =
-{
-  // S0
-  {
-    T_NONE,
-    0u,
-    {
-      {T_FORWARD_SLASH, '/', '/'},
+static const rcl_lexer_state_t g_states[LAST_STATE + 1] = {
+    // S0
+    {T_NONE,
+     0u,
+     {{T_FORWARD_SLASH, '/', '/'},
       {T_DOT, '.', '.'},
       {S1, '\\', '\\'},
       {S2, '~', '~'},
@@ -245,15 +241,11 @@ static const rcl_lexer_state_t g_states[LAST_STATE + 1] =
       {S11, 'r', 'r'},
       {S30, '*', '*'},
       {S31, ':', ':'},
-      END_TRANSITIONS
-    }
-  },
-  // S1
-  {
-    T_NONE,
-    0u,
-    {
-      {T_BR1, '1', '1'},
+      END_TRANSITIONS}},
+    // S1
+    {T_NONE,
+     0u,
+     {{T_BR1, '1', '1'},
       {T_BR2, '2', '2'},
       {T_BR3, '3', '3'},
       {T_BR4, '4', '4'},
@@ -262,368 +254,154 @@ static const rcl_lexer_state_t g_states[LAST_STATE + 1] =
       {T_BR7, '7', '7'},
       {T_BR8, '8', '8'},
       {T_BR9, '9', '9'},
-      END_TRANSITIONS
-    }
-  },
-  // S2
-  {
-    T_NONE,
-    0u,
-    {
-      {T_TILDE_SLASH, '/', '/'},
-      END_TRANSITIONS
-    }
-  },
-  // S3
-  {
-    S10,
-    1u,
-    {
-      {S4, '_', '_'},
-      END_TRANSITIONS
-    }
-  },
-  // S4
-  {
-    T_NONE,
-    0u,
-    {
-      {S5, 'n', 'n'},
-      END_TRANSITIONS
-    }
-  },
-  // S5
-  {
-    T_NONE,
-    0u,
-    {
-      {T_NS, 's', 's'},
-      {S6, 'o', 'o'},
-      {S7, 'a', 'a'},
-      END_TRANSITIONS
-    }
-  },
-  // S6
-  {
-    T_NONE,
-    0u,
-    {
-      {S8, 'd', 'd'},
-      END_TRANSITIONS
-    }
-  },
-  // S7
-  {
-    T_NONE,
-    0u,
-    {
-      {S8, 'm', 'm'},
-      END_TRANSITIONS
-    }
-  },
-  // S8
-  {
-    T_NONE,
-    0u,
-    {
-      {T_NODE, 'e', 'e'},
-      END_TRANSITIONS
-    }
-  },
-  // S9
-  {
-    T_TOKEN,
-    1u,
-    {
-      {S9, 'a', 'z'},
-      {S9, 'A', 'Z'},
-      {S9, '0', '9'},
-      {S10, '_', '_'},
-      END_TRANSITIONS
-    }
-  },
-  // S10
-  {
-    T_TOKEN,
-    1u,
-    {
-      {S9, 'a', 'z'},
-      {S9, 'A', 'Z'},
-      {S9, '0', '9'},
-      END_TRANSITIONS
-    }
-  },
-  // S11
-  {
-    S9,
-    1u,
-    {
-      {S12, 'o', 'o'},
-      END_TRANSITIONS
-    }
-  },
-  // S12
-  {
-    S9,
-    1u,
-    {
-      {S13, 's', 's'},
-      END_TRANSITIONS
-    }
-  },
-  // S13
-  {
-    S9,
-    1u,
-    {
-      {S14, 't', 't'},
-      {S21, 's', 's'},
-      END_TRANSITIONS
-    }
-  },
-  // S14
-  {
-    S9,
-    1u,
-    {
-      {S15, 'o', 'o'},
-      END_TRANSITIONS
-    }
-  },
-  // S15
-  {
-    S9,
-    1u,
-    {
-      {S16, 'p', 'p'},
-      END_TRANSITIONS
-    }
-  },
-  // S16
-  {
-    S9,
-    1u,
-    {
-      {S17, 'i', 'i'},
-      END_TRANSITIONS
-    }
-  },
-  // S17
-  {
-    S9,
-    1u,
-    {
-      {S18, 'c', 'c'},
-      END_TRANSITIONS
-    }
-  },
-  // S18
-  {
-    S9,
-    1u,
-    {
-      {S19, ':', ':'},
-      END_TRANSITIONS
-    }
-  },
-  // S19
-  {
-    S9,
-    2u,
-    {
-      {S20, '/', '/'},
-      END_TRANSITIONS
-    }
-  },
-  // S20
-  {
-    S9,
-    3u,
-    {
-      {T_URL_TOPIC, '/', '/'},
-      END_TRANSITIONS
-    }
-  },
-  // S21
-  {
-    S9,
-    1u,
-    {
-      {S22, 'e', 'e'},
-      END_TRANSITIONS
-    }
-  },
-  // S21
-  {
-    S9,
-    1u,
-    {
-      {S23, 'r', 'r'},
-      END_TRANSITIONS
-    }
-  },
-  // S23
-  {
-    S9,
-    1u,
-    {
-      {S24, 'v', 'v'},
-      END_TRANSITIONS
-    }
-  },
-  // S24
-  {
-    S9,
-    1u,
-    {
-      {S25, 'i', 'i'},
-      END_TRANSITIONS
-    }
-  },
-  // S25
-  {
-    S9,
-    1u,
-    {
-      {S26, 'c', 'c'},
-      END_TRANSITIONS
-    }
-  },
-  // S26
-  {
-    S9,
-    1u,
-    {
-      {S27, 'e', 'e'},
-      END_TRANSITIONS
-    }
-  },
-  // S27
-  {
-    S9,
-    1u,
-    {
-      {S28, ':', ':'},
-      END_TRANSITIONS
-    }
-  },
-  // S28
-  {
-    S9,
-    2u,
-    {
-      {S29, '/', '/'},
-      END_TRANSITIONS
-    }
-  },
-  // S29
-  {
-    S9,
-    3u,
-    {
-      {T_URL_SERVICE, '/', '/'},
-      END_TRANSITIONS
-    }
-  },
-  // S30
-  {
-    T_WILD_ONE,
-    1u,
-    {
-      {T_WILD_MULTI, '*', '*'},
-      END_TRANSITIONS
-    }
-  },
-  // S31
-  {
-    T_COLON,
-    1u,
-    {
-      {T_SEPARATOR, '=', '='},
-      END_TRANSITIONS
-    }
-  }
-};
+      END_TRANSITIONS}},
+    // S2
+    {T_NONE, 0u, {{T_TILDE_SLASH, '/', '/'}, END_TRANSITIONS}},
+    // S3
+    {S10, 1u, {{S4, '_', '_'}, END_TRANSITIONS}},
+    // S4
+    {T_NONE, 0u, {{S5, 'n', 'n'}, END_TRANSITIONS}},
+    // S5
+    {T_NONE, 0u, {{T_NS, 's', 's'}, {S6, 'o', 'o'}, {S7, 'a', 'a'}, END_TRANSITIONS}},
+    // S6
+    {T_NONE, 0u, {{S8, 'd', 'd'}, END_TRANSITIONS}},
+    // S7
+    {T_NONE, 0u, {{S8, 'm', 'm'}, END_TRANSITIONS}},
+    // S8
+    {T_NONE, 0u, {{T_NODE, 'e', 'e'}, END_TRANSITIONS}},
+    // S9
+    {T_TOKEN,
+     1u,
+     {{S9, 'a', 'z'}, {S9, 'A', 'Z'}, {S9, '0', '9'}, {S10, '_', '_'}, END_TRANSITIONS}},
+    // S10
+    {T_TOKEN, 1u, {{S9, 'a', 'z'}, {S9, 'A', 'Z'}, {S9, '0', '9'}, END_TRANSITIONS}},
+    // S11
+    {S9, 1u, {{S12, 'o', 'o'}, END_TRANSITIONS}},
+    // S12
+    {S9, 1u, {{S13, 's', 's'}, END_TRANSITIONS}},
+    // S13
+    {S9, 1u, {{S14, 't', 't'}, {S21, 's', 's'}, END_TRANSITIONS}},
+    // S14
+    {S9, 1u, {{S15, 'o', 'o'}, END_TRANSITIONS}},
+    // S15
+    {S9, 1u, {{S16, 'p', 'p'}, END_TRANSITIONS}},
+    // S16
+    {S9, 1u, {{S17, 'i', 'i'}, END_TRANSITIONS}},
+    // S17
+    {S9, 1u, {{S18, 'c', 'c'}, END_TRANSITIONS}},
+    // S18
+    {S9, 1u, {{S19, ':', ':'}, END_TRANSITIONS}},
+    // S19
+    {S9, 2u, {{S20, '/', '/'}, END_TRANSITIONS}},
+    // S20
+    {S9, 3u, {{T_URL_TOPIC, '/', '/'}, END_TRANSITIONS}},
+    // S21
+    {S9, 1u, {{S22, 'e', 'e'}, END_TRANSITIONS}},
+    // S21
+    {S9, 1u, {{S23, 'r', 'r'}, END_TRANSITIONS}},
+    // S23
+    {S9, 1u, {{S24, 'v', 'v'}, END_TRANSITIONS}},
+    // S24
+    {S9, 1u, {{S25, 'i', 'i'}, END_TRANSITIONS}},
+    // S25
+    {S9, 1u, {{S26, 'c', 'c'}, END_TRANSITIONS}},
+    // S26
+    {S9, 1u, {{S27, 'e', 'e'}, END_TRANSITIONS}},
+    // S27
+    {S9, 1u, {{S28, ':', ':'}, END_TRANSITIONS}},
+    // S28
+    {S9, 2u, {{S29, '/', '/'}, END_TRANSITIONS}},
+    // S29
+    {S9, 3u, {{T_URL_SERVICE, '/', '/'}, END_TRANSITIONS}},
+    // S30
+    {T_WILD_ONE, 1u, {{T_WILD_MULTI, '*', '*'}, END_TRANSITIONS}},
+    // S31
+    {T_COLON, 1u, {{T_SEPARATOR, '=', '='}, END_TRANSITIONS}}};
 
 static const rcl_lexeme_t g_terminals[LAST_TERMINAL + 1] = {
-  // 0
-  RCL_LEXEME_TILDE_SLASH,
-  // 1
-  RCL_LEXEME_URL_SERVICE,
-  // 2
-  RCL_LEXEME_URL_TOPIC,
-  // 3
-  RCL_LEXEME_COLON,
-  // 4
-  RCL_LEXEME_NODE,
-  // 5
-  RCL_LEXEME_NS,
-  // 6
-  RCL_LEXEME_SEPARATOR,
-  // 7
-  RCL_LEXEME_BR1,
-  // 8
-  RCL_LEXEME_BR2,
-  // 9
-  RCL_LEXEME_BR3,
-  // 10
-  RCL_LEXEME_BR4,
-  // 11
-  RCL_LEXEME_BR5,
-  // 12
-  RCL_LEXEME_BR6,
-  // 13
-  RCL_LEXEME_BR7,
-  // 14
-  RCL_LEXEME_BR8,
-  // 15
-  RCL_LEXEME_BR9,
-  // 16
-  RCL_LEXEME_TOKEN,
-  // 17
-  RCL_LEXEME_FORWARD_SLASH,
-  // 18
-  RCL_LEXEME_WILD_ONE,
-  // 19
-  RCL_LEXEME_WILD_MULTI,
-  // 20
-  RCL_LEXEME_EOF,
-  // 21
-  RCL_LEXEME_NONE,
-  // 22
-  RCL_LEXEME_DOT
-};
+    // 0
+    RCL_LEXEME_TILDE_SLASH,
+    // 1
+    RCL_LEXEME_URL_SERVICE,
+    // 2
+    RCL_LEXEME_URL_TOPIC,
+    // 3
+    RCL_LEXEME_COLON,
+    // 4
+    RCL_LEXEME_NODE,
+    // 5
+    RCL_LEXEME_NS,
+    // 6
+    RCL_LEXEME_SEPARATOR,
+    // 7
+    RCL_LEXEME_BR1,
+    // 8
+    RCL_LEXEME_BR2,
+    // 9
+    RCL_LEXEME_BR3,
+    // 10
+    RCL_LEXEME_BR4,
+    // 11
+    RCL_LEXEME_BR5,
+    // 12
+    RCL_LEXEME_BR6,
+    // 13
+    RCL_LEXEME_BR7,
+    // 14
+    RCL_LEXEME_BR8,
+    // 15
+    RCL_LEXEME_BR9,
+    // 16
+    RCL_LEXEME_TOKEN,
+    // 17
+    RCL_LEXEME_FORWARD_SLASH,
+    // 18
+    RCL_LEXEME_WILD_ONE,
+    // 19
+    RCL_LEXEME_WILD_MULTI,
+    // 20
+    RCL_LEXEME_EOF,
+    // 21
+    RCL_LEXEME_NONE,
+    // 22
+    RCL_LEXEME_DOT};
 
-rcl_ret_t
-rcl_lexer_analyze(
-  const char * text,
-  rcl_lexeme_t * lexeme,
-  size_t * length)
-{
+/**
+ * @brief 分析给定文本并返回词素和长度
+ *
+ * @param[in] text 输入的文本字符串
+ * @param[out] lexeme 分析后得到的词素
+ * @param[out] length 分析过程中处理的字符数
+ * @return rcl_ret_t 返回分析结果状态
+ */
+rcl_ret_t rcl_lexer_analyze(const char* text, rcl_lexeme_t* lexeme, size_t* length) {
+  // 检查输入参数是否有效，如果无效则返回错误
   RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
   RCUTILS_CAN_SET_MSG_AND_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
 
+  // 检查输入参数是否为空，如果为空则返回错误
   RCL_CHECK_ARGUMENT_FOR_NULL(text, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(lexeme, RCL_RET_INVALID_ARGUMENT);
   RCL_CHECK_ARGUMENT_FOR_NULL(length, RCL_RET_INVALID_ARGUMENT);
 
+  // 初始化长度为0
   *length = 0u;
 
+  // 如果输入字符串为空，则提前退出并返回结束符词素
   if ('\0' == text[0u]) {
-    // Early exit if string is empty
     *lexeme = RCL_LEXEME_EOF;
     return RCL_RET_OK;
   }
 
-  const rcl_lexer_state_t * state;
+  const rcl_lexer_state_t* state;
   char current_char;
   size_t next_state = S0;
   size_t movement;
 
-  // Analyze one character at a time until lexeme is found
+  // 逐个字符分析，直到找到词素为止
   do {
+    // 如果下一个状态大于最后一个状态，则返回错误
     if (next_state > LAST_STATE) {
-      // Should never happen
       RCL_SET_ERROR_MSG("Internal lexer bug: next state does not exist");
       return RCL_RET_ERROR;
     }
@@ -632,9 +410,9 @@ rcl_lexer_analyze(
     next_state = 0u;
     movement = 0u;
 
-    // Look for a transition that contains this character in its range
+    // 寻找包含当前字符范围的转换
     size_t transition_idx = 0u;
-    const rcl_lexer_transition_t * transition;
+    const rcl_lexer_transition_t* transition;
     do {
       transition = &(state->transitions[transition_idx]);
       if (transition->range_start <= current_char && transition->range_end >= current_char) {
@@ -644,21 +422,20 @@ rcl_lexer_analyze(
       ++transition_idx;
     } while (0u != transition->to_state);
 
-    // if no transition was found, take the else transition
+    // 如果没有找到转换，则采用else转换
     if (0u == next_state) {
       next_state = state->else_state;
       movement = state->else_movement;
     }
 
+    // 如果移动为0，则向前移动1个字符，除非已经到达字符串末尾
     if (0u == movement) {
       if ('\0' != current_char) {
-        // Go forwards 1 char as long as the end hasn't been reached
         ++(*length);
       }
     } else {
-      // Go backwards N chars
+      // 向后移动N个字符
       if (movement - 1u > *length) {
-        // Should never happen
         RCL_SET_ERROR_MSG("Internal lexer bug: movement would read before start of string");
         return RCL_RET_ERROR;
       }
@@ -666,8 +443,8 @@ rcl_lexer_analyze(
     }
   } while (next_state < FIRST_TERMINAL);
 
+  // 检查终止状态是否存在，如果不存在则返回错误
   if (FIRST_TERMINAL > next_state || next_state - FIRST_TERMINAL > LAST_TERMINAL) {
-    // Should never happen
     RCL_SET_ERROR_MSG("Internal lexer bug: terminal state does not exist");
     return RCL_RET_ERROR;
   }

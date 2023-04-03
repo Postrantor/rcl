@@ -19,111 +19,111 @@
 
 #include <rmw/types.h>
 
-/// The type that holds an rcl return code.
+/// rcl_ret_t 类型，用于保存 rcl 返回代码。
 typedef rmw_ret_t rcl_ret_t;
 
-/// Success return code.
+/// 成功返回代码。
 #define RCL_RET_OK RMW_RET_OK
-/// Unspecified error return code.
+/// 未指定错误返回代码。
 #define RCL_RET_ERROR RMW_RET_ERROR
-/// Timeout occurred return code.
+/// 超时发生返回代码。
 #define RCL_RET_TIMEOUT RMW_RET_TIMEOUT
-/// Failed to allocate memory return code.
+/// 内存分配失败返回代码。
 #define RCL_RET_BAD_ALLOC RMW_RET_BAD_ALLOC
-/// Invalid argument return code.
+/// 无效参数返回代码。
 #define RCL_RET_INVALID_ARGUMENT RMW_RET_INVALID_ARGUMENT
-/// Unsupported return code.
+/// 不支持的返回代码。
 #define RCL_RET_UNSUPPORTED RMW_RET_UNSUPPORTED
 
-// rcl specific ret codes start at 100
-/// rcl_init() already called return code.
+// rcl 特定的返回代码从 100 开始
+/// rcl_init() 已调用返回代码。
 #define RCL_RET_ALREADY_INIT 100
-/// rcl_init() not yet called return code.
+/// rcl_init() 尚未调用返回代码。
 #define RCL_RET_NOT_INIT 101
-/// Mismatched rmw identifier return code.
+/// 不匹配的 rmw 标识符返回代码。
 #define RCL_RET_MISMATCHED_RMW_ID 102
-/// Topic name does not pass validation.
+/// 主题名称未通过验证。
 #define RCL_RET_TOPIC_NAME_INVALID 103
-/// Service name (same as topic name) does not pass validation.
+/// 服务名称（与主题名称相同）未通过验证。
 #define RCL_RET_SERVICE_NAME_INVALID 104
-/// Topic name substitution is unknown.
+/// 主题名称替换未知。
 #define RCL_RET_UNKNOWN_SUBSTITUTION 105
-/// rcl_shutdown() already called return code.
+/// rcl_shutdown() 已调用返回代码。
 #define RCL_RET_ALREADY_SHUTDOWN 106
 
-// rcl node specific ret codes in 2XX
-/// Invalid rcl_node_t given return code.
+// rcl 节点特定的返回代码在 2XX
+/// 给定的 rcl_node_t 无效返回代码。
 #define RCL_RET_NODE_INVALID 200
-/// Invalid node name return code.
+/// 无效节点名称返回代码。
 #define RCL_RET_NODE_INVALID_NAME 201
-/// Invalid node namespace return code.
+/// 无效节点命名空间返回代码。
 #define RCL_RET_NODE_INVALID_NAMESPACE 202
-/// Failed to find node name
+/// 未找到节点名称
 #define RCL_RET_NODE_NAME_NON_EXISTENT 203
 
-// rcl publisher specific ret codes in 3XX
-/// Invalid rcl_publisher_t given return code.
+// rcl 发布者特定的返回代码在 3XX
+/// 给定的 rcl_publisher_t 无效返回代码。
 #define RCL_RET_PUBLISHER_INVALID 300
 
-// rcl subscription specific ret codes in 4XX
-/// Invalid rcl_subscription_t given return code.
+// rcl 订阅特定的返回代码在 4XX
+/// 给定的 rcl_subscription_t 无效返回代码。
 #define RCL_RET_SUBSCRIPTION_INVALID 400
-/// Failed to take a message from the subscription return code.
+/// 从订阅中获取消息失败返回代码。
 #define RCL_RET_SUBSCRIPTION_TAKE_FAILED 401
 
-// rcl service client specific ret codes in 5XX
-/// Invalid rcl_client_t given return code.
+// rcl 服务客户端特定的返回代码在 5XX
+/// 给定的 rcl_client_t 无效返回代码。
 #define RCL_RET_CLIENT_INVALID 500
-/// Failed to take a response from the client return code.
+/// 从客户端获取响应失败返回代码。
 #define RCL_RET_CLIENT_TAKE_FAILED 501
 
-// rcl service server specific ret codes in 6XX
-/// Invalid rcl_service_t given return code.
+// rcl 服务服务器特定的返回代码在 6XX
+/// 给定的 rcl_service_t 无效返回代码。
 #define RCL_RET_SERVICE_INVALID 600
-/// Failed to take a request from the service return code.
+/// 从服务中获取请求失败返回代码。
 #define RCL_RET_SERVICE_TAKE_FAILED 601
 
-// rcl guard condition specific ret codes in 7XX
+// rcl 守护条件特定的返回代码在 7XX
 
-// rcl timer specific ret codes in 8XX
-/// Invalid rcl_timer_t given return code.
+// rcl 计时器特定的返回代码在 8XX
+/// 给定的 rcl_timer_t 无效返回代码。
 #define RCL_RET_TIMER_INVALID 800
-/// Given timer was canceled return code.
+/// 给定的计时器已取消返回代码。
 #define RCL_RET_TIMER_CANCELED 801
 
-// rcl wait and wait set specific ret codes in 9XX
-/// Invalid rcl_wait_set_t given return code.
+// rcl 等待和等待集特定的返回代码在 9XX
+/// 给定的 rcl_wait_set_t 无效返回代码。
 #define RCL_RET_WAIT_SET_INVALID 900
-/// Given rcl_wait_set_t is empty return code.
+/// 给定的 rcl_wait_set_t 为空返回代码。
 #define RCL_RET_WAIT_SET_EMPTY 901
-/// Given rcl_wait_set_t is full return code.
+/// 给定的 rcl_wait_set_t 已满返回代码。
 #define RCL_RET_WAIT_SET_FULL 902
 
-// rcl argument parsing specific ret codes in 1XXX
-/// Argument is not a valid remap rule
+// rcl 参数解析特定的返回代码在 1XXX
+/// 参数不是有效的重映射规则
 #define RCL_RET_INVALID_REMAP_RULE 1001
-/// Expected one type of lexeme but got another
+/// 预期一种类型的词素，但得到另一种
 #define RCL_RET_WRONG_LEXEME 1002
-/// Found invalid ros argument while parsing
+/// 在解析过程中找到无效的 ros 参数
 #define RCL_RET_INVALID_ROS_ARGS 1003
-/// Argument is not a valid parameter rule
+/// 参数不是有效的参数规则
 #define RCL_RET_INVALID_PARAM_RULE 1010
-/// Argument is not a valid log level rule
+/// 参数不是有效的日志级别规则
 #define RCL_RET_INVALID_LOG_LEVEL_RULE 1020
 
-// rcl event specific ret codes in 20XX
-/// Invalid rcl_event_t given return code.
+// rcl 事件特定的返回代码在 20XX
+/// 给定的 rcl_event_t 无效返回代码。
 #define RCL_RET_EVENT_INVALID 2000
-/// Failed to take an event from the event handle
+/// 从事件句柄获取事件失败
 #define RCL_RET_EVENT_TAKE_FAILED 2001
 
-/// rcl_lifecycle state register ret codes in 30XX
-/// rcl_lifecycle state registered
+/// rcl_lifecycle 状态注册返回代码在 30XX
+/// rcl_lifecycle 状态已注册
 #define RCL_RET_LIFECYCLE_STATE_REGISTERED 3000
-/// rcl_lifecycle state not registered
+/// rcl_lifecycle 状态未注册
 #define RCL_RET_LIFECYCLE_STATE_NOT_REGISTERED 3001
 
-/// typedef for rmw_serialized_message_t;
+/// rmw_serialized_message_t 的 typedef;
 typedef rmw_serialized_message_t rcl_serialized_message_t;
 
 #endif  // RCL__TYPES_H_

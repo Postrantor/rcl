@@ -12,30 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** \mainpage rcl: Common functionality ROS actions
+/** \mainpage rcl: ROS 动作的通用功能
  *
- * `rcl_action` provides a pure C implementation of the ROS concept of an \b action.
- * It builds on top of the implementation of topics and services in `rcl`.
+ * `rcl_action` 提供了一个纯 C 语言实现的 ROS 动作（\b action）概念。
+ * 它基于 `rcl` 中主题（topics）和服务（services）的实现。
  *
- * `rcl_action` consists of functions and structs for the following ROS action entities:
+ * `rcl_action` 包含以下 ROS 动作实体的函数和结构：
  *
- * - Action client
+ * - 动作客户端（Action client）
  *   - rcl_action/action_client.h
- * - Action server
+ * - 动作服务器（Action server）
  *   - rcl_action/action_server.h
- * - Goal handle
+ * - 目标句柄（Goal handle）
  *   - rcl_action/goal_handle.h
- * - Goal state machine
+ * - 目标状态机（Goal state machine）
  *   - rcl_action/goal_state_machine.h
  *
- * It also has some machinery that is necessary to wait on and act on these entities:
+ * 它还具有一些等待和操作这些实体所必需的机制：
  *
- * - Wait sets for waiting on actions clients and action servers to be ready
+ * - 等待集合，用于等待动作客户端和动作服务器准备就绪
  *   - rcl_action/wait.h
  *
- * Some useful abstractions and utilities:
+ * 一些有用的抽象和实用程序：
  *
- * - Return codes and other types
+ * - 返回代码和其他类型
  *   - rcl_action/types.h
  */
 
@@ -43,8 +43,7 @@
 #define RCL_ACTION__RCL_ACTION_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcl_action/action_client.h"

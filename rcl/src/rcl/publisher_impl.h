@@ -15,16 +15,33 @@
 #ifndef RCL__PUBLISHER_IMPL_H_
 #define RCL__PUBLISHER_IMPL_H_
 
+#include "rcl/publisher.h"
 #include "rmw/rmw.h"
 
-#include "rcl/publisher.h"
-
-struct rcl_publisher_impl_s
-{
+/**
+ * @struct rcl_publisher_impl_s
+ * @brief ROS2中的rcl发布者实现结构体，包含了发布者的选项、QoS配置、上下文和底层RMW句柄。
+ */
+struct rcl_publisher_impl_s {
+  /**
+   * @brief 发布者选项，包括分配器、主题名等。
+   */
   rcl_publisher_options_t options;
+
+  /**
+   * @brief 实际使用的QoS配置，包括可靠性、持久性等。
+   */
   rmw_qos_profile_t actual_qos;
-  rcl_context_t * context;
-  rmw_publisher_t * rmw_handle;
+
+  /**
+   * @brief 指向rcl_context_t类型的指针，用于存储ROS2节点的上下文信息。
+   */
+  rcl_context_t* context;
+
+  /**
+   * @brief 指向rmw_publisher_t类型的指针，用于存储底层ROS中间件（如DDS）的发布者句柄。
+   */
+  rmw_publisher_t* rmw_handle;
 };
 
 #endif  // RCL__PUBLISHER_IMPL_H_

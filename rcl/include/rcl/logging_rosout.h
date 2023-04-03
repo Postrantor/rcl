@@ -24,18 +24,16 @@
 #include "rcl/visibility_control.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-/// The default qos profile setting for topic /rosout
+/// 默认的 /rosout 主题的 QoS 配置设置
 /**
  * - depth = 1000
  * - durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL
  * - lifespan = {10, 0}
  */
-static const rmw_qos_profile_t rcl_qos_profile_rosout_default =
-{
+static const rmw_qos_profile_t rcl_qos_profile_rosout_default = {
   RMW_QOS_POLICY_HISTORY_KEEP_LAST,
   1000,
   RMW_QOS_POLICY_RELIABILITY_RELIABLE,
@@ -44,211 +42,179 @@ static const rmw_qos_profile_t rcl_qos_profile_rosout_default =
   {10, 0},
   RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT,
   RMW_QOS_LIVELINESS_LEASE_DURATION_DEFAULT,
-  false
-};
+  false};
 
-/// Initializes the rcl_logging_rosout features
+/// 初始化 rcl_logging_rosout 功能
 /**
- * Calling this will initialize the rcl_logging_rosout features. This function must be called
- * before any other rcl_logging_rosout_* functions can be called.
+ * 调用此函数将初始化 rcl_logging_rosout 功能。在调用任何其他 rcl_logging_rosout_* 函数之前，必须先调用此函数。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] allocator The allocator used for metadata related to the rcl_logging_rosout features
- * \return #RCL_RET_OK if the rcl_logging_rosout features are successfully initialized, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] allocator 用于与 rcl_logging_rosout 功能相关的元数据的分配器
+ * \return #RCL_RET_OK 如果 rcl_logging_rosout 功能成功初始化，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_logging_rosout_init(
-  const rcl_allocator_t * allocator);
+rcl_ret_t rcl_logging_rosout_init(const rcl_allocator_t * allocator);
 
-/// Uninitializes the rcl_logging_rosout features
+/// 反初始化 rcl_logging_rosout 功能
 /**
- * Calling this will set the rcl_logging_rosout features into the an unitialized state that is
- * functionally the same as before rcl_logging_rosout_init was called.
+ * 调用此函数将使 rcl_logging_rosout 功能处于未初始化状态，该状态在功能上与调用 rcl_logging_rosout_init 之前相同。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \return #RCL_RET_OK if the rcl_logging_rosout feature was successfully unitialized, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \return #RCL_RET_OK 如果 rcl_logging_rosout 功能成功反初始化，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_logging_rosout_fini();
+rcl_ret_t rcl_logging_rosout_fini();
 
-/// Creates a rosout publisher for a node and registers it to be used by the logging system
+/// 为节点创建 rosout 发布者并将其注册到日志系统中
 /**
- * Calling this for an rcl_node_t will create a new publisher on that node that will be
- * used by the logging system to publish all log messages from that Node's logger.
+ * 对 rcl_node_t 调用此函数将在该节点上创建一个新的发布者，该发布者将由日志系统用于发布来自该节点的 logger 的所有日志消息。
  *
- * If a publisher already exists for this node then a new publisher will NOT be created.
+ * 如果此节点已存在发布者，则不会创建新的发布者。
  *
- * It is expected that after creating a rosout publisher with this function
- * rcl_logging_destroy_rosout_publisher_for_node() will be called for the node to cleanup
- * the publisher while the Node is still valid.
+ * 预期在使用此函数创建 rosout 发布者后，将在节点仍然有效时为节点调用 rcl_logging_destroy_rosout_publisher_for_node() 来清理发布者。
  *
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] node a valid rcl_node_t that the publisher will be created on
- * \return #RCL_RET_OK if the logging publisher was created successfully, or
- * \return #RCL_RET_NODE_INVALID if the argument is invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 将在其上创建发布者的有效 rcl_node_t
+ * \return #RCL_RET_OK 如果日志发布者成功创建，或
+ * \return #RCL_RET_NODE_INVALID 如果参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_logging_rosout_init_publisher_for_node(
-  rcl_node_t * node);
+rcl_ret_t rcl_logging_rosout_init_publisher_for_node(rcl_node_t * node);
 
-/// Deregisters a rosout publisher for a node and cleans up allocated resources
+/// 取消注册节点的 rosout 发布者并清理分配的资源
 /**
- * Calling this for an rcl_node_t will destroy the rosout publisher on that node and remove it from
- * the logging system so that no more Log messages are published to this function.
+ * 对 rcl_node_t 调用此函数将销毁该节点上的 rosout 发布者，并从日志系统中删除它，以便不再向此函数发布日志消息。
  *
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] node a valid rcl_node_t that the publisher will be created on
- * \return #RCL_RET_OK if the logging publisher was finalized successfully, or
- * \return #RCL_RET_NODE_INVALID if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 将在其上创建发布者的有效 rcl_node_t
+ * \return #RCL_RET_OK 如果日志发布者成功完成，或
+ * \return #RCL_RET_NODE_INVALID 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_logging_rosout_fini_publisher_for_node(
-  rcl_node_t * node);
+rcl_ret_t rcl_logging_rosout_fini_publisher_for_node(rcl_node_t * node);
 
-/// The output handler outputs log messages to rosout topics.
+/// 输出处理程序将日志消息输出到 rosout 主题。
 /**
- * When called with a logger name and log message this function will attempt to
- * find a rosout publisher correlated with the logger name and publish a Log
- * message out via that publisher. If there is no publisher directly correlated
- * with the logger then nothing will be done.
+ * 当使用 logger 名称和日志消息调用时，此函数将尝试查找与 logger 名称相关的 rosout 发布者，并通过该发布者发布 Log 消息。
+ * 如果没有与 logger 直接相关的发布者，则不会执行任何操作。
  *
- * This function is meant to be registered with the logging functions for
- * rcutils, and shouldn't be used outside of that context.
- * Additionally, arguments like args should be non-null and properly initialized
- * otherwise it is undefined behavior.
+ * 此函数旨在与 rcutils 的日志功能一起注册，不应在此上下文之外使用。
+ * 另外，像 args 这样的参数应为非空且已正确初始化，否则其行为是未定义的。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] location The pointer to the location struct or NULL
- * \param[in] severity The severity level
- * \param[in] name The name of the logger, must be null terminated c string
- * \param[in] timestamp The timestamp for when the log message was made
- * \param[in] format The list of arguments to insert into the formatted log message
- * \param[in] args argument for the string format
+ * \param[in] location 指向位置结构的指针或 NULL
+ * \param[in] severity 严重级别
+ * \param[in] name logger 的名称，必须是以空字符结尾的 c 字符串
+ * \param[in] timestamp 创建日志消息时的时间戳
+ * \param[in] format 要插入格式化日志消息的参数列表
+ * \param[in] args 字符串格式的参数
  */
 RCL_PUBLIC
-void
-rcl_logging_rosout_output_handler(
-  const rcutils_log_location_t * location,
-  int severity,
-  const char * name,
-  rcutils_time_point_value_t timestamp,
-  const char * format,
-  va_list * args);
+void rcl_logging_rosout_output_handler(
+  const rcutils_log_location_t * location, int severity, const char * name,
+  rcutils_time_point_value_t timestamp, const char * format, va_list * args);
 
-/// Add a subordinate logger based on a logger
+/// 基于 logger 添加一个从属 logger
 /**
- * Calling this will use the existing publisher of `logger_name` on a node to create an subordinate
- * logger that will be used by the logging system to publish all log messages from that Node's
- * logger.
+ * 调用此函数将使用节点上 `logger_name` 的现有发布者创建一个从属 logger，该 logger 将由日志系统用于发布来自该节点的 logger 的所有日志消息。
  *
- * If a subordinate logger already exists, it will NOT be created.
+ * 如果已存在从属 logger，则不会创建它。
  *
- * It is expected that after creating a subordinate logger with this function
- * rcl_logging_rosout_remove_sublogger() will be called for the node to cleanup
- * the subordinate logger while the publisher of `logger_name` is still valid.
+ * 预期在使用此函数创建从属 logger 后，将在 `logger_name` 的发布者仍然有效时为节点调用 rcl_logging_rosout_remove_sublogger() 来清理从属 logger。
  *
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] logger_name a logger_name that has a corresponding rosout publisher on a node
- * \param[in] sublogger_name a sublogger name
- * \return #RCL_RET_OK if the subordinate logger was created successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_SUBLOGGER_ALREADY_EXIST if the subordinate logger already exists, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] logger_name 具有相应 rosout 发布者的节点上的 logger_name
+ * \param[in] sublogger_name 从属 logger 名称
+ * \return #RCL_RET_OK 如果从属 logger 成功创建，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_SUBLOGGER_ALREADY_EXIST 如果从属 logger 已经存在，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_logging_rosout_add_sublogger(
-  const char * logger_name, const char * sublogger_name);
+rcl_ret_t rcl_logging_rosout_add_sublogger(const char * logger_name, const char * sublogger_name);
 
-/// Remove a subordinate logger and cleans up allocated resources
+/// 删除从属 logger 并清理分配的资源
 /**
- * Calling this will destroy the subordinate logger based on
- * `logger_name+RCUTILS_LOGGING_SEPARATOR_STRING+sublogger_name` on that node and remove it from
- * the logging system so that no more Log messages are published to this function.
+ * 调用此函数将销毁基于 `logger_name+RCUTILS_LOGGING_SEPARATOR_STRING+sublogger_name` 的从属 logger，并从日志系统中删除它，以便不再向此函数发布日志消息。
  *
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] logger_name a logger_name that has a corresponding rosout publisher on a node
- * \param[in] sublogger_name a sublogger name
- * \return #RCL_RET_OK if the subordinate logger was finalized successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] logger_name 具有相应 rosout 发布者的节点上的 logger_name
+ * \param[in] sublogger_name 从属 logger 名称
+ * \return #RCL_RET_OK 如果从属 logger 成功完成，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_logging_rosout_remove_sublogger(
+rcl_ret_t rcl_logging_rosout_remove_sublogger(
   const char * logger_name, const char * sublogger_name);
 
 #ifdef __cplusplus

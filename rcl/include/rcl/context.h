@@ -18,11 +18,8 @@
 #define RCL__CONTEXT_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
-
-#include "rmw/init.h"
 
 #include "rcl/allocator.h"
 #include "rcl/arguments.h"
@@ -30,32 +27,38 @@ extern "C"
 #include "rcl/macros.h"
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
+#include "rmw/init.h"
 
 /// @cond Doxygen_Suppress
 #ifdef _MSC_VER
-#define RCL_ALIGNAS(N) __declspec(align(N))
+#define RCL_ALIGNAS(N) \
+  __declspec(align(N))  // 当编译器为 MSVC 时，定义 RCL_ALIGNAS(N) 为 __declspec(align(N))
 #else
-#include <stdalign.h>
-#define RCL_ALIGNAS(N) alignas(N)
+#include <stdalign.h>              // 包含 stdalign.h 头文件
+#define RCL_ALIGNAS(N) alignas(N)  // 当编译器不是 MSVC 时，定义 RCL_ALIGNAS(N) 为 alignas(N)
 #endif
 /// @endcond
 
-/// A unique ID per context instance.
+/// \brief 一个唯一的ID，用于表示每个上下文实例。
+///
+/// rcl_context_instance_id_t 是一个无符号64位整数类型，用于表示 ROS2 上下文实例的唯一标识符。
 typedef uint64_t rcl_context_instance_id_t;
 
+/// \brief rcl_context_impl_s 结构体的前向声明。
+///
+/// rcl_context_impl_t 是一个指向 rcl_context_impl_s 结构体的指针类型。这里使用前向声明，以便在其他地方定义和使用该结构体。
 typedef struct rcl_context_impl_s rcl_context_impl_t;
 
-/// Encapsulates the non-global state of an init/shutdown cycle.
+/// 封装 init/shutdown 周期的非全局状态。
 /**
- * The context is used in the creation of top level entities like nodes and
- * guard conditions, as well as to shutdown a specific instance of init.
+ * 上下文用于创建顶级实体，如节点和保护条件，以及关闭特定实例的初始化。
  *
- * Here is a diagram of a typical context's lifecycle:
+ * 下面是典型上下文生命周期的示意图：
  *
  * ```
  *    +---------------+
  *    |               |
- * +--> uninitialized +---> rcl_get_zero_initialized_context() +
+ * +--> 未初始化状态 +---> rcl_get_zero_initialized_context() +
  * |  |               |                                        |
  * |  +---------------+                                        |
  * |                                                           |
@@ -63,7 +66,7 @@ typedef struct rcl_context_impl_s rcl_context_impl_t;
  * |           |
  * |  +--------v---------+                +-----------------------+
  * |  |                  |                |                       |
- * |  | zero-initialized +-> rcl_init() +-> initialized and valid +-> rcl_shutdown() +
+ * |  | 零初始化状态 +-> rcl_init() +-> 初始化且有效状态 +-> rcl_shutdown() +
  * |  |                  |                |                       |                  |
  * |  +------------------+                +-----------------------+                  |
  * |                                                                                 |
@@ -71,248 +74,213 @@ typedef struct rcl_context_impl_s rcl_context_impl_t;
  * |               |
  * |  +------------v------------+
  * |  |                         |
- * |  | initialized but invalid +---> finalize all entities, then rcl_context_fini() +
+ * |  | 初始化但无效状态 +---> 结束所有实体，然后 rcl_context_fini() +
  * |  |                         |                                                    |
  * |  +-------------------------+                                                    |
  * |                                                                                 |
  * +---------------------------------------------------------------------------------+
  * ```
  *
- * A declared but not defined rcl_context_t instance is considered to be
- * "uninitialized", and passing an uninitialized context to any functions will
- * result in undefined behavior.
- * Some functions, like rcl_init() require the context instance to be
- * zero initialized (all members set to "zero" state) before use.
+ * 声明但未定义的 rcl_context_t 实例被认为是“未初始化”的，将未初始化的上下文传递给任何函数都会导致未定义的行为。
+ * 一些函数，如 rcl_init() 在使用前需要上下文实例为零初始化（所有成员设置为“零”状态）。
  *
- * Zero initialization of an rcl_context_t should be done with
- * rcl_get_zero_initialized_context(), which ensures the context is in a safe
- * state for initialization with rcl_init().
+ * 使用 rcl_get_zero_initialized_context() 对 rcl_context_t 进行零初始化，确保上下文处于安全状态，以便使用 rcl_init() 进行初始化。
  *
- * Initialization of an rcl_context_t should be done with rcl_init(), after
- * which the context is considered both initialized and valid.
- * After initialization it can be used in the creation of other entities like
- * nodes and guard conditions.
+ * 使用 rcl_init() 对 rcl_context_t 进行初始化后，上下文被认为已初始化且有效。
+ * 初始化后，它可以用于创建其他实体，如节点和保护条件。
  *
- * At any time the context can be invalidated by calling rcl_shutdown() on
- * the rcl_context_t, after which the context is still initialized but now
- * invalid.
+ * 在任何时候，都可以通过在 rcl_context_t 上调用 rcl_shutdown() 来使上下文失效，此后，上下文仍然是初始化的，但现在无效。
  *
- * Invalidation indicates to other entities that the context was shutdown, but
- * is still accessible for use during cleanup of themselves.
+ * 使无效表示给其他实体指示上下文已关闭，但在清理期间仍可访问。
  *
- * After being invalidated, and after all of the entities which used it have
- * been finalized, the context should be finalized with rcl_context_fini().
+ * 在失效后，以及使用过它的所有实体都已完成后，应使用 rcl_context_fini() 对上下文进行最终处理。
  *
- * Finalizing the context while entities which have copies of it have not yet
- * been finalized is undefined behavior.
- * Therefore, the context's lifetime (between calls to rcl_init() and
- * rcl_context_fini()) should exceed the lifetime of all entities which use
- * it directly (e.g. nodes and guard conditions) or indirectly (e.g.
- * subscriptions and topics).
+ * 在还未完成拥有其副本的实体时对上下文进行最终处理是未定义的行为。
+ * 因此，上下文的生命周期（在 rcl_init() 和 rcl_context_fini() 调用之间）应超过所有直接（例如节点和保护条件）或间接（例如订阅和主题）使用它的实体。
  */
 typedef struct rcl_context_s
 {
-  /// Global arguments for all nodes which share this context.
-  /** Typically generated by the parsing of argc/argv in rcl_init(). */
+  /// 所有共享此上下文的节点的全局参数。
+  /** 通常由 rcl_init() 中的 argc/argv 解析生成。 */
   rcl_arguments_t global_arguments;
 
-  /// Implementation specific pointer.
+  /// 特定于实现的指针。
   rcl_context_impl_t * impl;
 
-  // The assumption that this is big enough for an atomic_uint_least64_t is
-  // ensured with a static_assert in the context.c file.
-  // In most cases it should just be a plain uint64_t.
+  // 确保这对于 atomic_uint_least64_t 足够大的假设是在 context.c 文件中的 static_assert 中确保的。
+  // 在大多数情况下，它应该只是一个普通的 uint64_t。
 /// @cond Doxygen_Suppress
 #if !defined(RCL_CONTEXT_ATOMIC_INSTANCE_ID_STORAGE_SIZE)
 #define RCL_CONTEXT_ATOMIC_INSTANCE_ID_STORAGE_SIZE sizeof(uint_least64_t)
 #endif
-/// @endcond
-  /// Private storage for instance ID atomic.
+  /// @endcond
+  /// 实例 ID 原子的私有存储。
   /**
-   * Accessing the instance id should be done using the function
-   * rcl_context_get_instance_id() because the instance id's type is an
-   * atomic and needs to be accessed properly to ensure safety.
+   * 访问实例 id 应使用函数 rcl_context_get_instance_id()，因为实例 id 的类型是原子的，需要正确访问以确保安全性。
    *
-   * The instance id should not be changed manually - doing so is undefined
-   * behavior.
+   * 实例 id 不应手动更改 - 这样做是未定义的行为。
    *
-   * The instance id cannot be protected within the `impl` pointer's type
-   * because it needs to be accessible even when the context is zero
-   * initialized and therefore `impl` is `NULL`.
-   * Specifically, storing the instance id in the `impl` would introduce a
-   * race condition between accessing it and finalizing the context.
-   * Additionally, C11 atomics (i.e. "stdatomic.h") cannot be used directly
-   * here in the case that this header is included into a C++ program.
-   * See this paper for an effort to make this possible in the future:
+   * 实例 id 不能在 `impl` 指针的类型中受到保护，因为即使在上下文为零初始化且 `impl` 为 `NULL` 时，也需要访问它。
+   * 具体来说，在 `impl` 中存储实例 id 会在访问它和完成上下文之间引入竞争条件。
+   * 此外，在将此头文件包含到 C++ 程序中时，无法直接在此处使用 C11 原子（即 "stdatomic.h"）。
+   * 请参阅此论文，了解将来可能实现这一点的努力：
    *   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0943r1.html
    */
   RCL_ALIGNAS(8) uint8_t instance_id_storage[RCL_CONTEXT_ATOMIC_INSTANCE_ID_STORAGE_SIZE];
 } rcl_context_t;
 
-/// Return a zero initialization context object.
+/// 返回一个零初始化的上下文对象。
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_context_t
-rcl_get_zero_initialized_context(void);
+rcl_context_t rcl_get_zero_initialized_context(void);
 
-/// Finalize a context.
+/// 结束一个上下文。
 /**
- * The context to be finalized must have been previously initialized with
- * rcl_init(), and then later invalidated with rcl_shutdown().
- * A zero-initialized context that has not been initialized can be finalized.
- * If context is `NULL`, then #RCL_RET_INVALID_ARGUMENT is returned.
- * If context is zero-initialized, then #RCL_RET_OK is returned.
- * If context is initialized and valid (rcl_shutdown() was not called on it),
- * then #RCL_RET_INVALID_ARGUMENT is returned.
+ * 要结束的上下文必须先用 rcl_init() 初始化，然后用 rcl_shutdown() 使之无效。
+ * 未初始化的零初始化上下文可以被结束。
+ * 如果 context 为 `NULL`，则返回 #RCL_RET_INVALID_ARGUMENT。
+ * 如果 context 为零初始化，则返回 #RCL_RET_OK。
+ * 如果 context 已初始化且有效（未对其调用 rcl_shutdown()），则返回 #RCL_RET_INVALID_ARGUMENT。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对 `atomic_uint_least64_t` 返回 true</i>
  *
- * \param[inout] context object to be finalized.
- * \return #RCL_RET_OK if the shutdown was completed successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occur.
+ * \param[inout] 要结束的上下文对象。
+ * \return 如果成功完成关闭，则返回 #RCL_RET_OK，或
+ * \return 如果任何参数无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果发生未指定的错误，则返回 #RCL_RET_ERROR。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_context_fini(rcl_context_t * context);
+rcl_ret_t rcl_context_fini(rcl_context_t * context);
 
-/// Return the init options used during initialization for this context.
+/// 返回此上下文在初始化期间使用的初始化选项。
 /**
- * This function can fail and return `NULL` if:
- *   - context is NULL
- *   - context is zero-initialized, e.g. context->impl is `NULL`
+ * 此函数可能失败并返回 `NULL`：
+ *   - context 为 NULL
+ *   - context 为零初始化，例如 context->impl 为 `NULL`
  *
- * If context is uninitialized then that is undefined behavior.
+ * 如果 context 未初始化，则为未定义行为。
  *
- * If `NULL` is returned an error message will have been set.
+ * 如果返回 `NULL`，则已设置错误消息。
  *
- * The options are for reference only, and therefore the returned pointer is
- * const.
- * Changing the values in the options is undefined behavior but will likely
- * have no effect.
+ * 选项仅供参考，因此返回的指针是 const。
+ * 更改选项中的值是未定义行为，但可能不会产生任何影响。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是
  *
- * \param[in] context object from which the init options should be retrieved
- * \return pointer to the the init options, or
- * \return `NULL` if there was an error
+ * \param[in] 要从中检索初始化选项的上下文对象
+ * \return 指向初始化选项的指针，或
+ * \return 如果有错误，则返回 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const rcl_init_options_t *
-rcl_context_get_init_options(const rcl_context_t * context);
+const rcl_init_options_t * rcl_context_get_init_options(const rcl_context_t * context);
 
-/// Returns an unsigned integer that is unique to the given context, or `0` if invalid.
+/// 返回给定上下文的唯一无符号整数，如果无效，则返回 `0`。
 /**
- * The given context must be non-`NULL`, but does not need to be initialized or valid.
- * If context is `NULL`, then `0` will be returned.
- * If context is uninitialized, then it is undefined behavior.
+ * 给定的上下文必须是非 `NULL` 的，但不需要初始化或有效。
+ * 如果上下文是 `NULL`，则返回 `0`。
+ * 如果上下文未初始化，则为未定义行为。
  *
- * The instance ID may be `0` if the context is zero-initialized or if the
- * context has been invalidated by rcl_shutdown().
+ * 如果上下文是零初始化的，或者上下文已被 rcl_shutdown() 使无效，
+ * 则实例 ID 可能为 `0`。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对于 `atomic_uint_least64_t` 返回 true</i>
  *
- * \param[in] context object from which the instance id should be retrieved
- * \return a unique id specific to this context instance, or
- * \return `0` if invalid, or
- * \return `0` if context is `NULL`
+ * \param[in] context 从中获取实例 id 的对象
+ * \return 特定于此上下文实例的唯一 id，或
+ * \return `0` 如果无效，或
+ * \return `0` 如果上下文是 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_context_instance_id_t
-rcl_context_get_instance_id(const rcl_context_t * context);
+rcl_context_instance_id_t rcl_context_get_instance_id(const rcl_context_t * context);
 
-/// Returns the context domain id.
+/// 返回上下文域 id。
 /**
- * \pre If context is uninitialized, then it is undefined behavior.
+ * \pre 如果上下文未初始化，则为未定义行为。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes [1]
- * Uses Atomics       | No
- * Lock-Free          | No
+ * 分配内存          | 否
+ * 线程安全          | 是 [1]
+ * 使用原子操作      | 否
+ * 无锁              | 否
  *
- * <i>[1] Calling the function asynchronously with rcl_init() or rcl_shutdown() can result
- *  in the function sometimes succeeding and sometimes returning #RCL_RET_INVALID_ARGUMENT.</i>
+ * <i>[1] 异步调用此函数与 rcl_init() 或 rcl_shutdown() 可能导致函数有时成功，有时返回 #RCL_RET_INVALID_ARGUMENT。</i>
  *
- * \param[in] context from which the domain id should be retrieved.
- * \param[out] domain_id output variable where the domain id will be returned.
- * \return #RCL_RET_INVALID_ARGUMENT if `context` is invalid (see rcl_context_is_valid()), or
- * \return #RCL_RET_INVALID_ARGUMENT if `domain_id` is `NULL`, or
- * \return #RCL_RET_OK if the domain id was correctly retrieved.
+ * \param[in] context 从中获取域 id 的上下文。
+ * \param[out] domain_id 将返回域 id 的输出变量。
+ * \return 如果 `context` 无效（参见 rcl_context_is_valid()），则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果 `domain_id` 是 `NULL`，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果正确检索到域 id，则返回 #RCL_RET_OK。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_context_get_domain_id(rcl_context_t * context, size_t * domain_id);
+rcl_ret_t rcl_context_get_domain_id(rcl_context_t * context, size_t * domain_id);
 
-/// Return `true` if the given context is currently valid, otherwise `false`.
+/// 如果给定的上下文当前有效，则返回 `true`，否则返回 `false`。
 /**
- * If context is `NULL`, then `false` is returned.
- * If context is zero-initialized, then `false` is returned.
- * If context is uninitialized, then it is undefined behavior.
+ * 如果上下文是 `NULL`，则返回 `false`。
+ * 如果上下文是零初始化的，则返回 `false`。
+ * 如果上下文未初始化，则为未定义行为。
  *
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对于 `atomic_uint_least64_t` 返回 true</i>
  *
- * \param[in] context object which should be checked for validity
- * \return `true` if valid, otherwise `false`
+ * \param[in] context 应检查其有效性的对象
+ * \return 如果有效，则返回 `true`，否则返回 `false`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-bool
-rcl_context_is_valid(const rcl_context_t * context);
+bool rcl_context_is_valid(const rcl_context_t * context);
 
-/// Return pointer to the rmw context if the given context is currently valid, otherwise `NULL`.
+/// 如果给定的上下文当前有效，则返回指向 rmw 上下文的指针，否则返回 `NULL`。
 /**
- * If context is `NULL`, then `NULL` is returned.
- * If context is zero-initialized, then `NULL` is returned.
- * If context is uninitialized, then it is undefined behavior.
+ * 如果上下文是 `NULL`，则返回 `NULL`。
+ * 如果上下文是零初始化的，则返回 `NULL`。
+ * 如果上下文未初始化，则为未定义行为。
  *
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对于 `atomic_uint_least64_t` 返回 true</i>
  *
- * \param[in] context object from which the rmw context should be retrieved.
- * \return pointer to rmw context if valid, otherwise `NULL`
+ * \param[in] context 从中获取 rmw 上下文的对象。
+ * \return 如果有效，则返回指向 rmw 上下文的指针，否则返回 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rmw_context_t *
-rcl_context_get_rmw_context(rcl_context_t * context);
+rmw_context_t * rcl_context_get_rmw_context(rcl_context_t * context);
 
 #ifdef __cplusplus
 }

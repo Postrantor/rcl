@@ -23,44 +23,50 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #define PARAMS_KEY "ros__parameters"
 #define NODE_NS_SEPERATOR "/"
 #define PARAMETER_NS_SEPERATOR "."
 
-typedef enum yaml_map_lvl_e
-{
-  MAP_UNINIT_LVL = 0U,
-  MAP_NODE_NAME_LVL = 1U,
-  MAP_PARAMS_LVL = 2U,
+/**
+ * @brief YAML映射层级枚举类型
+ */
+typedef enum yaml_map_lvl_e {
+  MAP_UNINIT_LVL = 0U,     ///< 未初始化的映射层级
+  MAP_NODE_NAME_LVL = 1U,  ///< 节点名称映射层级
+  MAP_PARAMS_LVL = 2U,     ///< 参数映射层级
 } yaml_map_lvl_t;
 
-/// Basic supported data types in the yaml file
-typedef enum data_types_e
-{
-  DATA_TYPE_UNKNOWN = 0U,
-  DATA_TYPE_BOOL = 1U,
-  DATA_TYPE_INT64 = 2U,
-  DATA_TYPE_DOUBLE = 3U,
-  DATA_TYPE_STRING = 4U
+/**
+ * @brief YAML文件中基本支持的数据类型枚举类型
+ */
+typedef enum data_types_e {
+  DATA_TYPE_UNKNOWN = 0U,  ///< 未知数据类型
+  DATA_TYPE_BOOL = 1U,     ///< 布尔数据类型
+  DATA_TYPE_INT64 = 2U,    ///< 64位整数数据类型
+  DATA_TYPE_DOUBLE = 3U,   ///< 双精度浮点数数据类型
+  DATA_TYPE_STRING = 4U    ///< 字符串数据类型
 } data_types_t;
 
-typedef enum namespace_type_e
-{
-  NS_TYPE_NODE = 1U,
-  NS_TYPE_PARAM = 2U
+/**
+ * @brief 命名空间类型枚举类型
+ */
+typedef enum namespace_type_e {
+  NS_TYPE_NODE = 1U,  ///< 节点命名空间类型
+  NS_TYPE_PARAM = 2U  ///< 参数命名空间类型
 } namespace_type_t;
 
-/// Keep track of node and parameter name spaces
+/**
+ * @brief 命名空间跟踪器结构体，用于跟踪节点和参数命名空间
+ */
 typedef struct namespace_tracker_s
 {
-  char * node_ns;
-  uint32_t num_node_ns;
-  char * parameter_ns;
-  uint32_t num_parameter_ns;
+  char * node_ns;             ///< 节点命名空间
+  uint32_t num_node_ns;       ///< 节点命名空间数量
+  char * parameter_ns;        ///< 参数命名空间
+  uint32_t num_parameter_ns;  ///< 参数命名空间数量
 } namespace_tracker_t;
 
 #ifdef __cplusplus

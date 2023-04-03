@@ -16,250 +16,210 @@
 #define RCL_ACTION__GOAL_HANDLE_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
+#include "rcl/allocator.h"
 #include "rcl_action/goal_state_machine.h"
 #include "rcl_action/types.h"
 #include "rcl_action/visibility_control.h"
-#include "rcl/allocator.h"
 
-
-/// Internal rcl action goal implementation struct.
+/// 内部rcl action目标实现结构体
 typedef struct rcl_action_goal_handle_impl_s rcl_action_goal_handle_impl_t;
 
-/// Goal handle for an action.
+/// Action的目标句柄
 typedef struct rcl_action_goal_handle_s
 {
-  /// Pointer to the action goal handle implementation
+  /// 指向action目标句柄实现的指针
   rcl_action_goal_handle_impl_t * impl;
 } rcl_action_goal_handle_t;
 
-/// Return a rcl_action_goal_handle_t struct with members set to `NULL`.
 /**
- * Should be called to get a null rcl_action_goal_handle_t before passing to
- * rcl_action_goal_handle_init().
+ * @brief 返回一个成员设置为`NULL`的rcl_action_goal_handle_t结构体
+ *
+ * 在传递给rcl_action_goal_handle_init()之前，应该调用此函数获取一个空的rcl_action_goal_handle_t。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_action_goal_handle_t
-rcl_action_get_zero_initialized_goal_handle(void);
+rcl_action_goal_handle_t rcl_action_get_zero_initialized_goal_handle(void);
 
-/// Initialize a rcl_action_goal_handle_t.
 /**
- * After calling this function on a rcl_action_goal_handle_t, it can be used to update the
- * goals state with rcl_action_update_goal_state().
- * It can also be used to query the state of the goal with
- * rcl_action_goal_handle_get_message() and rcl_action_goal_handle_is_active().
- * Goal information can be accessed with rcl_action_goal_handle_get_message() and
- * rcl_action_goal_handle_get_info().
+ * @brief 初始化一个rcl_action_goal_handle_t
  *
- * Goal handles are typically initialized and finalized by action servers.
- * I.e. The allocator should be provided by the action server.
- * Goal handles are created with rcl_action_accept_new_goal() and destroyed with
- * rcl_action_clear_expired_goals() or rcl_action_server_fini().
+ * 调用此函数后，可以使用rcl_action_goal_handle_t更新目标状态，
+ * 使用rcl_action_update_goal_state()。
+ * 还可以使用rcl_action_goal_handle_get_message()和rcl_action_goal_handle_is_active()查询目标状态。
+ * 可以使用rcl_action_goal_handle_get_message()和rcl_action_goal_handle_get_info()访问目标信息。
  *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 目标句柄通常由动作服务器初始化和完成。
+ * 即分配器应由动作服务器提供。
+ * 使用rcl_action_accept_new_goal()创建目标句柄，并使用rcl_action_clear_expired_goals()或rcl_action_server_fini()销毁。
  *
- * \param[out] goal_handle preallocated, zero-initialized, goal handle structure
- *   to be initialized
- * \param[in] goal_info information about the goal to be copied to the goal handle
- * \param[in] allocator a valid allocator used to initialized the goal handle
- * \return `RCL_RET_OK` if goal_handle was initialized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if the allocator is invalid, or
- * \return `RCL_RET_ACTION_GOAL_HANDLE_INVALID` if the goal handle is invalid, or
- * \return `RCL_RET_ALREADY_INIT` if the goal handle has already been initialized, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed
+ * \param[out] goal_handle 预先分配的、零初始化的目标句柄结构，用于初始化
+ * \param[in] goal_info 关于要复制到目标句柄的目标的信息
+ * \param[in] allocator 用于初始化目标句柄的有效分配器
+ * \return `RCL_RET_OK` 如果goal_handle成功初始化，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果分配器无效，或
+ * \return `RCL_RET_ACTION_GOAL_HANDLE_INVALID` 如果目标句柄无效，或
+ * \return `RCL_RET_ALREADY_INIT` 如果目标句柄已经初始化，或
+ * \return `RCL_RET_BAD_ALLOC` 如果分配内存失败
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_goal_handle_init(
-  rcl_action_goal_handle_t * goal_handle,
-  const rcl_action_goal_info_t * goal_info,
+rcl_ret_t rcl_action_goal_handle_init(
+  rcl_action_goal_handle_t * goal_handle, const rcl_action_goal_info_t * goal_info,
   rcl_allocator_t allocator);
 
-/// Finalize a rcl_action_goal_handle_t.
 /**
- * After calling, rcl_action_goal_handle_t will no longer be valid and
- * rcl_action_server_t will no longer track the goal associated with the goal handle.
+ * @brief 结束一个rcl_action_goal_handle_t
  *
- * After calling, calls to rcl_action_publish_feedback(), rcl_action_publish_status(),
- * rcl_action_update_goal_state(), rcl_action_goal_handle_get_status(),
- * rcl_action_goal_handle_is_active(), rcl_action_goal_handle_get_message(), and
- * rcl_action_goal_handle_get_info() will fail when using this goal handle.
+ * 调用后，rcl_action_goal_handle_t将不再有效，
+ * rcl_action_server_t将不再跟踪与目标句柄关联的目标。
  *
- * However, the given action server is still valid.
+ * 调用后，使用此目标句柄调用rcl_action_publish_feedback()、rcl_action_publish_status()、
+ * rcl_action_update_goal_state()、rcl_action_goal_handle_get_status()、
+ * rcl_action_goal_handle_is_active()、rcl_action_goal_handle_get_message()和
+ * rcl_action_goal_handle_get_info()将失败。
  *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 然而，给定的动作服务器仍然有效。
  *
- * \param[inout] goal_handle struct to be deinitialized
- * \return `RCL_RET_OK` if the goal handle was deinitialized successfully, or
- * \return `RCL_RET_ACTION_GOAL_HANDLE_INVALID` if the goal handle is invalid, or
+ * \param[inout] goal_handle 要取消初始化的结构
+ * \return `RCL_RET_OK` 如果目标句柄成功取消初始化，或
+ * \return `RCL_RET_ACTION_GOAL_HANDLE_INVALID` 如果目标句柄无效，或
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_goal_handle_fini(rcl_action_goal_handle_t * goal_handle);
+rcl_ret_t rcl_action_goal_handle_fini(rcl_action_goal_handle_t * goal_handle);
 
-/// Update a goal state with a rcl_action_goal_handle_t and an event.
 /**
- * This is a non-blocking call.
+ * @brief 使用rcl_action_goal_handle_t和事件更新目标状态
  *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 这是一个非阻塞调用。
  *
- * \param[inout] goal_handle struct containing goal state to transition
- * \param[in] goal_event the event used to transition the goal state
- * \return `RCL_RET_OK` if the goal state was updated successfully, or
- * \return `RCL_RET_ACTION_GOAL_EVENT_INVALID` if the goal event is invalid, or
- * \return `RCL_RET_ACTION_GOAL_HANDLE_INVALID` if the goal handle is invalid, or
+ * \param[inout] goal_handle 包含要转换的目标状态的结构
+ * \param[in] goal_event 用于转换目标状态的事件
+ * \return `RCL_RET_OK` 如果目标状态更新成功，或
+ * \return `RCL_RET_ACTION_GOAL_EVENT_INVALID` 如果目标事件无效，或
+ * \return `RCL_RET_ACTION_GOAL_HANDLE_INVALID` 如果目标句柄无效，或
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_update_goal_state(
-  rcl_action_goal_handle_t * goal_handle,
-  const rcl_action_goal_event_t goal_event);
+rcl_ret_t rcl_action_update_goal_state(
+  rcl_action_goal_handle_t * goal_handle, const rcl_action_goal_event_t goal_event);
 
-/// Get the ID of a goal using a rcl_action_goal_handle_t.
+/// 使用 rcl_action_goal_handle_t 获取目标的 ID。
 /**
- * This is a non-blocking call.
+ * 这是一个非阻塞调用。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] goal_handle struct containing the goal and meta
- * \param[out] goal_info a preallocated struct where the goal info is copied
- * \return `RCL_RET_OK` if the goal ID was accessed successfully, or
- * \return `RCL_RET_ACTION_GOAL_HANDLE_INVALID` if the goal handle is invalid, or
- * \return `RCL_RET_INVALID_ARGUMENT` if the goal_info argument is invalid
+ * \param[in] goal_handle 包含目标和元数据的结构体
+ * \param[out] goal_info 预分配的结构体，用于复制目标信息
+ * \return `RCL_RET_OK` 如果成功访问目标 ID，或者
+ * \return `RCL_RET_ACTION_GOAL_HANDLE_INVALID` 如果目标句柄无效，或者
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果 goal_info 参数无效
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_goal_handle_get_info(
-  const rcl_action_goal_handle_t * goal_handle,
-  rcl_action_goal_info_t * goal_info);
+rcl_ret_t rcl_action_goal_handle_get_info(
+  const rcl_action_goal_handle_t * goal_handle, rcl_action_goal_info_t * goal_info);
 
-/// Get the status of a goal.
+/// 获取目标状态。
 /**
- * This is a non-blocking call.
+ * 这是一个非阻塞调用。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] goal_handle struct containing the goal and metadata
- * \param[out] status a preallocated struct where the goal status is copied
- * \return `RCL_RET_OK` if the goal ID was accessed successfully, or
- * \return `RCL_RET_ACTION_GOAL_HANDLE_INVALID` if the goal handle is invalid, or
- * \return `RCL_RET_INVALID_ARGUMENT` if the status argument is invalid
+ * \param[in] goal_handle 包含目标和元数据的结构体
+ * \param[out] status 预分配的结构体，用于复制目标状态
+ * \return `RCL_RET_OK` 如果成功访问目标 ID，或者
+ * \return `RCL_RET_ACTION_GOAL_HANDLE_INVALID` 如果目标句柄无效，或者
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果 status 参数无效
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_goal_handle_get_status(
-  const rcl_action_goal_handle_t * goal_handle,
-  rcl_action_goal_state_t * status);
+rcl_ret_t rcl_action_goal_handle_get_status(
+  const rcl_action_goal_handle_t * goal_handle, rcl_action_goal_state_t * status);
 
-/// Check if a goal is active using a rcl_action_goal_handle_t.
+/// 使用 rcl_action_goal_handle_t 检查目标是否处于活动状态。
 /**
- * This is a non-blocking call.
+ * 这是一个非阻塞调用。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] goal_handle struct containing the goal and metadata
- * \return `true` if the goal is in one of the following states: ACCEPTED, EXECUTING, or CANCELING, or
- * \return `false` if the goal handle pointer is invalid, or
- * \return `false` otherwise
+ * \param[in] goal_handle 包含目标和元数据的结构体
+ * \return `true` 如果目标处于以下状态之一：ACCEPTED、EXECUTING 或 CANCELING，或者
+ * \return `false` 如果目标句柄指针无效，或者
+ * \return `false` 其他情况
 */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-bool
-rcl_action_goal_handle_is_active(const rcl_action_goal_handle_t * goal_handle);
+bool rcl_action_goal_handle_is_active(const rcl_action_goal_handle_t * goal_handle);
 
-/// Check if a goal can be transitioned to CANCELING in its current state.
+/// 检查目标在当前状态下是否可以转换为 CANCELING。
 /**
- * This is a non-blocking call.
+ * 这是一个非阻塞调用。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] goal_handle struct containing the goal and metadata
- * \return `true` if the goal can be transitioned to CANCELING from its current state, or
- * \return `false` if the goal handle pointer is invalid, or
- * \return `false` otherwise
+ * \param[in] goal_handle 包含目标和元数据的结构体
+ * \return `true` 如果目标可以从当前状态转换为 CANCELING，或者
+ * \return `false` 如果目标句柄指针无效，或者
+ * \return `false` 其他情况
 */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-bool
-rcl_action_goal_handle_is_cancelable(const rcl_action_goal_handle_t * goal_handle);
+bool rcl_action_goal_handle_is_cancelable(const rcl_action_goal_handle_t * goal_handle);
 
-/// Check if a rcl_action_goal_handle_t is valid.
+/// 检查 rcl_action_goal_handle_t 是否有效。
 /**
- * This is a non-blocking call.
+ * 这是一个非阻塞调用。
  *
- * A goal handle is invalid if:
- *   - the implementation is `NULL` (rcl_action_goal_handle_init() not called or failed)
- *   - rcl_shutdown() has been called since the goal handle has been initialized
- *   - the goal handle has been finalized with rcl_action_goal_handle_fini()
+ * 目标句柄无效的情况：
+ *   - 实现为 `NULL`（未调用 rcl_action_goal_handle_init() 或调用失败）
+ *   - 自目标句柄初始化以来已调用 rcl_shutdown()
+ *   - 使用 rcl_action_goal_handle_fini() 对目标句柄进行了终止处理
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] goal_handle struct to evaluate as valid or not
- * \return `true` if the goal handle is valid, or
- * \return `false` if the goal handle pointer is null, or
- * \return `false` otherwise
+ * \param[in] goal_handle 要评估为有效或无效的结构体
+ * \return `true` 如果目标句柄有效，或者
+ * \return `false` 如果目标句柄指针为空，或者
+ * \return `false` 其他情况
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-bool
-rcl_action_goal_handle_is_valid(const rcl_action_goal_handle_t * goal_handle);
+bool rcl_action_goal_handle_is_valid(const rcl_action_goal_handle_t * goal_handle);
 
 #ifdef __cplusplus
 }

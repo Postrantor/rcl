@@ -18,8 +18,7 @@
 #define RCL__TIMER_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <stdbool.h>
@@ -33,599 +32,548 @@ extern "C"
 #include "rcl/types.h"
 #include "rmw/rmw.h"
 
+/// rcl_timer_impl_s 结构体的类型定义
 typedef struct rcl_timer_impl_s rcl_timer_impl_t;
 
-/// Structure which encapsulates a ROS Timer.
+/// 封装 ROS 计时器的结构体
 typedef struct rcl_timer_s
 {
-  /// Private implementation pointer.
+  /// 私有实现指针
   rcl_timer_impl_t * impl;
 } rcl_timer_t;
 
-/// Structure which encapsulates the on reset callback data
+/// 封装重置回调数据的结构体
 typedef struct rcl_timer_on_reset_callback_data_s
 {
-  rcl_event_callback_t on_reset_callback;
-  const void * user_data;
-  size_t reset_counter;
+  rcl_event_callback_t on_reset_callback;  ///< 重置回调函数
+  const void * user_data;                  ///< 用户数据
+  size_t reset_counter;                    ///< 重置计数器
 } rcl_timer_on_reset_callback_data_t;
 
-/// User callback signature for timers.
+/// 计时器的用户回调签名
 /**
- * The first argument the callback gets is a pointer to the timer.
- * This can be used to cancel the timer, query the time until the next
- * timer callback, exchange the callback with a different one, etc.
+ * 回调接收到的第一个参数是指向计时器的指针。
+ * 这可以用于取消计时器、查询下一个计时器回调的时间、将回调替换为其他回调等。
  *
- * The only caveat is that the function rcl_timer_get_time_since_last_call()
- * will return the time since just before this callback was called, not the
- * previous call.
- * Therefore the second argument given is the time since the previous callback
- * was called, because that information is no longer accessible via the timer.
- * The time since the last callback call is given in nanoseconds.
+ * 唯一的注意事项是，函数 rcl_timer_get_time_since_last_call()
+ * 将返回自上次调用此回调之前的时间，而不是上次调用的时间。
+ * 因此，给定的第二个参数是自上次回调被调用以来的时间，因为该信息已经无法通过计时器获得。
+ * 自上次回调调用以来的时间以纳秒为单位给出。
  */
-typedef void (* rcl_timer_callback_t)(rcl_timer_t *, int64_t);
+typedef void (*rcl_timer_callback_t)(rcl_timer_t *, int64_t);
 
-/// Return a zero initialized timer.
+/// 返回一个零初始化的计时器
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_timer_t
-rcl_get_zero_initialized_timer(void);
+rcl_timer_t rcl_get_zero_initialized_timer(void);
 
-/// Initialize a timer.
+/// 初始化计时器
 /**
- * A timer consists of a clock, a callback function and a period.
- * A timer can be added to a wait set and waited on, such that the wait set
- * will wake up when a timer is ready to be executed.
+ * 计时器由时钟、回调函数和周期组成。
+ * 计时器可以添加到等待集合中并等待，这样当计时器准备好执行时，等待集合将唤醒。
  *
- * A timer simply holds state and does not automatically call callbacks.
- * It does not create any threads, register interrupts, or consume signals.
- * For blocking behavior it can be used in conjunction with a wait set and
- * rcl_wait().
- * When rcl_timer_is_ready() returns true, the timer must still be called
- * explicitly using rcl_timer_call().
+ * 计时器只保存状态，不会自动调用回调。
+ * 它不创建任何线程、注册中断或消耗信号。
+ * 对于阻塞行为，它可以与等待集合和 rcl_wait() 结合使用。
+ * 当 rcl_timer_is_ready() 返回 true 时，仍然需要使用 rcl_timer_call() 显式调用计时器。
  *
- * The timer handle must be a pointer to an allocated and zero initialized
- * rcl_timer_t struct.
- * Calling this function on an already initialized timer will fail.
- * Calling this function on a timer struct which has been allocated but not
- * zero initialized is undefined behavior.
+ * 计时器句柄必须是指向已分配且零初始化的 rcl_timer_t 结构体的指针。
+ * 在已经初始化的计时器上调用此函数将失败。
+ * 在已分配但未零初始化的计时器结构体上调用此函数是未定义的行为。
  *
- * The clock handle must be a pointer to an initialized rcl_clock_t struct.
- * The life time of the clock must exceed the life time of the timer.
+ * 时钟句柄必须是指向已初始化的 rcl_clock_t 结构体的指针。
+ * 时钟的生命周期必须超过计时器的生命周期。
  *
- * The period is a non-negative duration (rather an absolute time in the
- * future).
- * If the period is `0` then it will always be ready.
+ * 周期是一个非负持续时间（而不是未来的绝对时间）。
+ * 如果周期为 `0`，则始终准备好。
  *
- * The callback is an optional argument.
- * Valid inputs are either a pointer to the function callback, or `NULL` to
- * indicate that no callback will be stored in rcl.
- * If the callback is `NULL`, the caller client library is responsible for
- * firing the timer callback.
- * Else, it must be a function which returns void and takes two arguments,
- * the first being a pointer to the associated timer, and the second a int64_t
- * which is the time since the previous call, or since the timer was created
- * if it is the first call to the callback.
+ * 回调是一个可选参数。
+ * 有效输入是指向函数回调的指针，或者 `NULL` 表示在 rcl 中不存储回调。
+ * 如果回调为 `NULL`，则调用者客户端库负责触发计时器回调。
+ * 否则，它必须是一个返回 void 并接受两个参数的函数，
+ * 第一个参数是指向关联计时器的指针，第二个参数是 int64_t 类型，
+ * 表示自上次调用以来的时间，或者如果这是对回调的第一次调用，则表示自计时器创建以来的时间。
  *
- * Expected usage:
+ * 预期用法：
  *
  * ```c
  * #include <rcl/rcl.h>
  *
  * void my_timer_callback(rcl_timer_t * timer, int64_t last_call_time)
  * {
- *   // Do timer work...
- *   // Optionally reconfigure, cancel, or reset the timer...
+ *   // 执行计时器工作...
+ *   // 可选地重新配置、取消或重置计时器...
  * }
  *
- * rcl_context_t * context;  // initialized previously by rcl_init()...
+ * rcl_context_t * context;  // 之前通过 rcl_init() 初始化...
  * rcl_clock_t clock;
  * rcl_allocator_t allocator = rcl_get_default_allocator();
  * rcl_ret_t ret = rcl_clock_init(RCL_STEADY_TIME, &clock, &allocator);
- * // ... error handling
+ * // ... 错误处理
  *
  * rcl_timer_t timer = rcl_get_zero_initialized_timer();
  * ret = rcl_timer_init(
  *   &timer, &clock, context, RCL_MS_TO_NS(100), my_timer_callback, allocator);
- * // ... error handling, use the timer with a wait set, or poll it manually, then cleanup
+ * // ... 错误处理，使用等待集合或手动轮询计时器，然后清理
  * ret = rcl_timer_fini(&timer);
- * // ... error handling
+ * // ... 错误处理
  * ```
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1][2][3]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uintptr_t`</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1][2][3]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对于 `atomic_uintptr_t` 返回 true</i>
  *
- * <i>[2] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
+ * <i>[2] 如果 `atomic_is_lock_free()` 对于 `atomic_uint_least64_t` 返回 true</i>
  *
- * <i>[3] if `atomic_is_lock_free()` returns true for `atomic_bool`</i>
+ * <i>[3] 如果 `atomic_is_lock_free()` 对于 `atomic_bool` 返回 true</i>
  *
- * \param[inout] timer the timer handle to be initialized
- * \param[in] clock the clock providing the current time
- * \param[in] context the context that this timer is to be associated with
- * \param[in] period the duration between calls to the callback in nanoseconds
- * \param[in] callback the user defined function to be called every period
- * \param[in] allocator the allocator to use for allocations
- * \return #RCL_RET_OK if the timer was initialized successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ALREADY_INIT if the timer was already initialized, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR an unspecified error occur.
+ * \param[inout] timer 要初始化的计时器句柄
+ * \param[in] clock 提供当前时间的时钟
+ * \param[in] context 计时器要关联的上下文
+ * \param[in] period 回调之间的持续时间（以纳秒为单位）
+ * \param[in] callback 每个周期调用的用户定义函数
+ * \param[in] allocator 用于分配的分配器
+ * \return #RCL_RET_OK 如果计时器成功初始化，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ALREADY_INIT 如果计时器已经初始化，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_init(
-  rcl_timer_t * timer,
-  rcl_clock_t * clock,
-  rcl_context_t * context,
-  int64_t period,
-  const rcl_timer_callback_t callback,
-  rcl_allocator_t allocator);
+rcl_ret_t rcl_timer_init(
+  rcl_timer_t * timer, rcl_clock_t * clock, rcl_context_t * context, int64_t period,
+  const rcl_timer_callback_t callback, rcl_allocator_t allocator);
 
-/// Finalize a timer.
+/// 结束一个定时器。
 /**
- * This function will deallocate any memory and make the timer invalid.
+ * 此函数将释放任何内存并使定时器无效。
  *
- * A timer that is already invalid (zero initialized) or `NULL` will not fail.
+ * 已经无效（零初始化）或 `NULL` 的定时器不会失败。
  *
- * This function is not thread-safe with any rcl_timer_* functions used on the
- * same timer object.
+ * 与在同一定时器对象上使用的任何 rcl_timer_* 函数，此函数都不是线程安全的。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循情况
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1][2][3]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uintptr_t`</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1][2][3]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对于 `atomic_uintptr_t` 返回 true</i>
  *
- * <i>[2] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
+ * <i>[2] 如果 `atomic_is_lock_free()` 对于 `atomic_uint_least64_t` 返回 true</i>
  *
- * <i>[3] if `atomic_is_lock_free()` returns true for `atomic_bool`</i>
+ * <i>[3] 如果 `atomic_is_lock_free()` 对于 `atomic_bool` 返回 true</i>
  *
- * \param[inout] timer the handle to the timer to be finalized.
- * \return #RCL_RET_OK if the timer was finalized successfully, or
- * \return #RCL_RET_ERROR an unspecified error occur.
+ * \param[inout] timer 要结束的定时器句柄。
+ * \return #RCL_RET_OK 如果定时器成功结束，或
+ * \return #RCL_RET_ERROR 发生未指定错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_fini(rcl_timer_t * timer);
+rcl_ret_t rcl_timer_fini(rcl_timer_t * timer);
 
-/// Call the timer's callback and set the last call time.
+/// 调用定时器的回调并设置最后一次调用时间。
 /**
- * This function will call the callback and change the last call time even if
- * the timer's period has not yet elapsed.
- * It is up to the calling code to make sure the period has elapsed by first
- * calling rcl_timer_is_ready().
- * If the callback pointer is `NULL` (either set in init or exchanged after
- * initialized), no callback is fired.
- * However, this function should still be called by the client library to
- * update the state of the timer.
- * The order of operations in this command are as follows:
+ * 即使定时器的周期尚未过去，此函数也会调用回调并更改最后一次调用时间。
+ * 调用代码需要首先调用 rcl_timer_is_ready() 以确保周期已过。
+ * 如果回调指针为 `NULL`（在初始化中设置或在初始化后交换），则不触发回调。
+ * 但是，客户端库仍应调用此函数以更新定时器的状态。
+ * 此命令的操作顺序如下：
  *
- *  - Ensure the timer has not been canceled.
- *  - Get the current time into a temporary rcl_steady_time_point_t.
- *  - Exchange the current time with the last call time of the timer.
- *  - Call the callback, passing this timer and the time since the last call.
- *  - Return after the callback has completed.
+ *  - 确保定时器尚未取消。
+ *  - 将当前时间获取到一个临时 rcl_steady_time_point_t 中。
+ *  - 用定时器的最后一次调用时间交换当前时间。
+ *  - 调用回调，传递此定时器和自上次调用以来的时间。
+ *  - 回调完成后返回。
  *
- * During the callback the timer can be canceled or have its period and/or
- * callback modified.
+ * 在回调期间，可以取消定时器或修改其周期和/或回调。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循情况
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes [1]
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [2]
- * <i>[1] user callback might not be thread-safe</i>
+ * 分配内存          | 否
+ * 线程安全          | 是 [1]
+ * 使用原子操作      | 是
+ * 无锁              | 是 [2]
+ * <i>[1] 用户回调可能不是线程安全的</i>
  *
- * <i>[2] if `atomic_is_lock_free()` returns true for `atomic_int_least64_t`</i>
+ * <i>[2] 如果 `atomic_is_lock_free()` 对于 `atomic_int_least64_t` 返回 true</i>
  *
- * \param[inout] timer the handle to the timer to call
- * \return #RCL_RET_OK if the timer was called successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMER_INVALID if the timer->impl is invalid, or
- * \return #RCL_RET_TIMER_CANCELED if the timer has been canceled, or
- * \return #RCL_RET_ERROR an unspecified error occur.
+ * \param[inout] timer 要调用的定时器句柄
+ * \return #RCL_RET_OK 如果定时器成功调用，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_TIMER_INVALID 如果 timer->impl 无效，或
+ * \return #RCL_RET_TIMER_CANCELED 如果定时器已取消，或
+ * \return #RCL_RET_ERROR 发生未指定错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_call(rcl_timer_t * timer);
+rcl_ret_t rcl_timer_call(rcl_timer_t * timer);
 
-/// Retrieve the clock of the timer.
+/// 获取定时器的时钟。
 /**
- * This function retrieves the clock pointer and copies it into the given variable.
+ * 此函数检索时钟指针并将其复制到给定变量中。
  *
- * The clock argument must be a pointer to an already allocated rcl_clock_t *.
+ * clock 参数必须是指向已分配的 rcl_clock_t * 的指针。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循情况
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] timer the handle to the timer which is being queried
- * \param[out] clock the rcl_clock_t * in which the clock is stored
- * \return #RCL_RET_OK if the clock was retrieved successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMER_INVALID if the timer is invalid.
+ * \param[in] timer 正在查询的定时器句柄
+ * \param[out] clock 存储时钟的 rcl_clock_t *
+ * \return #RCL_RET_OK 如果时钟成功检索，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_TIMER_INVALID 如果定时器无效。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_clock(rcl_timer_t * timer, rcl_clock_t ** clock);
+rcl_ret_t rcl_timer_clock(rcl_timer_t * timer, rcl_clock_t ** clock);
 
-/// Calculates whether or not the timer should be called.
+/// 计算是否应调用定时器。
 /**
- * The result is true if the time until next call is less than, or equal to, 0
- * and the timer has not been canceled.
- * Otherwise the result is false, indicating the timer should not be called.
+ * 如果距离下次调用的时间小于或等于 0 且定时器尚未取消，则结果为 true。
+ * 否则，结果为 false，表示不应调用定时器。
  *
- * The is_ready argument must point to an allocated bool object, as the result
- * is copied into it.
+ * is_ready 参数必须指向一个已分配的 bool 对象，因为结果会复制到其中。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循情况
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_int_least64_t`</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对于 `atomic_int_least64_t` 返回 true</i>
  *
- * \param[in] timer the handle to the timer which is being checked
- * \param[out] is_ready the bool used to store the result of the calculation
- * \return #RCL_RET_OK if the last call time was retrieved successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMER_INVALID if the timer->impl is invalid, or
- * \return #RCL_RET_ERROR an unspecified error occur.
+ * \param[in] timer 正在检查的定时器句柄
+ * \param[out] is_ready 用于存储计算结果的布尔值
+ * \return #RCL_RET_OK 如果成功检索到上次调用时间，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_TIMER_INVALID 如果 timer->impl 无效，或
+ * \return #RCL_RET_ERROR 发生未指定错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_is_ready(const rcl_timer_t * timer, bool * is_ready);
+rcl_ret_t rcl_timer_is_ready(const rcl_timer_t * timer, bool * is_ready);
 
-/// Calculate and retrieve the time until the next call in nanoseconds.
+/// 计算并获取下次调用之前的时间（以纳秒为单位）。
 /**
- * This function calculates the time until the next call by adding the timer's
- * period to the last call time and subtracting that sum from the current time.
- * The calculated time until the next call can be positive, indicating that it
- * is not ready to be called as the period has not elapsed since the last call.
- * The calculated time until the next call can also be 0 or negative,
- * indicating that the period has elapsed since the last call and the timer
- * should be called.
- * A negative value indicates the timer call is overdue by that amount.
+ * 此函数通过将定时器的周期添加到上次调用时间，并从当前时间中减去该和来计算下次调用的时间。
+ * 下次调用的时间可以是正数，表示尚未准备好调用，因为自上次调用以来尚未过去周期。
+ * 下次调用的时间也可以是 0 或负数，表示自上次调用以来已过去周期，应调用定时器。
+ * 负值表示定时器调用逾期的时间量。
  *
- * The `time_until_next_call` argument must point to an allocated int64_t, as
- * the time until is copied into that instance.
+ * `time_until_next_call` 参数必须指向一个已分配的 int64_t，因为将时间直到复制到该实例中。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循情况
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_int_least64_t`</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对于 `atomic_int_least64_t` 返回 true</i>
  *
- * \param[in] timer the handle to the timer that is being queried
- * \param[out] time_until_next_call the output variable for the result
- * \return #RCL_RET_OK if the timer until next call was successfully calculated, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMER_INVALID if the timer->impl is invalid, or
- * \return #RCL_RET_TIMER_CANCELED if the timer is canceled, or
- * \return #RCL_RET_ERROR an unspecified error occur.
+ * \param[in] timer 正在查询的定时器句柄
+ * \param[out] time_until_next_call 用于存储结果的输出变量
+ * \return #RCL_RET_OK 如果成功计算了下次调用的时间，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_TIMER_INVALID 如果 timer->impl 无效，或
+ * \return #RCL_RET_TIMER_CANCELED 如果定时器已取消，或
+ * \return #RCL_RET_ERROR 发生未指定错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_get_time_until_next_call(const rcl_timer_t * timer, int64_t * time_until_next_call);
+rcl_ret_t rcl_timer_get_time_until_next_call(
+  const rcl_timer_t * timer, int64_t * time_until_next_call);
 
-/// Retrieve the time since the previous call to rcl_timer_call() occurred.
+/// 获取上一次调用 rcl_timer_call() 以来的时间。
 /**
- * This function calculates the time since the last call and copies it into
- * the given int64_t variable.
+ * 此函数计算自上次调用以来的时间，并将其复制到给定的 int64_t 变量中。
  *
- * Calling this function within a callback will not return the time since the
- * previous call but instead the time since the current callback was called.
+ * 在回调函数内部调用此函数不会返回自上次调用以来的时间，而是返回自当前回调被调用以来的时间。
  *
- * The time_since_last_call argument must be a pointer to an already allocated
- * int64_t.
+ * time_since_last_call 参数必须是指向已分配的 int64_t 的指针。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_int_least64_t`</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 返回 true，则为 `atomic_int_least64_t`</i>
  *
- * \param[in] timer the handle to the timer which is being queried
- * \param[out] time_since_last_call the struct in which the time is stored
- * \return #RCL_RET_OK if the last call time was retrieved successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMER_INVALID if the timer->impl is invalid, or
- * \return #RCL_RET_ERROR an unspecified error occur.
+ * \param[in] timer 正在查询的计时器句柄
+ * \param[out] time_since_last_call 存储时间的结构体
+ * \return #RCL_RET_OK 如果成功获取了上次调用的时间，或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或者
+ * \return #RCL_RET_TIMER_INVALID 如果 timer->impl 无效，或者
+ * \return #RCL_RET_ERROR 发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_get_time_since_last_call(const rcl_timer_t * timer, int64_t * time_since_last_call);
+rcl_ret_t rcl_timer_get_time_since_last_call(
+  const rcl_timer_t * timer, int64_t * time_since_last_call);
 
-/// Retrieve the period of the timer.
+/// 获取计时器的周期。
 /**
- * This function retrieves the period and copies it into the given variable.
+ * 此函数检索周期并将其复制到给定的变量中。
  *
- * The period argument must be a pointer to an already allocated int64_t.
+ * period 参数必须是指向已分配的 int64_t 的指针。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_int_least64_t`</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 返回 true，则为 `atomic_int_least64_t`</i>
  *
- * \param[in] timer the handle to the timer which is being queried
- * \param[out] period the int64_t in which the period is stored
- * \return #RCL_RET_OK if the period was retrieved successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMER_INVALID if the timer->impl is invalid, or
- * \return #RCL_RET_ERROR an unspecified error occur.
+ * \param[in] timer 正在查询的计时器句柄
+ * \param[out] period 存储周期的 int64_t
+ * \return #RCL_RET_OK 如果成功获取了周期，或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或者
+ * \return #RCL_RET_TIMER_INVALID 如果 timer->impl 无效，或者
+ * \return #RCL_RET_ERROR 发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_get_period(const rcl_timer_t * timer, int64_t * period);
+rcl_ret_t rcl_timer_get_period(const rcl_timer_t * timer, int64_t * period);
 
-/// Exchange the period of the timer and return the previous period.
+/// 交换计时器的周期并返回先前的周期。
 /**
- * This function exchanges the period in the timer and copies the old one into
- * the given variable.
+ * 此函数交换计时器中的周期，并将旧周期复制到给定的变量中。
  *
- * Exchanging (changing) the period will not affect already waiting wait sets.
+ * 交换（更改）周期不会影响已经等待的 wait sets。
  *
- * The old_period argument must be a pointer to an already allocated int64_t.
+ * old_period 参数必须是指向已分配的 int64_t 的指针。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_int_least64_t`</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 返回 true，则为 `atomic_int_least64_t`</i>
  *
- * \param[in] timer the handle to the timer which is being modified
- * \param[out] new_period the int64_t to exchange into the timer
- * \param[out] old_period the int64_t in which the previous period is stored
- * \return #RCL_RET_OK if the period was retrieved successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMER_INVALID if the timer->impl is invalid, or
- * \return #RCL_RET_ERROR an unspecified error occur.
+ * \param[in] timer 正在修改的计时器句柄
+ * \param[out] new_period 要交换到计时器中的 int64_t
+ * \param[out] old_period 存储先前周期的 int64_t
+ * \return #RCL_RET_OK 如果成功获取了周期，或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或者
+ * \return #RCL_RET_TIMER_INVALID 如果 timer->impl 无效，或者
+ * \return #RCL_RET_ERROR 发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_exchange_period(const rcl_timer_t * timer, int64_t new_period, int64_t * old_period);
+rcl_ret_t rcl_timer_exchange_period(
+  const rcl_timer_t * timer, int64_t new_period, int64_t * old_period);
 
-/// Return the current timer callback.
+/// 返回当前计时器回调。
 /**
- * This function can fail, and therefore return `NULL`, if:
- *   - timer is `NULL`
- *   - timer has not been initialized (the implementation is invalid)
+ * 如果以下情况之一发生，此函数可能会失败并返回 `NULL`：
+ *   - 计时器为 `NULL`
+ *   - 计时器尚未初始化（实现无效）
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_int_least64_t`</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 返回 true，则为 `atomic_int_least64_t`</i>
  *
- * \param[in] timer handle to the timer from the callback should be returned
- * \return function pointer to the callback, or `NULL` if an error occurred
+ * \param[in] timer 应返回回调的计时器句柄
+ * \return 指向回调的函数指针，如果发生错误则返回 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_timer_callback_t
-rcl_timer_get_callback(const rcl_timer_t * timer);
+rcl_timer_callback_t rcl_timer_get_callback(const rcl_timer_t * timer);
 
-/// Exchange the current timer callback and return the current callback.
+/// 交换当前计时器回调并返回当前回调。
 /**
- * This function can fail, and therefore return `NULL`, if:
- *   - timer is `NULL`
- *   - timer has not been initialized (the implementation is invalid)
+ * 如果以下情况之一发生，此函数可能会失败并返回 `NULL`：
+ *   - 计时器为 `NULL`
+ *   - 计时器尚未初始化（实现无效）
  *
- * This function can set callback to `NULL`, in which case the callback is
- * ignored when rcl_timer_call is called.
+ * 此函数可以将回调设置为 `NULL`，在这种情况下，当调用 rcl_timer_call 时，回调将被忽略。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_int_least64_t`</i>
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 返回 true，则为 `atomic_int_least64_t`</i>
  *
- * \param[inout] timer handle to the timer from the callback should be exchanged
- * \param[in] new_callback the callback to be exchanged into the timer
- * \return function pointer to the old callback, or `NULL` if an error occurred
+ * \param[inout] timer 应从中交换回调的计时器句柄
+ * \param[in] new_callback 要交换到计时器中的回调
+ * \return 指向旧回调的函数指针，如果发生错误则返回 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_timer_callback_t
-rcl_timer_exchange_callback(rcl_timer_t * timer, const rcl_timer_callback_t new_callback);
+rcl_timer_callback_t rcl_timer_exchange_callback(
+  rcl_timer_t * timer, const rcl_timer_callback_t new_callback);
 
-/// Cancel a timer.
+/// 取消定时器
 /**
- * When a timer is canceled, rcl_timer_is_ready() will return false for that
- * timer, and rcl_timer_call() will fail with RCL_RET_TIMER_CANCELED.
+ * 当定时器被取消时，rcl_timer_is_ready() 将对该定时器返回 false，
+ * 而 rcl_timer_call() 将失败并返回 RCL_RET_TIMER_CANCELED。
  *
- * A canceled timer can be reset with rcl_timer_reset(), and then used again.
- * Calling this function on an already canceled timer will succeed.
+ * 取消的定时器可以通过 rcl_timer_reset() 重置，然后再次使用。
+ * 在已经取消的定时器上调用此函数将成功。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_int_least64_t`</i>
+ * 分配内存            | 否
+ * 线程安全            | 是
+ * 使用原子操作        | 是
+ * 无锁                | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对于 `atomic_int_least64_t` 返回 true</i>
  *
- * \param[inout] timer the timer to be canceled
- * \return #RCL_RET_OK if the timer was canceled successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMER_INVALID if the timer is invalid.
+ * \param[inout] timer 要取消的定时器
+ * \return #RCL_RET_OK 如果定时器成功取消, 或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效, 或者
+ * \return #RCL_RET_TIMER_INVALID 如果定时器无效。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_cancel(rcl_timer_t * timer);
+rcl_ret_t rcl_timer_cancel(rcl_timer_t * timer);
 
-/// Retrieve the canceled state of a timer.
+/// 获取定时器的取消状态
 /**
- * If the timer is canceled true will be stored in the is_canceled argument.
- * Otherwise false will be stored in the is_canceled argument.
+ * 如果定时器被取消，is_canceled 参数中将存储 true。
+ * 否则，is_canceled 参数中将存储 false。
  *
- * The is_canceled argument must point to an allocated bool, as the result is
- * copied into this variable.
+ * is_canceled 参数必须指向一个分配好的 bool，因为结果会复制到这个变量中。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_bool`</i>
+ * 分配内存            | 否
+ * 线程安全            | 是
+ * 使用原子操作        | 是
+ * 无锁                | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对于 `atomic_bool` 返回 true</i>
  *
- * \param[in] timer the timer to be queried
- * \param[out] is_canceled storage for the is canceled bool
- * \return #RCL_RET_OK if the last call time was retrieved successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMER_INVALID if the timer->impl is invalid, or
- * \return #RCL_RET_ERROR an unspecified error occur.
+ * \param[in] timer 要查询的定时器
+ * \param[out] is_canceled 存储是否取消的布尔值
+ * \return #RCL_RET_OK 如果成功获取上次调用时间, 或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效, 或者
+ * \return #RCL_RET_TIMER_INVALID 如果 timer->impl 无效, 或者
+ * \return #RCL_RET_ERROR 发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_is_canceled(const rcl_timer_t * timer, bool * is_canceled);
+rcl_ret_t rcl_timer_is_canceled(const rcl_timer_t * timer, bool * is_canceled);
 
-/// Reset a timer.
+/// 重置定时器
 /**
- * This function can be called on a timer, canceled or not.
- * For all timers it will reset the last call time to now.
- * For canceled timers it will additionally make the timer not canceled.
+ * 此函数可以在已取消或未取消的定时器上调用。
+ * 对于所有定时器，它将把上次调用时间重置为现在。
+ * 对于已取消的定时器，它还会使定时器变为未取消状态。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_int_least64_t`</i>
+ * 分配内存            | 否
+ * 线程安全            | 是
+ * 使用原子操作        | 是
+ * 无锁                | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 对于 `atomic_int_least64_t` 返回 true</i>
  *
- * \param[inout] timer the timer to be reset
- * \return #RCL_RET_OK if the timer was reset successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMER_INVALID if the timer is invalid, or
- * \return #RCL_RET_ERROR an unspecified error occur.
+ * \param[inout] timer 要重置的定时器
+ * \return #RCL_RET_OK 如果定时器成功重置, 或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效, 或者
+ * \return #RCL_RET_TIMER_INVALID 如果定时器无效, 或者
+ * \return #RCL_RET_ERROR 发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_reset(rcl_timer_t * timer);
+rcl_ret_t rcl_timer_reset(rcl_timer_t * timer);
 
-/// Return the allocator for the timer.
+/// 返回定时器的分配器
 /**
- * This function can fail, and therefore return `NULL`, if:
- *   - timer is `NULL`
- *   - timer has not been initialized (the implementation is invalid)
+ * 此函数可能失败，因此返回 `NULL`，如果：
+ *   - 定时器为 `NULL`
+ *   - 定时器尚未初始化（实现无效）
  *
- * The returned pointer is only valid as long as the timer object is valid.
+ * 返回的指针只在定时器对象有效期间有效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 是
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[inout] timer handle to the timer object
- * \return pointer to the allocator, or `NULL` if an error occurred
+ * \param[inout] timer 定时器对象的句柄
+ * \return 指向分配器的指针，或者如果发生错误则返回 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const rcl_allocator_t *
-rcl_timer_get_allocator(const rcl_timer_t * timer);
+const rcl_allocator_t * rcl_timer_get_allocator(const rcl_timer_t * timer);
 
-/// Retrieve a guard condition used by the timer to wake the waitset when using ROSTime.
+/// 获取定时器用于在使用 ROSTime 时唤醒 waitset 的 guard condition
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] timer the timer to be queried
- * \return `NULL` if the timer is invalid or does not have a guard condition, or
- * \return a guard condition pointer.
+ * \param[in] timer 要查询的定时器
+ * \return `NULL` 如果定时器无效或没有 guard condition, 或者
+ * \return guard condition 指针。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_guard_condition_t *
-rcl_timer_get_guard_condition(const rcl_timer_t * timer);
+rcl_guard_condition_t * rcl_timer_get_guard_condition(const rcl_timer_t * timer);
 
-/// Set the on reset callback function for the timer.
+/// 为定时器设置重置回调函数
 /**
- * This API sets the callback function to be called whenever the
- * timer is reset.
- * If the timer has already been reset, the callback will be called.
+ * 此 API 设置在定时器重置时调用的回调函数。
+ * 如果定时器已经被重置，回调将被调用。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | No
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 否
  *
- * \param[in] timer The handle to the timer on which to set the callback
- * \param[in] on_reset_callback The callback to be called when timer is reset
- * \param[in] user_data Given to the callback when called later, may be NULL
- * \return `RCL_RET_OK` if successful, or
- * \return `RCL_RET_INVALID_ARGUMENT` if `timer` is NULL
+ * \param[in] timer 要设置回调的定时器句柄
+ * \param[in] on_reset_callback 当定时器重置时调用的回调
+ * \param[in] user_data 在以后调用回调时提供，可以为 NULL
+ * \return `RCL_RET_OK` 如果成功, 或者
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果 `timer` 为 NULL
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_timer_set_on_reset_callback(
-  const rcl_timer_t * timer,
-  rcl_event_callback_t on_reset_callback,
-  const void * user_data);
+rcl_ret_t rcl_timer_set_on_reset_callback(
+  const rcl_timer_t * timer, rcl_event_callback_t on_reset_callback, const void * user_data);
 
 #ifdef __cplusplus
 }

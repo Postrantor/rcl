@@ -15,29 +15,33 @@
 #ifndef IMPL__YAML_VARIANT_H_
 #define IMPL__YAML_VARIANT_H_
 
-#include "rcutils/allocator.h"
-#include "rcutils/macros.h"
-
 #include "./types.h"
 #include "rcl_yaml_param_parser/types.h"
 #include "rcl_yaml_param_parser/visibility_control.h"
+#include "rcutils/allocator.h"
+#include "rcutils/macros.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
+/// \brief Finalize一个rcl_yaml_variant_t
 ///
-/// Finalize an rcl_yaml_variant_t
+/// 该函数用于释放rcl_variant_t结构体中的内存资源。
 ///
+/// \param[in] param_var 指向需要释放资源的rcl_variant_t结构体指针
+/// \param[in] allocator 用于释放内存的rcutils_allocator_t实例
 RCL_YAML_PARAM_PARSER_PUBLIC
-void rcl_yaml_variant_fini(
-  rcl_variant_t * param_var,
-  const rcutils_allocator_t allocator);
+void rcl_yaml_variant_fini(rcl_variant_t * param_var, const rcutils_allocator_t allocator);
 
+/// \brief 复制一个yaml_variant_t从param_var到out_param_var
 ///
-/// Copy a yaml_variant_t from param_var to out_param_var
+/// 该函数用于将一个rcl_variant_t结构体的内容复制到另一个rcl_variant_t结构体中。
 ///
+/// \param[out] out_param_var 指向目标rcl_variant_t结构体的指针，用于存储复制的数据
+/// \param[in] param_var 指向源rcl_variant_t结构体的指针，包含要复制的数据
+/// \param[in] allocator 用于分配内存的rcutils_allocator_t实例
+/// \return 如果复制成功，则返回true；否则返回false
 RCL_YAML_PARAM_PARSER_PUBLIC
 RCUTILS_WARN_UNUSED
 bool rcl_yaml_variant_copy(

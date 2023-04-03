@@ -25,427 +25,405 @@
 #include "rcl_yaml_param_parser/types.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-typedef struct rcl_arguments_impl_s rcl_arguments_impl_t;
+/// \typedef rcl_arguments_impl_s rcl_arguments_impl_t
+/// \brief 私有实现结构体类型定义
 
-/// Hold output of parsing command line arguments.
-typedef struct rcl_arguments_s
-{
-  /// Private implementation pointer.
-  rcl_arguments_impl_t * impl;
+/// \struct rcl_arguments_s
+/// \brief 保存解析命令行参数的输出结果
+typedef struct rcl_arguments_s {
+  /// \var rcl_arguments_impl_t * impl
+  /// \brief 私有实现指针
+  rcl_arguments_impl_t* impl;
 } rcl_arguments_t;
 
-/// The command-line flag that delineates the start of ROS arguments.
+/// \def RCL_ROS_ARGS_FLAG
+/// \brief 命令行标志，表示 ROS 参数的开始
 #define RCL_ROS_ARGS_FLAG "--ros-args"
 
-/// The token that delineates the explicit end of ROS arguments.
+/// \def RCL_ROS_ARGS_EXPLICIT_END_TOKEN
+/// \brief 标记，表示 ROS 参数的显式结束
 #define RCL_ROS_ARGS_EXPLICIT_END_TOKEN "--"
 
-/// The ROS flag that precedes the setting of a ROS parameter.
+/// \def RCL_PARAM_FLAG
+/// \brief ROS 标志，表示设置 ROS 参数
 #define RCL_PARAM_FLAG "--param"
 
-/// The short version of the ROS flag that precedes the setting of a ROS parameter.
+/// \def RCL_SHORT_PARAM_FLAG
+/// \brief ROS 短标志，表示设置 ROS 参数
 #define RCL_SHORT_PARAM_FLAG "-p"
 
-/// The ROS flag that precedes a path to a file containing ROS parameters.
+/// \def RCL_PARAM_FILE_FLAG
+/// \brief ROS 标志，表示包含 ROS 参数的文件路径
 #define RCL_PARAM_FILE_FLAG "--params-file"
 
-/// The ROS flag that precedes a ROS remapping rule.
+/// \def RCL_REMAP_FLAG
+/// \brief ROS 标志，表示 ROS 重映射规则
 #define RCL_REMAP_FLAG "--remap"
 
-/// The short version of the ROS flag that precedes a ROS remapping rule.
+/// \def RCL_SHORT_REMAP_FLAG
+/// \brief ROS 短标志，表示 ROS 重映射规则
 #define RCL_SHORT_REMAP_FLAG "-r"
 
-/// The ROS flag that precedes the name of a ROS security enclave.
+/// \def RCL_ENCLAVE_FLAG
+/// \brief ROS 标志，表示 ROS 安全领域的名称
 #define RCL_ENCLAVE_FLAG "--enclave"
 
-/// The short version of the ROS flag that precedes the name of a ROS security enclave.
+/// \def RCL_SHORT_ENCLAVE_FLAG
+/// \brief ROS 短标志，表示 ROS 安全领域的名称
 #define RCL_SHORT_ENCLAVE_FLAG "-e"
 
-/// The ROS flag that precedes the ROS logging level to set.
+/// \def RCL_LOG_LEVEL_FLAG
+/// \brief ROS 标志，表示设置 ROS 日志级别
 #define RCL_LOG_LEVEL_FLAG "--log-level"
 
-/// The ROS flag that precedes the name of a configuration file to configure logging.
+/// \def RCL_EXTERNAL_LOG_CONFIG_FLAG
+/// \brief ROS 标志，表示配置日志的配置文件名称
 #define RCL_EXTERNAL_LOG_CONFIG_FLAG "--log-config-file"
 
-/// The suffix of the ROS flag to enable or disable stdout
-/// logging (must be preceded with --enable- or --disable-).
+/// \def RCL_LOG_STDOUT_FLAG_SUFFIX
+/// \brief ROS 标志后缀，用于启用或禁用 stdout 日志（必须以 --enable- 或 --disable- 开头）
 #define RCL_LOG_STDOUT_FLAG_SUFFIX "stdout-logs"
 
-/// The suffix of the ROS flag to enable or disable rosout
-/// logging (must be preceded with --enable- or --disable-).
+/// \def RCL_LOG_ROSOUT_FLAG_SUFFIX
+/// \brief ROS 标志后缀，用于启用或禁用 rosout 日志（必须以 --enable- 或 --disable- 开头）
 #define RCL_LOG_ROSOUT_FLAG_SUFFIX "rosout-logs"
 
-/// The suffix of the ROS flag to enable or disable external library
-/// logging (must be preceded with --enable- or --disable-).
+/// \def RCL_LOG_EXT_LIB_FLAG_SUFFIX
+/// \brief ROS 标志后缀，用于启用或禁用外部库日志（必须以 --enable- 或 --disable- 开头）
 #define RCL_LOG_EXT_LIB_FLAG_SUFFIX "external-lib-logs"
 
-/// Return a rcl_arguments_t struct with members initialized to `NULL`.
+/// \brief 返回一个 rcl_arguments_t 结构体，其成员初始化为 `NULL`
+/// \return 初始化为 `NULL` 的 rcl_arguments_t 结构体
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_arguments_t
-rcl_get_zero_initialized_arguments(void);
+rcl_arguments_t rcl_get_zero_initialized_arguments(void);
 
-/// Parse command line arguments into a structure usable by code.
+/// 解析命令行参数到一个可供代码使用的结构体。
 /**
  * \sa rcl_get_zero_initialized_arguments()
  *
- * ROS arguments are expected to be scoped by a leading `--ros-args` flag and a trailing double
- * dash token `--` which may be elided if no non-ROS arguments follow after the last `--ros-args`.
+ * ROS 参数预期由一个前导 `--ros-args` 标志和一个后置双
+ * 破折号标记 `--` 限定，如果在最后一个 `--ros-args` 后没有非 ROS 参数，则可以省略。
  *
- * Remap rule parsing is supported via `-r/--remap` flags e.g. `--remap from:=to` or `-r from:=to`.
- * Successfully parsed remap rules are stored in the order they were given in `argv`.
- * If given arguments `{"__ns:=/foo", "__ns:=/bar"}` then the namespace used by nodes in this
- * process will be `/foo` and not `/bar`.
+ * 支持通过 `-r/--remap` 标志解析重映射规则，例如 `--remap from:=to` 或 `-r from:=to`。
+ * 成功解析的重映射规则按照它们在 `argv` 中给出的顺序存储。
+ * 如果给定参数 `{"__ns:=/foo", "__ns:=/bar"}`，则此过程中节点使用的命名空间将是 `/foo` 而不是
+ * `/bar`。
  *
  * \sa rcl_remap_topic_name()
  * \sa rcl_remap_service_name()
  * \sa rcl_remap_node_name()
  * \sa rcl_remap_node_namespace()
  *
- * Parameter override rule parsing is supported via `-p/--param` flags e.g. `--param name:=value`
- * or `-p name:=value`.
+ * 支持通过 `-p/--param` 标志解析参数覆盖规则，例如 `--param name:=value`
+ * 或 `-p name:=value`。
  *
- * The default log level will be parsed as `--log-level level` and logger levels will be parsed as
- * multiple `--log-level name:=level`, where `level` is a name representing one of the log levels
- * in the `RCUTILS_LOG_SEVERITY` enum, e.g. `info`, `debug`, `warn`, not case sensitive.
- * If multiple of these rules are found, the last one parsed will be used.
+ * 默认日志级别将解析为 `--log-level level`，而记录器级别将解析为
+ * 多个 `--log-level name:=level`，其中 `level` 是一个名称，表示 `RCUTILS_LOG_SEVERITY`
+ * 枚举中的日志级别之一， 例如 `info`、`debug`、`warn`，不区分大小写。
+ * 如果找到多个这样的规则，则使用最后解析的一个。
  *
- * If an argument does not appear to be a valid ROS argument e.g. a `-r/--remap` flag followed by
- * anything but a valid remap rule, parsing will fail immediately.
+ * 如果参数看起来不是有效的 ROS 参数，例如 `-r/--remap` 标志后面跟着的
+ * 不是有效的重映射规则，则解析将立即失败。
  *
- * If an argument does not appear to be a known ROS argument, then it is skipped and left unparsed.
+ * 如果参数看起来不是已知的 ROS 参数，则跳过它并保持未解析状态。
  *
  * \sa rcl_arguments_get_count_unparsed_ros()
  * \sa rcl_arguments_get_unparsed_ros()
  *
- * All arguments found outside a `--ros-args ... --` scope are skipped and left unparsed.
+ * 在 `--ros-args ... --` 范围之外找到的所有参数都将被跳过并保持未解析状态。
  *
  * \sa rcl_arguments_get_count_unparsed()
  * \sa rcl_arguments_get_unparsed()
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 是
+ * 线程安全            | 是
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] argc The number of arguments in argv.
- * \param[in] argv The values of the arguments.
- * \param[in] allocator A valid allocator.
- * \param[out] args_output A structure that will contain the result of parsing.
- *   Must be zero initialized before use.
- * \return #RCL_RET_OK if the arguments were parsed successfully, or
- * \return #RCL_RET_INVALID_ROS_ARGS if an invalid ROS argument is found, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] argc 参数的数量。
+ * \param[in] argv 参数的值。
+ * \param[in] allocator 有效的分配器。
+ * \param[out] args_output 将包含解析结果的结构体。
+ *   使用前必须初始化为零。
+ * \return #RCL_RET_OK 如果参数解析成功，或
+ * \return #RCL_RET_INVALID_ROS_ARGS 如果找到无效的 ROS 参数，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_parse_arguments(
-  int argc,
-  const char * const * argv,
-  rcl_allocator_t allocator,
-  rcl_arguments_t * args_output);
+rcl_ret_t rcl_parse_arguments(
+    int argc, const char* const* argv, rcl_allocator_t allocator, rcl_arguments_t* args_output);
 
-/// Return the number of arguments that were not ROS specific arguments.
+/// 返回未解析为ROS特定参数的参数数量。
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 是
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] args An arguments structure that has been parsed.
- * \return number of unparsed arguments, or
- * \return -1 if args is `NULL` or zero initialized.
+ * \param[in] args 已解析的参数结构。
+ * \return 未解析参数的数量，或
+ * \return -1 如果args为`NULL`或零初始化。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-int
-rcl_arguments_get_count_unparsed(
-  const rcl_arguments_t * args);
+int rcl_arguments_get_count_unparsed(const rcl_arguments_t* args);
 
-/// Return a list of indices to non ROS specific arguments.
+/// 返回非ROS特定参数的索引列表。
 /**
- * Non ROS specific arguments may have been provided i.e. arguments outside a '--ros-args' scope.
- * This function populates an array of indices to these arguments in the original argv array.
- * Since the first argument is always assumed to be a process name, the list will always contain
- * the index 0.
+ * 可能提供了非ROS特定参数，即'--ros-args'范围之外的参数。
+ * 此函数将在原始argv数组中填充这些参数的索引数组。
+ * 由于第一个参数总是被认为是进程名，所以列表中总是包含索引0。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 是
+ * 线程安全            | 是
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] args An arguments structure that has been parsed.
- * \param[in] allocator A valid allocator.
- * \param[out] output_unparsed_indices An allocated array of indices into the original argv array.
- *   This array must be deallocated by the caller using the given allocator.
- *   If there are no unparsed args then the output will be set to NULL.
- * \return #RCL_RET_OK if everything goes correctly, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] args 已解析的参数结构。
+ * \param[in] allocator 有效的分配器。
+ * \param[out] output_unparsed_indices 分配的原始argv数组中的索引数组。
+ *   调用者必须使用给定的分配器释放此数组。
+ *   如果没有未解析的参数，则输出将设置为NULL。
+ * \return #RCL_RET_OK 如果一切正常，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_arguments_get_unparsed(
-  const rcl_arguments_t * args,
-  rcl_allocator_t allocator,
-  int ** output_unparsed_indices);
+rcl_ret_t rcl_arguments_get_unparsed(
+    const rcl_arguments_t* args, rcl_allocator_t allocator, int** output_unparsed_indices);
 
-/// Return the number of ROS specific arguments that were not successfully parsed.
+/// 返回未成功解析的ROS特定参数的数量。
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 是
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] args An arguments structure that has been parsed.
- * \return number of unparsed ROS specific arguments, or
- * \return -1 if args is `NULL` or zero initialized.
+ * \param[in] args 已解析的参数结构。
+ * \return 未解析的ROS特定参数的数量，或
+ * \return -1 如果args为`NULL`或零初始化。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-int
-rcl_arguments_get_count_unparsed_ros(
-  const rcl_arguments_t * args);
+int rcl_arguments_get_count_unparsed_ros(const rcl_arguments_t* args);
 
-/// Return a list of indices to unknown ROS specific arguments that were left unparsed.
+/// 返回未解析的未知ROS特定参数的索引列表。
 /**
- * Some ROS specific arguments may not have been recognized, or were not intended to be
- * parsed by rcl.
- * This function populates an array of indices to these arguments in the original argv array.
+ * 一些ROS特定参数可能没有被识别，或者不打算被rcl解析。
+ * 此函数将在原始argv数组中填充这些参数的索引数组。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 是
+ * 线程安全            | 是
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] args An arguments structure that has been parsed.
- * \param[in] allocator A valid allocator.
- * \param[out] output_unparsed_ros_indices An allocated array of indices into the original argv array.
- *   This array must be deallocated by the caller using the given allocator.
- *   If there are no unparsed ROS specific arguments then the output will be set to NULL.
- * \return #RCL_RET_OK if everything goes correctly, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] args 已解析的参数结构。
+ * \param[in] allocator 有效的分配器。
+ * \param[out] output_unparsed_ros_indices 分配的原始argv数组中的索引数组。
+ *   调用者必须使用给定的分配器释放此数组。
+ *   如果没有未解析的ROS特定参数，则输出将设置为NULL。
+ * \return #RCL_RET_OK 如果一切正常，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_arguments_get_unparsed_ros(
-  const rcl_arguments_t * args,
-  rcl_allocator_t allocator,
-  int ** output_unparsed_ros_indices);
+rcl_ret_t rcl_arguments_get_unparsed_ros(
+    const rcl_arguments_t* args, rcl_allocator_t allocator, int** output_unparsed_ros_indices);
 
-/// Return the number of parameter yaml files given in the arguments.
+/// 返回参数中给出的参数yaml文件的数量。
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存           | 否
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[in] args An arguments structure that has been parsed.
- * \return number of yaml files, or
- * \return -1 if args is `NULL` or zero initialized.
+ * \param[in] args 已解析的参数结构。
+ * \return yaml文件的数量，或
+ * \return -1 如果args为`NULL`或零初始化。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-int
-rcl_arguments_get_param_files_count(
-  const rcl_arguments_t * args);
+int rcl_arguments_get_param_files_count(const rcl_arguments_t* args);
 
-
-/// Return a list of yaml parameter file paths specified on the command line.
+/// 返回在命令行中指定的yaml参数文件路径列表。
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[in] arguments An arguments structure that has been parsed.
- * \param[in] allocator A valid allocator.
- * \param[out] parameter_files An allocated array of paramter file names.
- *   This array must be deallocated by the caller using the given allocator.
- *   The output is NULL if there were no paramter files.
- * \return #RCL_RET_OK if everything goes correctly, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] arguments 已解析的参数结构。
+ * \param[in] allocator 有效的分配器。
+ * \param[out] parameter_files 分配的参数文件名数组。
+ *   调用者必须使用给定的分配器释放此数组。
+ *   如果没有参数文件，则输出为NULL。
+ * \return #RCL_RET_OK 如果一切正常，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_arguments_get_param_files(
-  const rcl_arguments_t * arguments,
-  rcl_allocator_t allocator,
-  char *** parameter_files);
+rcl_ret_t rcl_arguments_get_param_files(
+    const rcl_arguments_t* arguments, rcl_allocator_t allocator, char*** parameter_files);
 
-/// Return all parameter overrides parsed from the command line.
+/// 返回从命令行解析的所有参数覆盖。
 /**
- * Parameter overrides are parsed directly from command line arguments and
- * parameter files provided in the command line.
+ * 参数覆盖是直接从命令行参数和命令行中提供的参数文件解析的。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[in] arguments An arguments structure that has been parsed.
- * \param[out] parameter_overrides Parameter overrides as parsed from command line arguments.
- *   This structure must be finalized by the caller.
- *   The output is NULL if no parameter overrides were parsed.
- * \return #RCL_RET_OK if everything goes correctly, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] arguments 已解析的参数结构。
+ * \param[out] parameter_overrides 从命令行参数解析的参数覆盖。
+ *   调用者必须完成此结构。
+ *   如果没有解析到参数覆盖，则输出为NULL。
+ * \return #RCL_RET_OK 如果一切正常，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_arguments_get_param_overrides(
-  const rcl_arguments_t * arguments,
-  rcl_params_t ** parameter_overrides);
+rcl_ret_t rcl_arguments_get_param_overrides(
+    const rcl_arguments_t* arguments, rcl_params_t** parameter_overrides);
 
-/// Return a list of arguments with ROS-specific arguments removed.
+/// 返回一个删除了 ROS 特定参数的参数列表。
 /**
- * Some arguments may not have been intended as ROS arguments.
- * This function populates an array of the aruments in a new argv array.
- * Since the first argument is always assumed to be a process name, the list
- * will always contain the first value from the argument vector.
+ * 一些参数可能不是作为 ROS 参数传递的。
+ * 此函数将新的 argv 数组中的参数填充到一个数组中。
+ * 由于第一个参数总是被认为是进程名，所以列表中始终包含参数向量的第一个值。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 是
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] argv The argument vector
- * \param[in] args An arguments structure that has been parsed.
- * \param[in] allocator A valid allocator.
- * \param[out] nonros_argc The count of arguments that aren't ROS-specific
- * \param[out] nonros_argv An allocated array of arguments that aren't ROS-specific
- *   This array must be deallocated by the caller using the given allocator.
- *   If there are no non-ROS args, then the output will be set to NULL.
- * \return #RCL_RET_OK if everything goes correctly, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] argv 参数向量
+ * \param[in] args 已解析的参数结构。
+ * \param[in] allocator 有效的分配器。
+ * \param[out] nonros_argc 不是 ROS 特定的参数计数
+ * \param[out] nonros_argv 分配的不是 ROS 特定的参数数组
+ *   调用者必须使用给定的分配器释放此数组。
+ *   如果没有非 ROS 参数，则输出将设置为 NULL。
+ * \return #RCL_RET_OK 如果一切正常，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_remove_ros_arguments(
-  const char * const * argv,
-  const rcl_arguments_t * args,
-  rcl_allocator_t allocator,
-  int * nonros_argc,
-  const char *** nonros_argv);
+rcl_ret_t rcl_remove_ros_arguments(
+    const char* const* argv,
+    const rcl_arguments_t* args,
+    rcl_allocator_t allocator,
+    int* nonros_argc,
+    const char*** nonros_argv);
 
-/// Return log levels parsed from the command line.
+/// 返回从命令行解析的日志级别。
 /**
- * Log levels are parsed directly from command line arguments.
+ * 日志级别直接从命令行参数解析。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] arguments An arguments structure that has been parsed.
- * \param[out] log_levels Log levels as parsed from command line arguments.
- *   The output must be finished by the caller if the function successes.
- * \return #RCL_RET_OK if everything goes correctly, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed.
+ * \param[in] arguments 已解析的参数结构。
+ * \param[out] log_levels 从命令行参数解析的日志级别。
+ *   如果函数成功，则调用者必须完成输出。
+ * \return #RCL_RET_OK 如果一切正常，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_arguments_get_log_levels(
-  const rcl_arguments_t * arguments,
-  rcl_log_levels_t * log_levels);
+rcl_ret_t rcl_arguments_get_log_levels(
+    const rcl_arguments_t* arguments, rcl_log_levels_t* log_levels);
 
-/// Copy one arguments structure into another.
+/// 将一个参数结构复制到另一个参数结构。
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] args The structure to be copied.
- *  Its allocator is used to copy memory into the new structure.
- * \param[out] args_out A zero-initialized arguments structure to be copied into.
- * \return #RCL_RET_OK if the structure was copied successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] args 要复制的结构。
+ *  其分配器用于将内存复制到新结构中。
+ * \param[out] args_out 要复制到的零初始化参数结构。
+ * \return #RCL_RET_OK 如果结构复制成功，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_arguments_copy(
-  const rcl_arguments_t * args,
-  rcl_arguments_t * args_out);
+rcl_ret_t rcl_arguments_copy(const rcl_arguments_t* args, rcl_arguments_t* args_out);
 
-/// Reclaim resources held inside rcl_arguments_t structure.
+/// 回收 rcl_arguments_t 结构内部持有的资源。
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] args The structure to be deallocated.
- * \return #RCL_RET_OK if the memory was successfully freed, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] args 要释放的结构。
+ * \return #RCL_RET_OK 如果内存成功释放，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_arguments_fini(
-  rcl_arguments_t * args);
+rcl_ret_t rcl_arguments_fini(rcl_arguments_t* args);
 
 #ifdef __cplusplus
 }

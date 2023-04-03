@@ -18,8 +18,7 @@
 #define RCL__SECURITY_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <stdbool.h>
@@ -30,101 +29,92 @@ extern "C"
 #include "rmw/security_options.h"
 
 #ifndef ROS_SECURITY_ENCLAVE_OVERRIDE
-/// The name of the environment variable containing the security enclave override.
-# define ROS_SECURITY_ENCLAVE_OVERRIDE "ROS_SECURITY_ENCLAVE_OVERRIDE"
+/// \brief 环境变量中包含安全领域覆盖的名称。
+#define ROS_SECURITY_ENCLAVE_OVERRIDE "ROS_SECURITY_ENCLAVE_OVERRIDE"
 #endif
 
 #ifndef ROS_SECURITY_KEYSTORE_VAR_NAME
-/// The name of the environment variable containing the path to the keystore.
-# define ROS_SECURITY_KEYSTORE_VAR_NAME "ROS_SECURITY_KEYSTORE"
+/// \brief 环境变量中包含密钥库路径的名称。
+#define ROS_SECURITY_KEYSTORE_VAR_NAME "ROS_SECURITY_KEYSTORE"
 #endif
 
 #ifndef ROS_SECURITY_STRATEGY_VAR_NAME
-/// The name of the environment variable containing the security strategy.
-# define ROS_SECURITY_STRATEGY_VAR_NAME "ROS_SECURITY_STRATEGY"
+/// \brief 环境变量中包含安全策略的名称。
+#define ROS_SECURITY_STRATEGY_VAR_NAME "ROS_SECURITY_STRATEGY"
 #endif
 
 #ifndef ROS_SECURITY_ENABLE_VAR_NAME
-/// The name of the environment variable controlling whether security is enabled.
-# define ROS_SECURITY_ENABLE_VAR_NAME "ROS_SECURITY_ENABLE"
+/// \brief 控制是否启用安全性的环境变量名称。
+#define ROS_SECURITY_ENABLE_VAR_NAME "ROS_SECURITY_ENABLE"
 #endif
 
-/// Initialize security options from values in the environment variables and given names.
+/// \brief 从环境变量和给定名称中初始化安全选项。
 /**
- * Initialize the given security options based on the environment.
- * For more details:
+ * 根据环境初始化给定的安全选项。
+ * 更多细节：
  *  \sa rcl_security_enabled()
  *  \sa rcl_get_enforcement_policy()
  *  \sa rcl_get_secure_root()
  *
- * \param[in] name name used to find the security root path.
- * \param[in] allocator used to do allocations.
- * \param[out] security_options security options that will be configured according to
- *  the environment.
- * \return #RCL_RET_OK If the security options are returned properly, or
- * \return #RCL_RET_INVALID_ARGUMENT if an argument is not valid, or
- * \return #RCL_RET_ERROR if an unexpected error happened
+ * \param[in] name 用于查找安全根路径的名称。
+ * \param[in] allocator 用于分配的分配器。
+ * \param[out] security_options 将根据环境配置的安全选项。
+ * \return #RCL_RET_OK 如果安全选项正确返回，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果参数无效，或
+ * \return #RCL_RET_ERROR 如果发生意外错误
  */
 RCL_PUBLIC
-rcl_ret_t
-rcl_get_security_options_from_environment(
-  const char * name,
-  const rcutils_allocator_t * allocator,
+rcl_ret_t rcl_get_security_options_from_environment(
+  const char * name, const rcutils_allocator_t * allocator,
   rmw_security_options_t * security_options);
 
-/// Check if security has to be used, according to the environment.
+/// \brief 根据环境检查是否需要使用安全性。
 /**
- * If the `ROS_SECURITY_ENABLE` environment variable is set to "true", `use_security` will be set to
- * true.
+ * 如果 `ROS_SECURITY_ENABLE` 环境变量设置为 "true"，则 `use_security` 将设置为 true。
  *
- * \param[out] use_security Must not be NULL.
- * \return #RCL_RET_INVALID_ARGUMENT if an argument is not valid, or
- * \return #RCL_RET_ERROR if an unexpected error happened, or
- * \return #RCL_RET_OK.
+ * \param[out] use_security 不能为空。
+ * \return #RCL_RET_INVALID_ARGUMENT 如果参数无效，或
+ * \return #RCL_RET_ERROR 如果发生意外错误，或
+ * \return #RCL_RET_OK。
  */
 RCL_PUBLIC
-rcl_ret_t
-rcl_security_enabled(bool * use_security);
+rcl_ret_t rcl_security_enabled(bool * use_security);
 
-/// Get security enforcement policy from the environment.
+/// \brief 从环境中获取安全执行策略。
 /**
- * Sets `policy` based on the value of the `ROS_SECURITY_STRATEGY` environment variable.
- * If `ROS_SECURITY_STRATEGY` is "Enforce", `policy` will be `RMW_SECURITY_ENFORCEMENT_ENFORCE`.
- * If not, `policy` will be `RMW_SECURITY_ENFORCEMENT_PERMISSIVE`.
+ * 根据 `ROS_SECURITY_STRATEGY` 环境变量的值设置 `policy`。
+ * 如果 `ROS_SECURITY_STRATEGY` 是 "Enforce"，则 `policy` 将是 `RMW_SECURITY_ENFORCEMENT_ENFORCE`。
+ * 如果不是，则 `policy` 将是 `RMW_SECURITY_ENFORCEMENT_PERMISSIVE`。
  *
- * \param[out] policy Must not be NULL.
- * \return #RCL_RET_INVALID_ARGUMENT if an argument is not valid, or
- * \return #RCL_RET_ERROR if an unexpected error happened, or
- * \return #RCL_RET_OK.
+ * \param[out] policy 不能为空。
+ * \return #RCL_RET_INVALID_ARGUMENT 如果参数无效，或
+ * \return #RCL_RET_ERROR 如果发生意外错误，或
+ * \return #RCL_RET_OK。
  */
 RCL_PUBLIC
-rcl_ret_t
-rcl_get_enforcement_policy(rmw_security_enforcement_policy_t * policy);
+rcl_ret_t rcl_get_enforcement_policy(rmw_security_enforcement_policy_t * policy);
 
-/// Return the secure root given a enclave name.
+/// \brief 给定领域名称返回安全根。
 /**
- * Return the security directory associated with the enclave name.
+ * 返回与领域名称关联的安全目录。
  *
- * The value of the environment variable `ROS_SECURITY_KEYSTORE` is used as a root.
- * The specific directory to be used is found from that root using the `name` passed.
- * E.g. for a context named "/a/b/c" and root "/r", the secure root path will be
- * "/r/a/b/c", where the delimiter "/" is native for target file system (e.g. "\\" for _WIN32).
+ * 使用环境变量 `ROS_SECURITY_KEYSTORE` 的值作为根。
+ * 使用传递的 `name` 从该根查找要使用的特定目录。
+ * 例如，对于名为 "/a/b/c" 的上下文和根 "/r"，安全根路径将是
+ * "/r/a/b/c"，其中分隔符 "/" 是针对目标文件系统的本地分隔符（例如，在 _WIN32 上为 "\"）。
  *
- * However, this expansion can be overridden by setting the secure enclave override environment
- * (`ROS_SECURITY_ENCLAVE_OVERRIDE`) variable, allowing users to explicitly specify the exact enclave
- * `name` to be utilized.
- * Such an override is useful for applications where the enclave is non-deterministic
- * before runtime, or when testing and using additional tools that may not otherwise be easily
- * provisioned.
+ * 但是，可以通过设置安全领域覆盖环境变量（`ROS_SECURITY_ENCLAVE_OVERRIDE`）来覆盖此扩展，
+ * 允许用户显式指定要使用的确切领域 `name`。
+ * 对于在运行时之前领域不确定的应用程序或在测试和使用其他可能无法轻松配置的工具时，
+ * 这种覆盖非常有用。
  *
- * \param[in] name validated name (a single token)
- * \param[in] allocator the allocator to use for allocation
- * \return Machine specific (absolute) enclave directory path or NULL on failure.
- *  Returned pointer must be deallocated by the caller of this function
+ * \param[in] name 经过验证的名称（单个令牌）
+ * \param[in] allocator 用于分配的分配器
+ * \return 机器特定（绝对）领域目录路径或失败时返回 NULL。
+ *  返回的指针必须由此函数的调用者释放
  */
 RCL_PUBLIC
-char *
-rcl_get_secure_root(const char * name, const rcl_allocator_t * allocator);
+char * rcl_get_secure_root(const char * name, const rcl_allocator_t * allocator);
 
 #ifdef __cplusplus
 }

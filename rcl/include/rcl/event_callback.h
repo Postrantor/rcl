@@ -18,8 +18,7 @@
 #include "rmw/event_callback_type.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef rmw_event_callback_t rcl_event_callback_t;

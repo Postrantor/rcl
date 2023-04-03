@@ -25,16 +25,14 @@
 #include "rcl/visibility_control.h"
 
 #if __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-/// Type of lexeme found by lexical analysis.
-typedef enum rcl_lexeme_e
-{
-  /// Indicates no valid lexeme was found (end of input not reached)
+/// 词法分析器找到的词素类型。
+typedef enum rcl_lexeme_e {
+  /// 表示没有找到有效的词素（未达到输入结尾）
   RCL_LEXEME_NONE = 0,
-  /// Indicates end of input has been reached
+  /// 表示已经到达输入的结尾
   RCL_LEXEME_EOF = 1,
   /// ~/
   RCL_LEXEME_TILDE_SLASH = 2,
@@ -44,7 +42,7 @@ typedef enum rcl_lexeme_e
   RCL_LEXEME_URL_TOPIC = 4,
   /// :
   RCL_LEXEME_COLON = 5,
-  /// __node or __name
+  /// __node 或者 __name
   RCL_LEXEME_NODE = 6,
   /// __ns
   RCL_LEXEME_NS = 7,
@@ -68,7 +66,7 @@ typedef enum rcl_lexeme_e
   RCL_LEXEME_BR8 = 16,
   /// \9
   RCL_LEXEME_BR9 = 17,
-  /// a name between slashes, must match (([a-zA-Z](_)?)|_)([0-9a-zA-Z](_)?)*
+  /// 斜杠之间的名称，必须匹配 (([a-zA-Z](_)?)|_)([0-9a-zA-Z](_)?)*
   RCL_LEXEME_TOKEN = 18,
   /// /
   RCL_LEXEME_FORWARD_SLASH = 19,
@@ -76,43 +74,37 @@ typedef enum rcl_lexeme_e
   RCL_LEXEME_WILD_ONE = 20,
   /// **
   RCL_LEXEME_WILD_MULTI = 21,
-  // TODO(hidmic): remove when parameter names are standardized to
-  //               use slashes in lieu of dots
+  // TODO(hidmic): 当参数名称标准化为使用斜杠代替点时删除
   /// \.
   RCL_LEXEME_DOT = 22,
 } rcl_lexeme_t;
 
-
-/// Do lexical analysis on a string.
+/// 对字符串进行词法分析。
 /**
- * This function analyzes a string to see if it starts with a valid lexeme.
- * If the string does not begin with a valid lexeme then lexeme will be RCL_LEXEME_NONE, and the
- * length will be set to include the character that made it impossible.
- * It will never be longer than the length of the string.
- * If the first character is '\0' then lexeme will be RCL_LEXEME_EOF.
+ * 此函数分析一个字符串，查看它是否以有效的词素开头。
+ * 如果字符串不是以有效的词素开头，则词素将为 RCL_LEXEME_NONE，并且
+ * 长度将设置为包含使其无效的字符。
+ * 它永远不会超过字符串的长度。
+ * 如果第一个字符是 '\0'，那么词素将是 RCL_LEXEME_EOF。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] text The string to analyze.
- * \param[out] lexeme The type of lexeme found in the string.
- * \param[out] length The length of text in the string that constitutes the found lexeme.
- * \return #RCL_RET_OK if analysis is successful regardless whether a valid lexeme is found, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_ERROR if an internal bug is detected.
+ * \param[in] text 要分析的字符串。
+ * \param[out] lexeme 在字符串中找到的词素类型。
+ * \param[out] length 构成找到的词素的字符串文本的长度。
+ * \return #RCL_RET_OK 如果分析成功，无论是否找到有效的词素，或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或者
+ * \return #RCL_RET_ERROR 如果检测到内部错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lexer_analyze(
-  const char * text,
-  rcl_lexeme_t * lexeme,
-  size_t * length);
+rcl_ret_t rcl_lexer_analyze(const char * text, rcl_lexeme_t * lexeme, size_t * length);
 
 #if __cplusplus
 }

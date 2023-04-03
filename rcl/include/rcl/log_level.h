@@ -23,38 +23,35 @@
 #include "rcl/visibility_control.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-/// typedef for RCUTILS_LOG_SEVERITY;
+/// 定义 RCUTILS_LOG_SEVERITY 的类型别名；
 typedef enum RCUTILS_LOG_SEVERITY rcl_log_severity_t;
 
-/// A logger item to specify a name and a log level.
-typedef struct rcl_logger_setting_s
-{
-  /// Name for the logger.
-  const char * name;
-  /// Minimum log level severity of the logger.
+/// 用于指定名称和日志级别的 logger 项。
+typedef struct rcl_logger_setting_s {
+  /// logger 的名称。
+  const char* name;
+  /// logger 的最低日志级别严重性。
   rcl_log_severity_t level;
 } rcl_logger_setting_t;
 
-/// Hold default logger level and other logger setting.
-typedef struct rcl_log_levels_s
-{
-  /// Minimum default logger level severity.
+/// 保存默认 logger 级别和其他 logger 设置。
+typedef struct rcl_log_levels_s {
+  /// 最低默认 logger 级别严重性。
   rcl_log_severity_t default_logger_level;
-  /// Array of logger setting.
-  rcl_logger_setting_t * logger_settings;
-  /// Number of logger settings.
+  /// logger 设置数组。
+  rcl_logger_setting_t* logger_settings;
+  /// logger 设置数量。
   size_t num_logger_settings;
-  /// Capacity of logger settings.
+  /// logger 设置容量。
   size_t capacity_logger_settings;
-  /// Allocator used to allocate objects in this struct.
+  /// 用于在此结构中分配对象的分配器。
   rcl_allocator_t allocator;
 } rcl_log_levels_t;
 
-/// Return a rcl_log_levels_t struct with members initialized to zero value.
+/// 返回一个成员初始化为零值的 rcl_log_levels_t 结构体。
 /**
  * <hr>
  * Attribute          | Adherence
@@ -64,14 +61,13 @@ typedef struct rcl_log_levels_s
  * Uses Atomics       | No
  * Lock-Free          | Yes
  *
- * \return a rcl_log_levels_t struct with members initialized to zero value.
+ * \return 成员初始化为零值的 rcl_log_levels_t 结构体。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_log_levels_t
-rcl_get_zero_initialized_log_levels();
+rcl_log_levels_t rcl_get_zero_initialized_log_levels();
 
-/// Initialize a log levels structure.
+/// 初始化日志级别结构体。
 /**
  * <hr>
  * Attribute          | Adherence
@@ -81,23 +77,22 @@ rcl_get_zero_initialized_log_levels();
  * Uses Atomics       | No
  * Lock-Free          | Yes
  *
- * \param[in] log_levels The structure to be initialized.
- * \param[in] allocator Memory allocator to be used and assigned into log_levels.
- * \param[in] logger_count Number of logger settings to be allocated.
- *  This reserves memory for logger_settings, but doesn't initialize it.
- * \return #RCL_RET_OK if the structure was initialized successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if log_levels is NULL, or
- * \return #RCL_RET_INVALID_ARGUMENT if log_levels contains initialized memory, or
- * \return #RCL_RET_INVALID_ARGUMENT if allocator is invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed.
+ * \param[in] log_levels 要初始化的结构体。
+ * \param[in] allocator 用于分配并分配到 log_levels 的内存分配器。
+ * \param[in] logger_count 要分配的 logger 设置数量。
+ *  此操作为 logger_settings 预留内存，但不进行初始化。
+ * \return 如果结构成功初始化，则返回 #RCL_RET_OK，或
+ * \return 如果 log_levels 为 NULL，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果 log_levels 包含已初始化的内存，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果分配器无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果分配内存失败，则返回 #RCL_RET_BAD_ALLOC。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_log_levels_init(
-  rcl_log_levels_t * log_levels, const rcl_allocator_t * allocator, size_t logger_count);
+rcl_ret_t rcl_log_levels_init(
+    rcl_log_levels_t* log_levels, const rcl_allocator_t* allocator, size_t logger_count);
 
-/// Copy one log levels structure into another.
+/// 将一个日志级别结构体复制到另一个。
 /**
  * <hr>
  * Attribute          | Adherence
@@ -107,22 +102,21 @@ rcl_log_levels_init(
  * Uses Atomics       | No
  * Lock-Free          | Yes
  *
- * \param[in] src The structure to be copied.
- *  Its allocator is used to copy memory into the new structure.
- * \param[out] dst A log levels structure to be copied into.
- * \return #RCL_RET_OK if the structure was copied successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if src is NULL, or
- * \return #RCL_RET_INVALID_ARGUMENT if src allocator is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if dst is NULL, or
- * \return #RCL_RET_INVALID_ARGUMENT if dst contains already allocated memory, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed.
+ * \param[in] src 要复制的结构体。
+ *  其分配器用于将内存复制到新结构中。
+ * \param[out] dst 要复制到的日志级别结构体。
+ * \return 如果结构成功复制，则返回 #RCL_RET_OK，或
+ * \return 如果 src 为 NULL，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果 src 分配器无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果 dst 为 NULL，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果 dst 包含已分配的内存，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果分配内存失败，则返回 #RCL_RET_BAD_ALLOC。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_log_levels_copy(const rcl_log_levels_t * src, rcl_log_levels_t * dst);
+rcl_ret_t rcl_log_levels_copy(const rcl_log_levels_t* src, rcl_log_levels_t* dst);
 
-/// Reclaim resources held inside rcl_log_levels_t structure.
+/// 回收 rcl_log_levels_t 结构体内部持有的资源。
 /**
  * <hr>
  * Attribute          | Adherence
@@ -132,16 +126,15 @@ rcl_log_levels_copy(const rcl_log_levels_t * src, rcl_log_levels_t * dst);
  * Uses Atomics       | No
  * Lock-Free          | Yes
  *
- * \param[in] log_levels The structure which its resources have to be deallocated.
- * \return #RCL_RET_OK if the memory was successfully freed, or
- * \return #RCL_RET_INVALID_ARGUMENT if log_levels is NULL, or
- * \return #RCL_RET_INVALID_ARGUMENT if the log_levels allocator is invalid and the structure contains initialized memory.
+ * \param[in] log_levels 要释放其资源的结构体。
+ * \return 如果内存成功释放，则返回 #RCL_RET_OK，或
+ * \return 如果 log_levels 为 NULL，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果 log_levels 分配器无效且结构包含已初始化的内存，则返回 #RCL_RET_INVALID_ARGUMENT。
  */
 RCL_PUBLIC
-rcl_ret_t
-rcl_log_levels_fini(rcl_log_levels_t * log_levels);
+rcl_ret_t rcl_log_levels_fini(rcl_log_levels_t* log_levels);
 
-/// Shrink log levels structure.
+/// 缩小日志级别结构体。
 /**
  * <hr>
  * Attribute          | Adherence
@@ -151,16 +144,15 @@ rcl_log_levels_fini(rcl_log_levels_t * log_levels);
  * Uses Atomics       | No
  * Lock-Free          | Yes
  *
- * \param[in] log_levels The structure to be shrunk.
- * \return #RCL_RET_OK if the memory was successfully shrunk, or
- * \return #RCL_RET_INVALID_ARGUMENT if log_levels is NULL or if its allocator is invalid, or
- * \return #RCL_RET_BAD_ALLOC if reallocating memory failed.
+ * \param[in] log_levels 要缩小的结构体。
+ * \return 如果内存成功缩小，则返回 #RCL_RET_OK，或
+ * \return 如果 log_levels 为 NULL 或其分配器无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果重新分配内存失败，则返回 #RCL_RET_BAD_ALLOC。
  */
 RCL_PUBLIC
-rcl_ret_t
-rcl_log_levels_shrink_to_size(rcl_log_levels_t * log_levels);
+rcl_ret_t rcl_log_levels_shrink_to_size(rcl_log_levels_t* log_levels);
 
-/// Add logger setting with a name and a level.
+/// 添加具有名称和级别的 logger 设置。
 /**
  * <hr>
  * Attribute          | Adherence
@@ -170,21 +162,20 @@ rcl_log_levels_shrink_to_size(rcl_log_levels_t * log_levels);
  * Uses Atomics       | No
  * Lock-Free          | Yes
  *
- * \param[in] log_levels The structure where to set the logger log level.
- * \param[in] logger_name Name for the logger, a copy of it will be stored in the structure.
- * \param[in] log_level Minimum log level severity to be set for logger_name.
- * \return #RCL_RET_OK if add logger setting successfully, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_INVALID_ARGUMENT if log_levels is NULL, or
- * \return #RCL_RET_INVALID_ARGUMENT if log_levels was not initialized, or
- * \return #RCL_RET_INVALID_ARGUMENT if log_levels allocator is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if logger_name is NULL, or
- * \return #RCL_RET_ERROR if the log_levels structure is already full.
+ * \param[in] log_levels 要设置 logger 日志级别的结构体。
+ * \param[in] logger_name logger 的名称，将在结构中存储其副本。
+ * \param[in] log_level 要为 logger_name 设置的最低日志级别严重性。
+ * \return 如果成功添加 logger 设置，则返回 #RCL_RET_OK，或
+ * \return 如果分配内存失败，则返回 #RCL_RET_BAD_ALLOC，或
+ * \return 如果 log_levels 为 NULL，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果 log_levels 未初始化，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果 log_levels 分配器无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果 logger_name 为 NULL，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果 log_levels 结构已满，则返回 #RCL_RET_ERROR。
  */
 RCL_PUBLIC
-rcl_ret_t
-rcl_log_levels_add_logger_setting(
-  rcl_log_levels_t * log_levels, const char * logger_name, rcl_log_severity_t log_level);
+rcl_ret_t rcl_log_levels_add_logger_setting(
+    rcl_log_levels_t* log_levels, const char* logger_name, rcl_log_severity_t log_level);
 
 #ifdef __cplusplus
 }

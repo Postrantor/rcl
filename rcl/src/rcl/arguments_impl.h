@@ -15,57 +15,57 @@
 #ifndef RCL__ARGUMENTS_IMPL_H_
 #define RCL__ARGUMENTS_IMPL_H_
 
+#include "./remap_impl.h"
 #include "rcl/arguments.h"
 #include "rcl/log_level.h"
 #include "rcl_yaml_param_parser/types.h"
-#include "./remap_impl.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /// \internal
+/// \brief 结构体 rcl_arguments_impl_s，用于存储解析后的命令行参数信息。
 struct rcl_arguments_impl_s
 {
-  /// Array of indices to unknown ROS specific arguments.
+  /// \brief 未解析的 ROS 特定参数的索引数组。
   int * unparsed_ros_args;
-  /// Length of unparsed_ros_args.
+  /// \brief unparsed_ros_args 的长度。
   int num_unparsed_ros_args;
 
-  /// Array of indices to non-ROS arguments.
+  /// \brief 非 ROS 参数的索引数组。
   int * unparsed_args;
-  /// Length of unparsed_args.
+  /// \brief unparsed_args 的长度。
   int num_unparsed_args;
 
-  /// Parameter override rules parsed from arguments.
+  /// \brief 从参数中解析出的参数覆盖规则。
   rcl_params_t * parameter_overrides;
 
-  /// Array of yaml parameter file paths
+  /// \brief yaml 参数文件路径数组。
   char ** parameter_files;
-  /// Length of parameter_files.
+  /// \brief parameter_files 的长度。
   int num_param_files_args;
 
-  /// Array of rules for name remapping.
+  /// \brief 名称重映射规则数组。
   rcl_remap_t * remap_rules;
-  /// Length of remap_rules.
+  /// \brief remap_rules 的长度。
   int num_remap_rules;
 
-  /// Log levels parsed from arguments.
+  /// \brief 从参数中解析出的日志级别。
   rcl_log_levels_t log_levels;
-  /// A file used to configure the external logging library
+  /// \brief 用于配置外部日志库的文件。
   char * external_log_config_file;
-  /// A boolean value indicating if the standard out handler should be used for log output
+  /// \brief 布尔值，表示是否禁用标准输出处理程序进行日志输出。
   bool log_stdout_disabled;
-  /// A boolean value indicating if the rosout topic handler should be used for log output
+  /// \brief 布尔值，表示是否禁用 rosout 主题处理程序进行日志输出。
   bool log_rosout_disabled;
-  /// A boolean value indicating if the external lib handler should be used for log output
+  /// \brief 布尔值，表示是否禁用外部库处理程序进行日志输出。
   bool log_ext_lib_disabled;
 
-  /// Enclave to be used.
+  /// \brief 要使用的 Enclave。
   char * enclave;
 
-  /// Allocator used to allocate objects in this struct
+  /// \brief 用于在此结构中分配对象的分配器。
   rcl_allocator_t allocator;
 };
 

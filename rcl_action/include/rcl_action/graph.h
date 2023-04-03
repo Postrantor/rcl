@@ -16,143 +16,121 @@
 #define RCL_ACTION__GRAPH_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcl/graph.h"
 #include "rcl/node.h"
-
 #include "rcl_action/visibility_control.h"
 
-/// Get a list of action names and types for action clients associated with a node.
+/// 获取与节点关联的动作客户端的动作名称和类型列表。
 /**
- * The `node` parameter must point to a valid node.
+ * `node` 参数必须指向一个有效的节点。
  *
- * The `action_names_and_types` parameter must be allocated and zero initialized.
- * This function allocates memory for the returned list of names and types and so it is the
- * callers responsibility to pass `action_names_and_types` to rcl_names_and_types_fini()
- * when it is no longer needed.
- * Failing to do so will result in leaked memory.
+ * `action_names_and_types` 参数必须分配并初始化为零。
+ * 此函数为返回的名称和类型列表分配内存，因此调用者有责任在不再需要时将 `action_names_and_types` 传递给 rcl_names_and_types_fini()。
+ * 否则将导致内存泄漏。
  *
- * The returned names are not automatically remapped by this function.
- * Attempting to create action clients or action servers with names returned by this function may
- * not result in the desired action name depending on the remap rules in use.
+ * 此函数不会自动重新映射返回的名称。
+ * 尝试使用此函数返回的名称创建动作客户端或动作服务器可能不会得到所需的动作名称，具体取决于正在使用的重映射规则。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator for allocating space for strings
- * \param[in] node_name the node name of the actions to return
- * \param[in] node_namespace the node namespace of the actions to return
- * \param[out] action_names_and_types list of action names and their types
- * \return `RCL_RET_OK` if the query was successful, or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 为字符串分配空间的分配器
+ * \param[in] node_name 要返回的动作的节点名称
+ * \param[in] node_namespace 要返回的动作的节点命名空间
+ * \param[out] action_names_and_types 动作名称及其类型列表
+ * \return `RCL_RET_OK` 如果查询成功，或
+ * \return `RCL_RET_NODE_INVALID` 如果节点无效，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_get_client_names_and_types_by_node(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  const char * node_name,
-  const char * node_namespace,
-  rcl_names_and_types_t * action_names_and_types);
+rcl_ret_t rcl_action_get_client_names_and_types_by_node(
+  const rcl_node_t * node, rcl_allocator_t * allocator, const char * node_name,
+  const char * node_namespace, rcl_names_and_types_t * action_names_and_types);
 
-/// Get a list of action names and types for action servers associated with a node.
+/// 获取与节点关联的动作服务器的动作名称和类型列表。
 /**
- * This function returns a list of action names and types for action servers associated with
- * the provided node name.
+ * 此函数返回与提供的节点名称关联的动作服务器的动作名称和类型列表。
  *
- * The `node` parameter must point to a valid node.
+ * `node` 参数必须指向一个有效的节点。
  *
- * The `action_names_and_types` parameter must be allocated and zero initialized.
- * This function allocates memory for the returned list of names and types and so it is the
- * callers responsibility to pass `action_names_and_types` to rcl_names_and_types_fini()
- * when it is no longer needed.
- * Failing to do so will result in leaked memory.
+ * `action_names_and_types` 参数必须分配并初始化为零。
+ * 此函数为返回的名称和类型列表分配内存，因此调用者有责任在不再需要时将 `action_names_and_types` 传递给 rcl_names_and_types_fini()。
+ * 否则将导致内存泄漏。
  *
- * The returned names are not automatically remapped by this function.
- * Attempting to create action clients or action servers with names returned by this function may
- * not result in the desired action name depending on the remap rules in use.
+ * 此函数不会自动重新映射返回的名称。
+ * 尝试使用此函数返回的名称创建动作客户端或动作服务器可能不会得到所需的动作名称，具体取决于正在使用的重映射规则。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator for allocating space for strings
- * \param[in] node_name the node name of the actions to return
- * \param[in] node_namespace the node namespace of the actions to return
- * \param[out] action_names_and_types list of action names and their types
- * \return `RCL_RET_OK` if the query was successful, or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 为字符串分配空间的分配器
+ * \param[in] node_name 要返回的动作的节点名称
+ * \param[in] node_namespace 要返回的动作的节点命名空间
+ * \param[out] action_names_and_types 动作名称及其类型列表
+ * \return `RCL_RET_OK` 如果查询成功，或
+ * \return `RCL_RET_NODE_INVALID` 如果节点无效，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_get_server_names_and_types_by_node(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  const char * node_name,
-  const char * node_namespace,
-  rcl_names_and_types_t * action_names_and_types);
+rcl_ret_t rcl_action_get_server_names_and_types_by_node(
+  const rcl_node_t * node, rcl_allocator_t * allocator, const char * node_name,
+  const char * node_namespace, rcl_names_and_types_t * action_names_and_types);
 
-/// Return a list of action names and their types.
+/// 返回动作名称及其类型列表。
 /**
- * This function returns a list of action names and types in the ROS graph.
+ * 此函数返回 ROS 图中的动作名称和类型列表。
  *
- * The `node` parameter must point to a valid node.
+ * `node` 参数必须指向一个有效的节点。
  *
- * The `action_names_and_types` parameter must be allocated and zero initialized.
- * This function allocates memory for the returned list of names and types and so it is the
- * callers responsibility to pass `action_names_and_types` to rcl_names_and_types_fini()
- * when it is no longer needed.
- * Failing to do so will result in leaked memory.
+ * `action_names_and_types` 参数必须分配并初始化为零。
+ * 此函数为返回的名称和类型列表分配内存，因此调用者有责任在不再需要时将 `action_names_and_types` 传递给 rcl_names_and_types_fini()。
+ * 否则将导致内存泄漏。
  *
- * The returned names are not automatically remapped by this function.
- * Attempting to create action clients or action servers with names returned by this function may
- * not result in the desired action name depending on the remap rules in use.
+ * 此函数不会自动重新映射返回的名称。
+ * 尝试使用此函数返回的名称创建动作客户端或动作服务器可能不会得到所需的动作名称，具体取决于正在使用的重映射规则。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator for allocating space for strings
- * \param[out] action_names_and_types list of action names and types
- * \return `RCL_RET_OK` if the query was successful, or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 为字符串分配空间的分配器
+ * \param[out] action_names_and_types 动作名称及其类型列表
+ * \return `RCL_RET_OK` 如果查询成功，或
+ * \return `RCL_RET_NODE_INVALID` 如果节点无效，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_get_names_and_types(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
+rcl_ret_t rcl_action_get_names_and_types(
+  const rcl_node_t * node, rcl_allocator_t * allocator,
   rcl_names_and_types_t * action_names_and_types);
 
 #ifdef __cplusplus

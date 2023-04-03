@@ -17,14 +17,13 @@
 
 #define RCL_SERVICE_INTROSPECTION_TOPIC_POSTFIX "/_service_event"
 
-/// The introspection state for a client or service.
-typedef enum rcl_service_introspection_state_e
-{
-  /// Introspection disabled
+/// \brief 客户端或服务的内省状态 (The introspection state for a client or service)
+typedef enum rcl_service_introspection_state_e {
+  /// \brief 内省禁用 (Introspection disabled)
   RCL_SERVICE_INTROSPECTION_OFF,
-  /// Introspect metadata only
+  /// \brief 仅内省元数据 (Introspect metadata only)
   RCL_SERVICE_INTROSPECTION_METADATA,
-  /// Introspection metadata and contents
+  /// \brief 内省元数据和内容 (Introspection metadata and contents)
   RCL_SERVICE_INTROSPECTION_CONTENTS,
 } rcl_service_introspection_state_t;
 

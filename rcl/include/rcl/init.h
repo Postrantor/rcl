@@ -18,8 +18,7 @@
 #define RCL__INIT_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcl/allocator.h"
@@ -29,90 +28,77 @@ extern "C"
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
 
-/// Initialization of rcl.
+/// 初始化 rcl.
 /**
- * This function can be run any number of times, so long as the given context
- * has been properly prepared.
+ * 此函数可以运行任意次数，只要给定的上下文已经被正确准备。
  *
- * The given rcl_context_t must be zero initialized with the function
- * rcl_get_zero_initialized_context() and must not be already initialized
- * by this function.
- * If the context is already initialized this function will fail and return the
- * #RCL_RET_ALREADY_INIT error code.
- * A context may be initialized again after it has been finalized with the
- * rcl_shutdown() function and zero initialized again with
- * rcl_get_zero_initialized_context().
+ * 给定的 rcl_context_t 必须使用函数 rcl_get_zero_initialized_context() 进行零初始化，
+ * 并且不能已经通过此函数初始化。
+ * 如果上下文已经初始化，此函数将失败并返回 #RCL_RET_ALREADY_INIT 错误代码。
+ * 上下文在使用 rcl_shutdown() 函数完成后可以再次初始化，并使用
+ * rcl_get_zero_initialized_context() 再次进行零初始化。
  *
- * The `argc` and `argv` parameters may contain command line arguments for the
- * program.
- * rcl specific arguments will be parsed, but not removed.
- * If `argc` is `0` and `argv` is `NULL` no parameters will be parsed.
+ * `argc` 和 `argv` 参数可能包含程序的命令行参数。
+ * 将解析但不删除 rcl 特定的参数。
+ * 如果 `argc` 为 `0`，`argv` 为 `NULL`，则不会解析任何参数。
  *
- * The `options` argument must be non-`NULL` and must have been initialized
- * with rcl_init_options_init().
- * It is unmodified by this function, and the ownership is not transfered to
- * the context, but instead a copy is made into the context for later reference.
- * Therefore, the given options need to be cleaned up with
- * rcl_init_options_fini() after this function returns.
+ * `options` 参数必须为非 `NULL`，并且必须使用 rcl_init_options_init() 初始化。
+ * 此函数不会修改它，所有权也不会转移到上下文中，而是将其复制到上下文中以供以后参考。
+ * 因此，在此函数返回后，需要使用 rcl_init_options_fini() 清理给定的选项。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 返回 true，则针对 `atomic_uint_least64_t`</i>
  *
- * \param[in] argc number of strings in argv
- * \param[in] argv command line arguments; rcl specific arguments are removed
- * \param[in] options options used during initialization
- * \param[out] context resulting context object that represents this init
- * \return #RCL_RET_OK if initialization is successful, or
- * \return #RCL_RET_ALREADY_INIT if rcl_init has already been called, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_INVALID_ROS_ARGS if an invalid ROS argument is found, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] argc argv 中的字符串数量
+ * \param[in] argv 命令行参数；rcl 特定参数将被移除
+ * \param[in] options 初始化期间使用的选项
+ * \param[out] context 表示此初始化的结果上下文对象
+ * \return #RCL_RET_OK 如果初始化成功，或
+ * \return #RCL_RET_ALREADY_INIT 如果 rcl_init 已经被调用，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_INVALID_ROS_ARGS 如果找到无效的 ROS 参数，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_init(
-  int argc,
-  char const * const * argv,
-  const rcl_init_options_t * options,
-  rcl_context_t * context);
+rcl_ret_t rcl_init(
+  int argc, char const * const * argv, const rcl_init_options_t * options, rcl_context_t * context);
 
-/// Shutdown a given rcl context.
+/// 关闭给定的 rcl 上下文。
 /**
- * The given context must have been initialized with rcl_init().
- * If not, this function will fail with #RCL_RET_ALREADY_SHUTDOWN.
+ * 给定的上下文必须使用 rcl_init() 初始化。
+ * 如果没有，此函数将失败并返回 #RCL_RET_ALREADY_SHUTDOWN。
  *
- * When this function is called:
- *  - Any rcl objects created using this context are invalidated.
- *  - Functions called on invalid objects may or may not fail.
- *  - Calls to rcl_context_is_initialized() will return `false`.
+ * 调用此函数时：
+ *  - 使用此上下文创建的任何 rcl 对象都将失效。
+ *  - 在无效对象上调用的函数可能会失败，也可能不会失败。
+ *  - 调用 rcl_context_is_initialized() 将返回 `false`。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | Yes
- * Uses Atomics       | Yes
- * Lock-Free          | Yes [1]
- * <i>[1] if `atomic_is_lock_free()` returns true for `atomic_uint_least64_t`</i>
+ * 分配内存          | 是
+ * 线程安全          | 是
+ * 使用原子操作      | 是
+ * 无锁              | 是 [1]
+ * <i>[1] 如果 `atomic_is_lock_free()` 返回 true，则针对 `atomic_uint_least64_t`</i>
  *
- * \param[inout] context object to shutdown
- * \return #RCL_RET_OK if the shutdown was completed successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ALREADY_SHUTDOWN if the context is not currently valid, or
- * \return #RCL_RET_ERROR if an unspecified error occur.
+ * \param[inout] context 要关闭的对象
+ * \return #RCL_RET_OK 如果关闭成功完成，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ALREADY_SHUTDOWN 如果上下文当前无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_shutdown(rcl_context_t * context);
+rcl_ret_t rcl_shutdown(rcl_context_t * context);
 
 #ifdef __cplusplus
 }

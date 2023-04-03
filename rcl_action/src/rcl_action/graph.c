@@ -13,33 +13,38 @@
 // limitations under the License.
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
+
+#include "rcl/graph.h"
 
 #include <assert.h>
 #include <string.h>
 
 #include "rcl/error_handling.h"
-#include "rcl/graph.h"
 #include "rcl/node.h"
+#include "rcl_action/graph.h"
 #include "rcutils/strdup.h"
 
-#include "rcl_action/graph.h"
-
-static
-rcl_ret_t
-_filter_action_names(
-  rcl_names_and_types_t * topic_names_and_types,
-  rcl_allocator_t * allocator,
+/**
+ * @brief 过滤出action名称和类型
+ *
+ * @param[in] topic_names_and_types 话题名称和类型列表
+ * @param[in] allocator 分配器
+ * @param[out] action_names_and_types action名称和类型列表
+ * @return rcl_ret_t 返回RCL_RET_OK表示成功，其他值表示失败
+ */
+static rcl_ret_t _filter_action_names(
+  rcl_names_and_types_t * topic_names_and_types, rcl_allocator_t * allocator,
   rcl_names_and_types_t * action_names_and_types)
 {
+  // 断言输入参数不为空
   assert(topic_names_and_types);
   assert(allocator);
   assert(action_names_and_types);
 
-  // Assumption: actions provide a topic name with the suffix "/_action/feedback"
-  // and it has type with the suffix "_FeedbackMessage"
+  // 假设：actions提供一个带有后缀"/_action/feedback"的主题名
+  // 类型带有后缀"_FeedbackMessage"
   const char * action_name_identifier = "/_action/feedback";
   const char * action_type_identifier = "_FeedbackMessage";
 
@@ -47,7 +52,7 @@ _filter_action_names(
   const size_t num_names = topic_names_and_types->names.size;
   char ** names = topic_names_and_types->names.data;
 
-  // Count number of actions to determine how much memory to allocate
+  // 计算action数量以确定要分配多少内存
   size_t num_actions = 0u;
   for (size_t i = 0u; i < num_names; ++i) {
     const char * identifier_index = strstr(names[i], action_name_identifier);
@@ -67,7 +72,7 @@ _filter_action_names(
 
   ret = RCL_RET_OK;
 
-  // Prune names/types that are not actions (ie. do not contain the suffix)
+  // 删除不是actions的名称/类型（即不包含后缀的）
   const size_t suffix_len = strlen(action_name_identifier);
   size_t j = 0u;
   for (size_t i = 0u; i < num_names; ++i) {
@@ -83,30 +88,28 @@ _filter_action_names(
 
       action_names_and_types->names.data[j] = action_name;
 
-      // Allocate storage for type list
+      // 为类型列表分配存储空间
       rcutils_ret_t rcutils_ret = rcutils_string_array_init(
-        &action_names_and_types->types[j],
-        topic_names_and_types->types[i].size,
-        allocator);
+        &action_names_and_types->types[j], topic_names_and_types->types[i].size, allocator);
       if (RCUTILS_RET_OK != rcutils_ret) {
         RCL_SET_ERROR_MSG(rcutils_get_error_string().str);
         ret = RCL_RET_BAD_ALLOC;
         break;
       }
 
-      // Populate types list
+      // 填充类型列表
       for (size_t k = 0u; k < topic_names_and_types->types[i].size; ++k) {
         char * type_name = topic_names_and_types->types[i].data[k];
         size_t action_type_len = strlen(type_name);
-        // Trim type name suffix
+        // 裁剪类型名后缀
         const size_t type_suffix_len = strlen(action_type_identifier);
         const char * type_identifier_index = strstr(type_name, action_type_identifier);
-        if (type_identifier_index &&
-          strlen(type_identifier_index) == strlen(action_type_identifier))
-        {
+        if (
+          type_identifier_index &&
+          strlen(type_identifier_index) == strlen(action_type_identifier)) {
           action_type_len = strlen(type_name) - type_suffix_len;
         }
-        // Copy name to output struct
+        // 将名称复制到输出结构
         char * action_type_name = rcutils_strndup(type_name, action_type_len, *allocator);
         if (!action_type_name) {
           RCL_SET_ERROR_MSG("Failed to allocate memory for action type");
@@ -119,7 +122,7 @@ _filter_action_names(
     }
   }
 
-  // Cleanup if there is an error
+  // 如果有错误，进行清理
   if (RCL_RET_OK != ret) {
     rcl_ret_t fini_ret = rcl_names_and_types_fini(action_names_and_types);
     if (RCL_RET_OK != fini_ret) {
@@ -131,29 +134,36 @@ _filter_action_names(
   return ret;
 }
 
-rcl_ret_t
-rcl_action_get_client_names_and_types_by_node(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  const char * node_name,
-  const char * node_namespace,
-  rcl_names_and_types_t * action_names_and_types)
+/**
+ * @brief 获取指定节点的 action 客户端名称和类型
+ *
+ * @param[in] node 指向 rcl_node_t 结构体的指针，表示要查询的节点
+ * @param[in] allocator 分配器，用于分配内存
+ * @param[in] node_name 要查询的节点名称
+ * @param[in] node_namespace 要查询的节点命名空间
+ * @param[out] action_names_and_types 一个指向 rcl_names_and_types_t 结构体的指针，用于存储查询到的 action 客户端名称和类型
+ * @return 返回 rcl_ret_t 类型的结果，成功返回 RCL_RET_OK，否则返回相应的错误代码
+ */
+rcl_ret_t rcl_action_get_client_names_and_types_by_node(
+  const rcl_node_t * node, rcl_allocator_t * allocator, const char * node_name,
+  const char * node_namespace, rcl_names_and_types_t * action_names_and_types)
 {
+  // 检查 action_names_and_types 参数是否为空
   RCL_CHECK_ARGUMENT_FOR_NULL(action_names_and_types, RCL_RET_INVALID_ARGUMENT);
 
   rcl_ret_t ret;
   rcl_names_and_types_t topic_names_and_types = rcl_get_zero_initialized_names_and_types();
+  // 获取节点的订阅者名称和类型
   ret = rcl_get_subscriber_names_and_types_by_node(
     node, allocator, false, node_name, node_namespace, &topic_names_and_types);
   if (RCL_RET_OK != ret) {
     return ret;
   }
 
-  ret = _filter_action_names(
-    &topic_names_and_types,
-    allocator,
-    action_names_and_types);
+  // 过滤出 action 客户端名称
+  ret = _filter_action_names(&topic_names_and_types, allocator, action_names_and_types);
 
+  // 清理 topic_names_and_types 结构体
   rcl_ret_t nat_fini_ret = rcl_names_and_types_fini(&topic_names_and_types);
   if (RCL_RET_OK != nat_fini_ret) {
     ret = rcl_names_and_types_fini(action_names_and_types);
@@ -166,29 +176,36 @@ rcl_action_get_client_names_and_types_by_node(
   return ret;
 }
 
-rcl_ret_t
-rcl_action_get_server_names_and_types_by_node(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  const char * node_name,
-  const char * node_namespace,
-  rcl_names_and_types_t * action_names_and_types)
+/**
+ * @brief 获取指定节点的 action 服务器名称和类型
+ *
+ * @param[in] node 指向 rcl_node_t 结构体的指针，表示要查询的节点
+ * @param[in] allocator 分配器，用于分配内存
+ * @param[in] node_name 要查询的节点名称
+ * @param[in] node_namespace 要查询的节点命名空间
+ * @param[out] action_names_and_types 一个指向 rcl_names_and_types_t 结构体的指针，用于存储查询到的 action 服务器名称和类型
+ * @return 返回 rcl_ret_t 类型的结果，成功返回 RCL_RET_OK，否则返回相应的错误代码
+ */
+rcl_ret_t rcl_action_get_server_names_and_types_by_node(
+  const rcl_node_t * node, rcl_allocator_t * allocator, const char * node_name,
+  const char * node_namespace, rcl_names_and_types_t * action_names_and_types)
 {
+  // 检查 action_names_and_types 参数是否为空
   RCL_CHECK_ARGUMENT_FOR_NULL(action_names_and_types, RCL_RET_INVALID_ARGUMENT);
 
   rcl_ret_t ret;
   rcl_names_and_types_t topic_names_and_types = rcl_get_zero_initialized_names_and_types();
+  // 获取节点的发布者名称和类型
   ret = rcl_get_publisher_names_and_types_by_node(
     node, allocator, false, node_name, node_namespace, &topic_names_and_types);
   if (RCL_RET_OK != ret) {
     return ret;
   }
 
-  ret = _filter_action_names(
-    &topic_names_and_types,
-    allocator,
-    action_names_and_types);
+  // 过滤出 action 服务器名称
+  ret = _filter_action_names(&topic_names_and_types, allocator, action_names_and_types);
 
+  // 清理 topic_names_and_types 结构体
   rcl_ret_t nat_fini_ret = rcl_names_and_types_fini(&topic_names_and_types);
   if (RCL_RET_OK != nat_fini_ret) {
     ret = rcl_names_and_types_fini(action_names_and_types);
@@ -202,24 +219,31 @@ rcl_action_get_server_names_and_types_by_node(
   return ret;
 }
 
-rcl_ret_t
-rcl_action_get_names_and_types(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
+/**
+ * @brief 获取指定节点的 action 名称和类型
+ *
+ * @param[in] node 指向 rcl_node_t 结构体的指针，表示要查询的节点
+ * @param[in] allocator 分配器，用于分配内存
+ * @param[out] action_names_and_types 一个指向 rcl_names_and_types_t 结构体的指针，用于存储查询到的 action 名称和类型
+ * @return 返回 rcl_ret_t 类型的结果，成功返回 RCL_RET_OK，否则返回相应的错误代码
+ */
+rcl_ret_t rcl_action_get_names_and_types(
+  const rcl_node_t * node, rcl_allocator_t * allocator,
   rcl_names_and_types_t * action_names_and_types)
 {
+  // 检查 action_names_and_types 参数是否为空
   RCL_CHECK_ARGUMENT_FOR_NULL(action_names_and_types, RCL_RET_INVALID_ARGUMENT);
   rcl_names_and_types_t topic_names_and_types = rcl_get_zero_initialized_names_and_types();
+  // 获取节点的主题名称和类型
   rcl_ret_t ret = rcl_get_topic_names_and_types(node, allocator, false, &topic_names_and_types);
   if (RCL_RET_OK != ret) {
     return ret;
   }
 
-  ret = _filter_action_names(
-    &topic_names_and_types,
-    allocator,
-    action_names_and_types);
+  // 过滤出 action 名称
+  ret = _filter_action_names(&topic_names_and_types, allocator, action_names_and_types);
 
+  // 清理 topic_names_and_types 结构体
   rcl_ret_t nat_fini_ret = rcl_names_and_types_fini(&topic_names_and_types);
   if (RCL_RET_OK != nat_fini_ret) {
     ret = rcl_names_and_types_fini(action_names_and_types);

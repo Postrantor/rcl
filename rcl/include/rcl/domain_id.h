@@ -18,8 +18,7 @@
 #define RCL__DOMAIN_ID_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <stddef.h>
@@ -28,21 +27,21 @@ extern "C"
 #include "rcl/visibility_control.h"
 #include "rmw/domain_id.h"
 
-/// The default domain ID used by RCL.
+/// 默认情况下，RCL 使用的域 ID。
 #define RCL_DEFAULT_DOMAIN_ID RMW_DEFAULT_DOMAIN_ID
 
-extern const char * const RCL_DOMAIN_ID_ENV_VAR;
+// 声明一个外部常量字符串，表示 RCL 域 ID 的环境变量名称。
+extern const char* const RCL_DOMAIN_ID_ENV_VAR;
 
-/// Determine the default domain ID, based on the environment.
+/// 根据环境确定默认域 ID。
 /**
- * \param[out] domain_id Must not be NULL.
- * \returns #RCL_RET_INVALID_ARGUMENT if an argument is invalid, or,
- * \returns #RCL_RET_ERROR in case of an unexpected error, or,
- * \returns #RCL_RET_OK.
+ * \param[out] domain_id 不能为空（Must not be NULL）。
+ * \returns #RCL_RET_INVALID_ARGUMENT 如果参数无效，或者，
+ * \returns #RCL_RET_ERROR 如果发生意外错误，或者，
+ * \returns #RCL_RET_OK。
  */
 RCL_PUBLIC
-rcl_ret_t
-rcl_get_default_domain_id(size_t * domain_id);
+rcl_ret_t rcl_get_default_domain_id(size_t* domain_id);
 
 #ifdef __cplusplus
 }

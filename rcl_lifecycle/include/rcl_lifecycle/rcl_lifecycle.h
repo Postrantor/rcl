@@ -12,30 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/** \mainpage rcl: Common functionality ROS lifecycle
+/** \mainpage rcl: ROS生命周期的通用功能
  *
- * `rcl_lifecycle` provides a pure C implementation of the ROS concept of lifecycle.
- * It builds on top of the implementation of topics and services in `rcl`.
+ * `rcl_lifecycle` 提供了一个纯C语言实现的ROS生命周期概念。
+ * 它基于 `rcl` 中的主题和服务的实现。
  *
- * `rcl_lifecycle` consists of functions and structs for the following ROS lifecycle entities:
+ * `rcl_lifecycle` 包含以下ROS生命周期实体的函数和结构：
  *
- * - Lifecycle states
- * - Lifecycle transitions
- * - Lifecycle state machine
- * - Lifecycle triggers
+ * - 生命周期状态
+ * - 生命周期转换
+ * - 生命周期状态机
+ * - 生命周期触发器
  *
- * Some useful abstractions:
+ * 一些有用的抽象：
  *
- * - Return codes and other types
+ * - 返回代码和其他类型
  *   - rcl_lifecycle/data_types.h
  */
 
+// 防止头文件重复包含
 #ifndef RCL_LIFECYCLE__RCL_LIFECYCLE_H_
 #define RCL_LIFECYCLE__RCL_LIFECYCLE_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <stdbool.h>
@@ -44,206 +44,173 @@ extern "C"
 #include "rcl_lifecycle/default_state_machine.h"
 #include "rcl_lifecycle/visibility_control.h"
 
-/// Return a rcl_lifecycle_state_t struct with members set to `NULL` or 0.
+/// 返回一个成员设置为`NULL`或0的rcl_lifecycle_state_t结构体。
 /**
- * Should be called to get a null rcl_lifecycle_state_t before passing to
- * rcl_lifecycle_state_init().
+ * 在传递给 rcl_lifecycle_state_init() 之前，应调用此函数以获取一个空的 rcl_lifecycle_state_t。
  *
- * \return rcl_lifecycle_state_t a initilized struct
+ * \return rcl_lifecycle_state_t 初始化后的结构体
  */
 RCL_LIFECYCLE_PUBLIC
-rcl_lifecycle_state_t
-rcl_lifecycle_get_zero_initialized_state();
+rcl_lifecycle_state_t rcl_lifecycle_get_zero_initialized_state();
 
-/// Initialize a rcl_lifecycle_state_init.
+/// 初始化一个 rcl_lifecycle_state_init。
 /**
- * This function initializes a state based on an `id` and a `label`.
+ * 此函数根据 `id` 和 `label` 初始化一个状态。
  *
- * The given `rcl_lifecycle_state_t` must be zero initialized with the function
- * `rcl_lifecycle_get_zero_initialized_state()` and must not be already initialized
- * by this function.
- * The allocator will be used to allocate the label string.
+ * 给定的 `rcl_lifecycle_state_t` 必须使用函数 `rcl_lifecycle_get_zero_initialized_state()` 进行零初始化，
+ * 并且不能已经由此函数初始化。分配器将用于分配标签字符串。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[inout] state pointer to the state struct to be initialized
- * \param[in] id identifier of the state
- * \param[in] label label of the state
- * \param[in] allocator a valid allocator used to initialized the lifecycle state
- * \return `RCL_RET_OK` if state was initialized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[inout] state 指向要初始化的状态结构体的指针
+ * \param[in] id 状态的标识符
+ * \param[in] label 状态的标签
+ * \param[in] allocator 用于初始化生命周期状态的有效分配器
+ * \return `RCL_RET_OK` 如果状态成功初始化, 或者
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效, 或者
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_state_init(
-  rcl_lifecycle_state_t * state,
-  uint8_t id,
-  const char * label,
-  const rcl_allocator_t * allocator);
+rcl_ret_t rcl_lifecycle_state_init(
+  rcl_lifecycle_state_t * state, uint8_t id, const char * label, const rcl_allocator_t * allocator);
 
-/// Finalize a rcl_lifecycle_state_t.
+/// 结束一个 rcl_lifecycle_state_t.
 /**
  *
- * Calling this will set the rcl_lifecycle_state_t struct into the an unitialized state that is
- * functionally the same as before rcl_lifecycle_state_init was called. This function make the
- * rcl_lifecycle_state_t invalid.
+ * 调用此函数将使 rcl_lifecycle_state_t 结构进入未初始化状态，该状态在功能上与调用 rcl_lifecycle_state_init 之前相同。此函数使
+ * rcl_lifecycle_state_t 无效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[inout] state struct to be finalized
- * \param[in] allocator a valid allocator used to finalize the lifecycle state
- * \return `RCL_RET_OK` if the state was finalized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid.
+ * \param[inout] state 要结束的结构
+ * \param[in] allocator 用于结束生命周期状态的有效分配器
+ * \return `RCL_RET_OK` 如果状态成功结束, 或者
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_state_fini(
-  rcl_lifecycle_state_t * state,
-  const rcl_allocator_t * allocator);
+rcl_ret_t rcl_lifecycle_state_fini(
+  rcl_lifecycle_state_t * state, const rcl_allocator_t * allocator);
 
-/// Return a rcl_lifecycle_transition_t struct with members set to `NULL` or 0.
+/// 返回一个成员设置为 `NULL` 或 0 的 rcl_lifecycle_transition_t 结构。
 /**
- * Should be called to get a null rcl_lifecycle_transition_t before passing to
- * rcl_lifecycle_transition_init().
+ * 在传递给 rcl_lifecycle_transition_init() 之前，应调用此函数以获取空的 rcl_lifecycle_transition_t。
  */
 RCL_LIFECYCLE_PUBLIC
-rcl_lifecycle_transition_t
-rcl_lifecycle_get_zero_initialized_transition();
+rcl_lifecycle_transition_t rcl_lifecycle_get_zero_initialized_transition();
 
-/// Initialize a transition from a start state to the goal state.
+/// 从开始状态初始化到目标状态的过渡。
 /**
- * The given `rcl_lifecycle_transition_t` must be zero initialized with the function
- * `rcl_lifecycle_get_zero_initialized_transition()` and must not be already initialized
- * by this function.
- * The allocator will be used to allocate the label string and the rcl_lifecycle_state_t structs.
+ * 给定的 `rcl_lifecycle_transition_t` 必须使用函数 `rcl_lifecycle_get_zero_initialized_transition()` 进行零初始化，并且不能已经由此函数初始化。
+ * 分配器将用于分配标签字符串和 rcl_lifecycle_state_t 结构。
  *
- * Note: the transition pointer will take ownership
- * of the start and goal state. When calling
- * rcl_lifecycle_transition_fini(), the two states
- * will be freed.
+ * 注意：过渡指针将拥有开始和目标状态。当调用
+ * rcl_lifecycle_transition_fini() 时，这两个状态
+ * 将被释放。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] transition to a preallocated, zero-initialized transition structure
- *    to be initialized.
- * \param[in] id identifier of the transition
- * \param[in] label label of the transition
- * \param[in] start the value where the transition is initialized
- * \param[in] goal the objetive of the transition
- * \param[in] allocator a valid allocator used to finalize the lifecycle state
- * \return `RCL_RET_OK` if the transition is initialized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] transition 指向预分配的、零初始化的过渡结构
+ *    要初始化。
+ * \param[in] id 过渡的标识符
+ * \param[in] label 过渡的标签
+ * \param[in] start 过渡初始化的值
+ * \param[in] goal 过渡的目标
+ * \param[in] allocator 用于结束生命周期状态的有效分配器
+ * \return `RCL_RET_OK` 如果过渡成功初始化, 或者
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效, 或者
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_transition_init(
-  rcl_lifecycle_transition_t * transition,
-  unsigned int id,
-  const char * label,
-  rcl_lifecycle_state_t * start,
-  rcl_lifecycle_state_t * goal,
-  const rcl_allocator_t * allocator);
+rcl_ret_t rcl_lifecycle_transition_init(
+  rcl_lifecycle_transition_t * transition, unsigned int id, const char * label,
+  rcl_lifecycle_state_t * start, rcl_lifecycle_state_t * goal, const rcl_allocator_t * allocator);
 
-/// Finalize a rcl_lifecycle_transition_t.
+/// 结束一个 rcl_lifecycle_transition_t.
 /**
- * Calling this will set the rcl_lifecycle_transition_t struct into the an unitialized state that is
- * functionally the same as before rcl_lifecycle_transition_init was called. This function make the
- * rcl_lifecycle_transition_t invalid.
+ * 调用此函数将使 rcl_lifecycle_transition_t 结构进入未初始化状态，该状态在功能上与调用 rcl_lifecycle_transition_init 之前相同。此函数使
+ * rcl_lifecycle_transition_t 无效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[inout] transition struct to be finalized
- * \param[in] allocator a valid allocator used to finalize the transition
- * \return `RCL_RET_OK` if the state was finalized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[inout] transition 要完成的结构
+ * \param[in] allocator 用于完成过渡的有效分配器
+ * \return `RCL_RET_OK` 如果状态成功完成, 或者
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效, 或者
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_transition_fini(
-  rcl_lifecycle_transition_t * transition,
-  const rcl_allocator_t * allocator);
+rcl_ret_t rcl_lifecycle_transition_fini(
+  rcl_lifecycle_transition_t * transition, const rcl_allocator_t * allocator);
 
-/// Return a default initialized state machine options struct.
+/// 返回默认初始化的状态机选项结构。
 RCL_LIFECYCLE_PUBLIC
-rcl_lifecycle_state_machine_options_t
-rcl_lifecycle_get_default_state_machine_options();
+rcl_lifecycle_state_machine_options_t rcl_lifecycle_get_default_state_machine_options();
 
-/// Return a rcl_lifecycle_state_machine_t struct with members set to `NULL` or 0.
+/// 返回一个成员设置为 `NULL` 或 0 的 rcl_lifecycle_state_machine_t 结构。
 /**
- * Should be called to get a null rcl_lifecycle_state_machine_t before passing to
- * rcl_lifecycle_state_machine_init().
+ * 在传递给 rcl_lifecycle_state_machine_init() 之前，应该调用它以获取空的 rcl_lifecycle_state_machine_t。
  */
 RCL_LIFECYCLE_PUBLIC
-rcl_lifecycle_state_machine_t
-rcl_lifecycle_get_zero_initialized_state_machine();
+rcl_lifecycle_state_machine_t rcl_lifecycle_get_zero_initialized_state_machine();
 
-/// Initialize state machine
+/// 初始化状态机
 /**
- * This function initialize the state machine: one publisher to publish transitions messages
- * and a set of services to get information about states and transitions.
- * If `default_state` is `true` then a new default state machine is initialized.
+ * 此函数初始化状态机：一个发布器用于发布过渡消息和一组服务以获取有关状态和过渡的信息。
+ * 如果 `default_state` 为 `true`，则初始化一个新的默认状态机。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[inout] state_machine struct to be initialized
- * \param[in] node_handle a valid (not finalized) handle to the node used to create the publisher
- *    and the services
- * \param[in] ts_pub_notify pointer to transition publisher, it used to publish the transitions
- * \param[in] ts_srv_change_state pointer to the service that allows to trigger changes on the state
- * \param[in] ts_srv_get_state pointer to the service that allows to get the current state
- * \param[in] ts_srv_get_available_states pointer to the service that allows to get the available states
- * \param[in] ts_srv_get_available_transitions pointer to the service that allows to get the
- *    available transitions
- * \param[in] ts_srv_get_transition_graph pointer to the service that allows to get transitions from
- *    the graph
- * \param[in] state_machine_options collection of config options for initializing the state machine
- * \return `RCL_RET_OK` if the state machine was initialized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if input params is NULL, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[inout] state_machine 要初始化的结构
+ * \param[in] node_handle 有效的（未完成）节点句柄，用于创建发布器和服务
+ * \param[in] ts_pub_notify 过渡发布器指针，用于发布过渡
+ * \param[in] ts_srv_change_state 允许触发状态更改的服务指针
+ * \param[in] ts_srv_get_state 允许获取当前状态的服务指针
+ * \param[in] ts_srv_get_available_states 允许获取可用状态的服务指针
+ * \param[in] ts_srv_get_available_transitions 允许获取可用过渡的服务指针
+ * \param[in] ts_srv_get_transition_graph 允许从图中获取过渡的服务指针
+ * \param[in] state_machine_options 初始化状态机的配置选项集合
+ * \return `RCL_RET_OK` 如果状态机成功初始化, 或者
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果输入参数为 NULL, 或者
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_state_machine_init(
-  rcl_lifecycle_state_machine_t * state_machine,
-  rcl_node_t * node_handle,
+rcl_ret_t rcl_lifecycle_state_machine_init(
+  rcl_lifecycle_state_machine_t * state_machine, rcl_node_t * node_handle,
   const rosidl_message_type_support_t * ts_pub_notify,
   const rosidl_service_type_support_t * ts_srv_change_state,
   const rosidl_service_type_support_t * ts_srv_get_state,
@@ -252,183 +219,168 @@ rcl_lifecycle_state_machine_init(
   const rosidl_service_type_support_t * ts_srv_get_transition_graph,
   const rcl_lifecycle_state_machine_options_t * state_machine_options);
 
-/// Finalize a rcl_lifecycle_state_machine_t.
+/// 结束一个 rcl_lifecycle_state_machine_t.
 /**
- * Calling this will set the rcl_lifecycle_state_machine_t struct into the an unitialized state that is
- * functionally the same as before rcl_lifecycle_state_machine_init was called. This function make the
- * rcl_lifecycle_state_machine_t invalid.
+ * 调用此函数将使 rcl_lifecycle_state_machine_t 结构进入未初始化状态，该状态在功能上与调用 rcl_lifecycle_state_machine_init 之前相同。此函数使
+ * rcl_lifecycle_state_machine_t 无效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[inout] state_machine struct to be finalized
- * \param[in] node_handle valid (not finalized) handle to the node
- * \return `RCL_RET_OK` if the state was finalized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[inout] state_machine 要完成的结构
+ * \param[in] node_handle 有效的（未完成）节点句柄
+ * \return `RCL_RET_OK` 如果状态成功完成, 或者
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效, 或者
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_state_machine_fini(
-  rcl_lifecycle_state_machine_t * state_machine,
-  rcl_node_t * node_handle);
+rcl_ret_t rcl_lifecycle_state_machine_fini(
+  rcl_lifecycle_state_machine_t * state_machine, rcl_node_t * node_handle);
 
-/// Check if a state machine is active.
+/// 检查状态机是否处于活动状态。
 /**
- * If the state is initialized then returns `RCL_RET_OK`, otherwise returns `RCL_RET_ERROR`
- * In the case where `RCL_RET_ERROR` is to be returned, an error message is set.
- * This function cannot fail.
+ * 如果状态已初始化，则返回 `RCL_RET_OK`，否则返回 `RCL_RET_ERROR`
+ * 在要返回 `RCL_RET_ERROR` 的情况下，设置错误消息。
+ * 此功能不能失败。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] state_machine pointer to the state machine struct
- * \return `RCL_RET_OK` if the state is initialized, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid.
+ * \param[in] state_machine 指向状态机结构的指针
+ * \return `RCL_RET_OK` 如果状态已初始化, 或者
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_state_machine_is_initialized(
+rcl_ret_t rcl_lifecycle_state_machine_is_initialized(
   const rcl_lifecycle_state_machine_t * state_machine);
 
-/// Get a state by id.
+/// 通过id获取状态。
 /**
- * A pointer to the internally transition struct is returned
- * based on the `id`. If the `id` is not set in the state then returns NULL.
+ * 根据`id`返回指向内部转换结构的指针。
+ * 如果状态中未设置`id`，则返回NULL。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] state pointer to the state struct
- * \param[in] id identifier to be find in the valid transitions
- * \return a pointer to the lifecycle transition if the `id` exists or otherwise it return NULL
+ * \param[in] state 指向状态结构的指针
+ * \param[in] id 要在有效转换中查找的标识符
+ * \return 如果存在`id`，则返回指向生命周期转换的指针，否则返回NULL
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-const rcl_lifecycle_transition_t *
-rcl_lifecycle_get_transition_by_id(
-  const rcl_lifecycle_state_t * state,
-  uint8_t id);
+const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_id(
+  const rcl_lifecycle_state_t * state, uint8_t id);
 
-/// Get a state by id.
+/// 通过id获取状态。
 /**
- * A pointer to the internally transition struct is returned
- * based on the `label`. If the `label` is not set in the state then returns NULL.
+ * 根据`label`返回指向内部转换结构的指针。
+ * 如果状态中未设置`label`，则返回NULL。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] state pointer to the state struct
- * \param[in] label label to be find in the valid transitions
- * \return a pointer to the lifecycle transition if the label exists or otherwise it return NULL
+ * \param[in] state 指向状态结构的指针
+ * \param[in] label 要在有效转换中查找的标签
+ * \return 如果存在标签，则返回指向生命周期转换的指针，否则返回NULL
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-const rcl_lifecycle_transition_t *
-rcl_lifecycle_get_transition_by_label(
-  const rcl_lifecycle_state_t * state,
-  const char * label);
+const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_label(
+  const rcl_lifecycle_state_t * state, const char * label);
 
-/// Trigger a state by id.
+/// 通过id触发状态。
 /**
- * This function will trigger a transition based on the `id`. If the argument
- * `publish_notification` is `true` then a message will be published in the
- * ROS 2 network notifying the transition, if `false` no message will be published.
+ * 此函数将根据`id`触发转换。如果参数
+ * `publish_notification`为`true`，则将在
+ * ROS 2网络中发布通知转换的消息，如果为`false`，则不会发布消息。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] state_machine pointer to the state machine struct
- * \param[in] id identifier of the transition to be triggered
- * \param[in] publish_notification if the value is `true` a message will be published
- *    notifying the transition, otherwise no message will be published
- * \return `RCL_RET_OK` if the transition was triggered successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] state_machine 指向状态机结构的指针
+ * \param[in] id 要触发的转换的标识符
+ * \param[in] publish_notification 如果值为`true`，将发布通知转换的消息，
+ *    否则不会发布消息
+ * \return 如果成功触发转换，则返回`RCL_RET_OK`，或者
+ * \return 如果任何参数无效，则返回`RCL_RET_INVALID_ARGUMENT`，或者
+ * \return 如果发生未指定的错误，则返回`RCL_RET_ERROR`。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_trigger_transition_by_id(
-  rcl_lifecycle_state_machine_t * state_machine,
-  uint8_t id,
-  bool publish_notification);
+rcl_ret_t rcl_lifecycle_trigger_transition_by_id(
+  rcl_lifecycle_state_machine_t * state_machine, uint8_t id, bool publish_notification);
 
-/// Trigger a state by label.
+/// 通过标签触发状态。
 /**
- * This function will trigger a transition base on the `label`. If the argument
- * `publish_notification` is `true` then a message will be published in the
- * ROS 2 network notifying the transition, if `false` no message will be published.
+ * 此函数将根据`label`触发转换。如果参数
+ * `publish_notification`为`true`，则将在
+ * ROS 2网络中发布通知转换的消息，如果为`false`，则不会发布消息。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] state_machine pointer to the state machine struct
- * \param[in] label of the transition to be triggered
- * \param[in] publish_notification if the value is `true` a message will be published
- *    notifying the transition, otherwise no message will be published
- * \return `RCL_RET_OK` if the transition was triggered successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] state_machine 指向状态机结构的指针
+ * \param[in] label 要触发的转换的标签
+ * \param[in] publish_notification 如果值为`true`，将发布通知转换的消息，
+ *    否则不会发布消息
+ * \return 如果成功触发转换，则返回`RCL_RET_OK`，或者
+ * \return 如果任何参数无效，则返回`RCL_RET_INVALID_ARGUMENT`，或者
+ * \return 如果发生未指定的错误，则返回`RCL_RET_ERROR`。
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lifecycle_trigger_transition_by_label(
-  rcl_lifecycle_state_machine_t * state_machine,
-  const char * label,
-  bool publish_notification);
+rcl_ret_t rcl_lifecycle_trigger_transition_by_label(
+  rcl_lifecycle_state_machine_t * state_machine, const char * label, bool publish_notification);
 
-/// Print the state machine data
+/// 打印状态机数据
 /**
- * This function will print in the standard output the data in the
- * rcl_lifecycle_state_machine_t struct.
+ * 此函数将在标准输出中打印
+ * rcl_lifecycle_state_machine_t结构中的数据。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] state_machine pointer to the state machine struct to print
+ * \param[in] state_machine 要打印的状态机结构的指针
  */
 RCL_LIFECYCLE_PUBLIC
-void
-rcl_print_state_machine(const rcl_lifecycle_state_machine_t * state_machine);
+void rcl_print_state_machine(const rcl_lifecycle_state_machine_t * state_machine);
 
 #ifdef __cplusplus
 }

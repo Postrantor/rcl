@@ -18,28 +18,31 @@
 #define RCL__LOCALHOST_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
 #include "rmw/localhost.h"
 
-extern const char * const RCL_LOCALHOST_ENV_VAR;
+// 声明一个外部常量字符串，表示RCL本地主机环境变量。
+extern const char* const RCL_LOCALHOST_ENV_VAR;
 
-/// Determine if the user wants to communicate using loopback only.
+// 定义一个函数，用于确定用户是否希望仅使用环回（loopback）进行通信。
 /**
- * Checks if localhost should be used for network communication based on environment.
+ * 函数功能：基于环境检查是否应该使用localhost进行网络通信。
  *
- * \param[out] localhost_only Must not be NULL.
- * \return #RCL_RET_INVALID_ARGUMENT if an argument is invalid, or
- * \return #RCL_RET_ERROR if an unexpected error happened, or
- * \return #RCL_RET_OK.
+ * 参数列表：
+ * \param[out] localhost_only 输出参数，表示是否仅使用本地主机进行通信。不能为空（Must not be
+ * NULL）。
+ *
+ * 返回值：
+ * \return #RCL_RET_INVALID_ARGUMENT 如果参数无效，则返回此值。
+ * \return #RCL_RET_ERROR 如果发生意外错误，则返回此值。
+ * \return #RCL_RET_OK 如果一切正常，则返回此值。
  */
 RCL_PUBLIC
-rcl_ret_t
-rcl_get_localhost_only(rmw_localhost_only_t * localhost_only);
+rcl_ret_t rcl_get_localhost_only(rmw_localhost_only_t* localhost_only);  // 函数声明
 
 #ifdef __cplusplus
 }

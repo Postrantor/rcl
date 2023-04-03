@@ -18,11 +18,10 @@
 #include "rcutils/macros.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-/// Ignored return values of functions with this macro will emit a warning.
+/// 使用此宏定义的函数，如果其返回值未被使用，编译器将发出警告。
 #define RCL_WARN_UNUSED RCUTILS_WARN_UNUSED
 
 #define RCL_UNUSED(x) RCUTILS_UNUSED(x)

@@ -16,18 +16,19 @@
 #define RCL__INIT_OPTIONS_IMPL_H_
 
 #include "rcl/init_options.h"
-
 #include "rmw/init_options.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /// \internal
-struct rcl_init_options_impl_s
-{
+/// \brief 结构体 rcl_init_options_impl_s 用于存储 ROS2 初始化选项的实现细节。
+struct rcl_init_options_impl_s {
+  /// \brief 分配器，用于管理内存分配和释放。
   rcl_allocator_t allocator;
+
+  /// \brief RMW 初始化选项，包含了与底层中间件相关的初始化参数。
   rmw_init_options_t rmw_init_options;
 };
 

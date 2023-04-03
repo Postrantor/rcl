@@ -15,15 +15,31 @@
 #ifndef RCL__SUBSCRIPTION_IMPL_H_
 #define RCL__SUBSCRIPTION_IMPL_H_
 
+#include "rcl/subscription.h"
 #include "rmw/rmw.h"
 
-#include "rcl/subscription.h"
-
-struct rcl_subscription_impl_s
-{
+/**
+ * @struct rcl_subscription_impl_s
+ * @brief ROS2中的rcl订阅器实现结构体，包含订阅器选项、QoS配置和底层RMW订阅器句柄。
+ */
+struct rcl_subscription_impl_s {
+  /**
+   * @var rcl_subscription_options_t options
+   * @brief 订阅器选项，包括分配器、节点名等。
+   */
   rcl_subscription_options_t options;
+
+  /**
+   * @var rmw_qos_profile_t actual_qos
+   * @brief 实际使用的QoS配置，包括可靠性、历史深度等。
+   */
   rmw_qos_profile_t actual_qos;
-  rmw_subscription_t * rmw_handle;
+
+  /**
+   * @var rmw_subscription_t * rmw_handle
+   * @brief 底层RMW订阅器句柄，用于与ROS2中间件通信。
+   */
+  rmw_subscription_t* rmw_handle;
 };
 
 #endif  // RCL__SUBSCRIPTION_IMPL_H_

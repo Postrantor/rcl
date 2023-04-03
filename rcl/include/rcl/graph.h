@@ -18,826 +18,716 @@
 #define RCL__GRAPH_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-#include <rmw/names_and_types.h>
 #include <rmw/get_topic_names_and_types.h>
+#include <rmw/names_and_types.h>
 #include <rmw/topic_endpoint_info_array.h>
 
-#include "rcutils/time.h"
-#include "rcutils/types.h"
-
-#include "rosidl_runtime_c/service_type_support_struct.h"
-
-#include "rcl/macros.h"
 #include "rcl/client.h"
+#include "rcl/macros.h"
 #include "rcl/node.h"
 #include "rcl/visibility_control.h"
+#include "rcutils/time.h"
+#include "rcutils/types.h"
+#include "rosidl_runtime_c/service_type_support_struct.h"
 
-/// A structure that contains topic names and types.
+/// 包含主题名称和类型的结构体。
 typedef rmw_names_and_types_t rcl_names_and_types_t;
 
-/// A structure that encapsulates the node name, node namespace,
-/// topic type, gid, and qos_profile or publishers and subscriptions
-/// for a topic.
+/// 封装节点名称、节点命名空间、主题类型、gid 和 qos_profile 的结构体，用于主题的发布者和订阅者。
 typedef rmw_topic_endpoint_info_t rcl_topic_endpoint_info_t;
 
-/// An array of topic endpoint information.
+/// 主题端点信息的数组。
 typedef rmw_topic_endpoint_info_array_t rcl_topic_endpoint_info_array_t;
 
-/// Return a zero-initialized rcl_names_and_types_t structure.
+/// 返回一个零初始化的 rcl_names_and_types_t 结构体。
 #define rcl_get_zero_initialized_names_and_types rmw_get_zero_initialized_names_and_types
 
-/// Return a zero-initialized rcl_topic_endpoint_info_t structure.
+/// 返回一个零初始化的 rcl_topic_endpoint_info_t 结构体。
 #define rcl_get_zero_initialized_topic_endpoint_info_array \
   rmw_get_zero_initialized_topic_endpoint_info_array
 
-/// Finalize a topic_endpoint_info_array_t structure.
+/// 结束一个 topic_endpoint_info_array_t 结构体。
 #define rcl_topic_endpoint_info_array_fini rmw_topic_endpoint_info_array_fini
 
-/// Return a list of topic names and types for publishers associated with a node.
 /**
- * The `node` parameter must point to a valid node.
+ * \brief 返回与节点关联的发布者的主题名称和类型列表。
  *
- * The `topic_names_and_types` parameter must be allocated and zero initialized.
- * This function allocates memory for the returned list of names and types and so it is the
- * callers responsibility to pass `topic_names_and_types` to rcl_names_and_types_fini()
- * when it is no longer needed.
- * Failing to do so will result in leaked memory.
+ * `node` 参数必须指向一个有效的节点。
  *
- * There may be some demangling that occurs when listing the names from the middleware
- * implementation.
- * If the `no_demangle` argument is set to `true`, then this will be avoided and the names will be
- * returned as they appear to the middleware.
+ * `topic_names_and_types` 参数必须已分配并零初始化。
+ * 此函数为返回的名称和类型列表分配内存，因此调用者有责任在不再需要 `topic_names_and_types` 时将其传递给 rcl_names_and_types_fini()。
+ * 如果没有这样做，将导致内存泄漏。
  *
- * \see rmw_get_topic_names_and_types for more details on no_demangle
+ * 当从中间件实现列出名称时，可能会发生一些解析操作。
+ * 如果 `no_demangle` 参数设置为 `true`，则将避免这种情况，名称将按照中间件显示的方式返回。
  *
- * The returned names are not automatically remapped by this function.
- * Attempting to create publishers or subscribers using names returned by this function may not
- * result in the desired topic name being used depending on the remap rules in use.
+ * \see rmw_get_topic_names_and_types 以获取有关 no_demangle 的更多详细信息
+ *
+ * 此函数不会自动重新映射返回的名称。
+ * 使用此函数返回的名称创建发布者或订阅者可能不会导致使用所需的主题名称，具体取决于正在使用的重映射规则。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存            | 是
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator to be used when allocating space for strings
- * \param[in] no_demangle if true, list all topics without any demangling
- * \param[in] node_name the node name of the topics to return
- * \param[in] node_namespace the node namespace of the topics to return
- * \param[out] topic_names_and_types list of topic names and their types
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_NODE_INVALID_NAME if the node name is invalid, or
- * \return #RCL_RET_NODE_INVALID_NAMESPACE if the node namespace is invalid, or
- * \return #RCL_RET_NODE_NAME_NON_EXISTENT if the node name wasn't found, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 用于为字符串分配空间时使用的分配器
+ * \param[in] no_demangle 如果为 true，则列出所有主题而无需解析
+ * \param[in] node_name 要返回的主题的节点名称
+ * \param[in] node_namespace 要返回的主题的节点命名空间
+ * \param[out] topic_names_and_types 主题名称及其类型列表
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_NODE_INVALID_NAME 如果节点名称无效，或
+ * \return #RCL_RET_NODE_INVALID_NAMESPACE 如果节点命名空间无效，或
+ * \return #RCL_RET_NODE_NAME_NON_EXISTENT 如果未找到节点名称，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_publisher_names_and_types_by_node(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  bool no_demangle,
-  const char * node_name,
-  const char * node_namespace,
+rcl_ret_t rcl_get_publisher_names_and_types_by_node(
+  const rcl_node_t * node, rcl_allocator_t * allocator, bool no_demangle, const char * node_name,
+  const char * node_namespace, rcl_names_and_types_t * topic_names_and_types);
+
+/// 返回与节点关联的订阅主题名称和类型列表。
+/**
+ * `node` 参数必须指向一个有效的节点。
+ *
+ * `topic_names_and_types` 参数必须已分配并初始化为零。
+ * 此函数为返回的名称和类型列表分配内存，因此调用者有责任在不再需要时将 `topic_names_and_types` 传递给 rcl_names_and_types_fini()。
+ * 如果没有这样做，将导致内存泄漏。
+ *
+ * \see rcl_get_publisher_names_and_types_by_node 关于 `no_demangle` 参数的详细信息。
+ *
+ * 此函数不会自动重映射返回的名称。
+ * 尝试使用此函数返回的名称创建发布者或订阅者可能不会根据正在使用的重映射规则得到期望的主题名称。
+ *
+ * <hr>
+ * 属性                | 遵循性
+ * ------------------ | -------------
+ * 分配内存            | 是
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
+ *
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 用于为字符串分配空间的分配器
+ * \param[in] no_demangle 如果为 true，则列出所有未经处理的主题
+ * \param[in] node_name 要返回的主题的节点名称
+ * \param[in] node_namespace 要返回的主题的节点命名空间
+ * \param[out] topic_names_and_types 主题名称及其类型列表
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_NODE_INVALID_NAME 如果节点名称无效，或
+ * \return #RCL_RET_NODE_INVALID_NAMESPACE 如果节点命名空间无效，或
+ * \return #RCL_RET_NODE_NAME_NON_EXISTENT 如果未找到节点名称，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t rcl_get_subscriber_names_and_types_by_node(
+  const rcl_node_t * node, rcl_allocator_t * allocator, bool no_demangle, const char * node_name,
+  const char * node_namespace, rcl_names_and_types_t * topic_names_and_types);
+
+/// 返回与节点关联的服务名称和类型列表。
+/**
+ * `node` 参数必须指向一个有效的节点。
+ *
+ * `service_names_and_types` 参数必须已分配并初始化为零。
+ * 此函数为返回的名称和类型列表分配内存，因此调用者有责任在不再需要时将 `service_names_and_types` 传递给 rcl_names_and_types_fini()。
+ * 如果没有这样做，将导致内存泄漏。
+ *
+ * \see rcl_get_publisher_names_and_types_by_node 关于 `no_demangle` 参数的详细信息。
+ *
+ * 此函数不会自动重映射返回的名称。
+ * 尝试使用此函数返回的名称创建服务客户端可能不会根据正在使用的重映射规则得到期望的服务名称。
+ *
+ * <hr>
+ * 属性                | 遵循性
+ * ------------------ | -------------
+ * 分配内存            | 是
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
+ *
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 用于为字符串分配空间的分配器
+ * \param[in] node_name 要返回的服务的节点名称
+ * \param[in] node_namespace 要返回的服务的节点命名空间
+ * \param[out] service_names_and_types 服务名称及其类型列表
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_NODE_INVALID_NAME 如果节点名称无效，或
+ * \return #RCL_RET_NODE_INVALID_NAMESPACE 如果节点命名空间无效，或
+ * \return #RCL_RET_NODE_NAME_NON_EXISTENT 如果未找到节点名称，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t rcl_get_service_names_and_types_by_node(
+  const rcl_node_t * node, rcl_allocator_t * allocator, const char * node_name,
+  const char * node_namespace, rcl_names_and_types_t * service_names_and_types);
+
+/// 返回与节点关联的服务客户端名称和类型列表。
+/**
+ * `node` 参数必须指向一个有效的节点。
+ *
+ * `service_names_and_types` 参数必须分配并初始化为零。
+ * 此函数为返回的名称和类型列表分配内存，因此调用者有责任在不再需要时将 `service_names_and_types` 传递给 rcl_names_and_types_fini()。
+ * 如果没有这样做，将导致内存泄漏。
+ *
+ * \see rcl_get_publisher_names_and_types_by_node 关于 `no_demangle` 参数的详细信息。
+ *
+ * 此函数不会自动重映射返回的名称。
+ * 尝试使用此函数返回的名称创建服务服务器可能不会导致使用所需的服务名称，具体取决于正在使用的重映射规则。
+ *
+ * <hr>
+ * 属性              | 遵循性
+ * ------------------ | -------------
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
+ *
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 用于为字符串分配空间时使用的分配器
+ * \param[in] node_name 要返回的服务的节点名称
+ * \param[in] node_namespace 要返回的服务的节点命名空间
+ * \param[out] service_names_and_types 服务客户端名称及其类型列表
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_NODE_INVALID_NAME 如果节点名称无效，或
+ * \return #RCL_RET_NODE_INVALID_NAMESPACE 如果节点命名空间无效，或
+ * \return #RCL_RET_NODE_NAME_NON_EXISTENT 如果未找到节点名称，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t rcl_get_client_names_and_types_by_node(
+  const rcl_node_t * node, rcl_allocator_t * allocator, const char * node_name,
+  const char * node_namespace, rcl_names_and_types_t * service_names_and_types);
+
+/// 返回主题名称及其类型列表。
+/**
+ * `node` 参数必须指向一个有效的节点。
+ *
+ * `topic_names_and_types` 参数必须分配并初始化为零。
+ * 此函数为返回的名称和类型列表分配内存，因此调用者有责任在不再需要时将 `topic_names_and_types` 传递给 rcl_names_and_types_fini()。
+ * 如果没有这样做，将导致内存泄漏。
+ *
+ * \see rcl_get_publisher_names_and_types_by_node 关于 `no_demangle` 参数的详细信息。
+ *
+ * 此函数不会自动重映射返回的名称。
+ * 尝试使用此函数返回的名称创建发布者或订阅者可能不会导致使用所需的主题名称，具体取决于正在使用的重映射规则。
+ *
+ * <hr>
+ * 属性              | 遵循性
+ * ------------------ | -------------
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
+ *
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 用于为字符串分配空间时使用的分配器
+ * \param[in] no_demangle 如果为 true，则列出所有主题而不进行任何解扰
+ * \param[out] topic_names_and_types 主题名称及其类型列表
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
+ */
+RCL_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t rcl_get_topic_names_and_types(
+  const rcl_node_t * node, rcl_allocator_t * allocator, bool no_demangle,
   rcl_names_and_types_t * topic_names_and_types);
 
-/// Return a list of topic names and types for subscriptions associated with a node.
+/// 返回服务名称及其类型列表。
 /**
- * The `node` parameter must point to a valid node.
+ * `node` 参数必须指向一个有效的节点。
  *
- * The `topic_names_and_types` parameter must be allocated and zero initialized.
- * This function allocates memory for the returned list of names and types and so it is the
- * callers responsibility to pass `topic_names_and_types` to rcl_names_and_types_fini()
- * when it is no longer needed.
- * Failing to do so will result in leaked memory.
+ * `service_names_and_types` 参数必须分配并初始化为零。
+ * 此函数为返回的名称和类型列表分配内存，因此调用者有责任在不再需要时将 `service_names_and_types` 传递给 rcl_names_and_types_fini()。
+ * 如果没有这样做，将导致内存泄漏。
  *
- * \see rcl_get_publisher_names_and_types_by_node for details on the `no_demangle` parameter.
- *
- * The returned names are not automatically remapped by this function.
- * Attempting to create publishers or subscribers using names returned by this function may not
- * result in the desired topic name being used depending on the remap rules in use.
+ * 此函数不会自动重映射返回的名称。
+ * 尝试使用此函数返回的名称创建客户端或服务可能不会导致使用所需的服务名称，具体取决于正在使用的重映射规则。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator to be used when allocating space for strings
- * \param[in] no_demangle if true, list all topics without any demangling
- * \param[in] node_name the node name of the topics to return
- * \param[in] node_namespace the node namespace of the topics to return
- * \param[out] topic_names_and_types list of topic names and their types
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_NODE_INVALID_NAME if the node name is invalid, or
- * \return #RCL_RET_NODE_INVALID_NAMESPACE if the node namespace is invalid, or
- * \return #RCL_RET_NODE_NAME_NON_EXISTENT if the node name wasn't found, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 用于为字符串分配空间时使用的分配器
+ * \param[out] service_names_and_types 服务名称及其类型列表
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_subscriber_names_and_types_by_node(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  bool no_demangle,
-  const char * node_name,
-  const char * node_namespace,
-  rcl_names_and_types_t * topic_names_and_types);
-
-/// Return a list of service names and types associated with a node.
-/**
- * The `node` parameter must point to a valid node.
- *
- * The `service_names_and_types` parameter must be allocated and zero initialized.
- * This function allocates memory for the returned list of names and types and so it is the
- * callers responsibility to pass `service_names_and_types` to rcl_names_and_types_fini()
- * when it is no longer needed.
- * Failing to do so will result in leaked memory.
- *
- * \see rcl_get_publisher_names_and_types_by_node for details on the `no_demangle` parameter.
- *
- * The returned names are not automatically remapped by this function.
- * Attempting to create service clients using names returned by this function may not
- * result in the desired service name being used depending on the remap rules in use.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
- *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator to be used when allocating space for strings
- * \param[in] node_name the node name of the services to return
- * \param[in] node_namespace the node namespace of the services to return
- * \param[out] service_names_and_types list of service names and their types
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_NODE_INVALID_NAME if the node name is invalid, or
- * \return #RCL_RET_NODE_INVALID_NAMESPACE if the node namespace is invalid, or
- * \return #RCL_RET_NODE_NAME_NON_EXISTENT if the node name wasn't found, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_service_names_and_types_by_node(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  const char * node_name,
-  const char * node_namespace,
+rcl_ret_t rcl_get_service_names_and_types(
+  const rcl_node_t * node, rcl_allocator_t * allocator,
   rcl_names_and_types_t * service_names_and_types);
 
-/// Return a list of service client names and types associated with a node.
+/// 初始化一个 rcl_names_and_types_t 对象。
 /**
- * The `node` parameter must point to a valid node.
- *
- * The `service_names_and_types` parameter must be allocated and zero initialized.
- * This function allocates memory for the returned list of names and types and so it is the
- * callers responsibility to pass `service_names_and_types` to rcl_names_and_types_fini()
- * when it is no longer needed.
- * Failing to do so will result in leaked memory.
- *
- * \see rcl_get_publisher_names_and_types_by_node for details on the `no_demangle` parameter.
- *
- * The returned names are not automatically remapped by this function.
- * Attempting to create service servers using names returned by this function may not
- * result in the desired service name being used depending on the remap rules in use.
+ * 此函数初始化 names 的字符串数组，并根据给定的大小为类型的所有字符串数组分配空间，
+ * 但不会初始化每组类型的字符串数组。
+ * 然而，每组类型的字符串数组都是零初始化的。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator to be used when allocating space for strings
- * \param[in] node_name the node name of the services to return
- * \param[in] node_namespace the node namespace of the services to return
- * \param[out] service_names_and_types list of service client names and their types
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_NODE_INVALID_NAME if the node name is invalid, or
- * \return #RCL_RET_NODE_INVALID_NAMESPACE if the node namespace is invalid, or
- * \return #RCL_RET_NODE_NAME_NON_EXISTENT if the node name wasn't found, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[inout] names_and_types 要初始化的对象
+ * \param[in] size 要存储的名称和类型集的数量
+ * \param[in] allocator 用于分配和释放内存的分配器
+ * \return #RCL_RET_OK 成功时返回，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果内存分配失败，或
+ * \return #RCL_RET_ERROR 当发生未指定的错误时返回。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_client_names_and_types_by_node(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  const char * node_name,
-  const char * node_namespace,
-  rcl_names_and_types_t * service_names_and_types);
+rcl_ret_t rcl_names_and_types_init(
+  rcl_names_and_types_t * names_and_types, size_t size, rcl_allocator_t * allocator);
 
-/// Return a list of topic names and their types.
+/// 结束一个 rcl_names_and_types_t 对象。
 /**
- * The `node` parameter must point to a valid node.
+ * 当对象传递给 rcl_get_*_names_and_types() 函数之一时，对象将被填充。
+ * 此函数回收在填充过程中分配的任何资源。
  *
- * The `topic_names_and_types` parameter must be allocated and zero initialized.
- * This function allocates memory for the returned list of names and types and so it is the
- * callers responsibility to pass `topic_names_and_types` to rcl_names_and_types_fini()
- * when it is no longer needed.
- * Failing to do so will result in leaked memory.
- *
- * \see rcl_get_publisher_names_and_types_by_node for details on the `no_demangle` parameter.
- *
- * The returned names are not automatically remapped by this function.
- * Attempting to create publishers or subscribers using names returned by this function may not
- * result in the desired topic name being used depending on the remap rules in use.
+ * `names_and_types` 参数不能为 `NULL`，并且必须指向一个已分配的 rcl_names_and_types_t 结构，
+ * 该结构之前已传递给成功的 rcl_get_*_names_and_types() 函数调用。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator to be used when allocating space for strings
- * \param[in] no_demangle if true, list all topics without any demangling
- * \param[out] topic_names_and_types list of topic names and their types
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_NODE_INVALID_NAME if the node name is invalid, or
- * \return #RCL_RET_NODE_INVALID_NAMESPACE if the node namespace is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[inout] names_and_types 要结束的结构
+ * \return #RCL_RET_OK 如果成功，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_topic_names_and_types(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  bool no_demangle,
-  rcl_names_and_types_t * topic_names_and_types);
+rcl_ret_t rcl_names_and_types_fini(rcl_names_and_types_t * names_and_types);
 
-/// Return a list of service names and their types.
+/// 返回 ROS 图中可用节点的列表。
 /**
- * The `node` parameter must point to a valid node.
+ * `node` 参数必须指向一个有效的节点。
  *
- * The `service_names_and_types` parameter must be allocated and zero initialized.
- * This function allocates memory for the returned list of names and types and so it is the
- * callers responsibility to pass `service_names_and_types` to rcl_names_and_types_fini()
- * when it is no longer needed.
- * Failing to do so will result in leaked memory.
+ * `node_names` 参数必须是分配和零初始化的。
+ * `node_names` 是此函数的输出，并包含分配的内存。
+ * 使用 rcutils_get_zero_initialized_string_array() 初始化空的 rcutils_string_array_t 结构。
+ * 因此，当不再需要此 `node_names` 结构时，应将其传递给 rcutils_string_array_fini()。
+ * 如果不这样做，将导致内存泄漏。
  *
- * The returned names are not automatically remapped by this function.
- * Attempting to create clients or services using names returned by this function may not result in
- * the desired service name being used depending on the remap rules in use.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
- *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator to be used when allocating space for strings
- * \param[out] service_names_and_types list of service names and their types
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_service_names_and_types(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  rcl_names_and_types_t * service_names_and_types);
-
-/// Initialize a rcl_names_and_types_t object.
-/**
- * This function initializes the string array for the names and allocates space
- * for all the string arrays for the types according to the given size, but
- * it does not initialize the string array for each set of types.
- * However, the string arrays for each set of types is zero initialized.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[inout] names_and_types object to be initialized
- * \param[in] size the number of names and sets of types to be stored
- * \param[in] allocator to be used to allocate and deallocate memory
- * \return #RCL_RET_OK on success, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if memory allocation fails, or
- * \return #RCL_RET_ERROR when an unspecified error occurs.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_names_and_types_init(
-  rcl_names_and_types_t * names_and_types,
-  size_t size,
-  rcl_allocator_t * allocator);
-
-/// Finalize a rcl_names_and_types_t object.
-/**
- * The object is populated when given to one of the rcl_get_*_names_and_types()
- * functions.
- * This function reclaims any resources allocated during population.
- *
- * The `names_and_types` parameter must not be `NULL`, and must point to an
- * already allocated rcl_names_and_types_t struct that was previously
- * passed to a successful rcl_get_*_names_and_types() function call.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[inout] names_and_types struct to be finalized
- * \return #RCL_RET_OK if successful, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
- */
-RCL_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_names_and_types_fini(rcl_names_and_types_t * names_and_types);
-
-/// Return a list of available nodes in the ROS graph.
-/**
- * The `node` parameter must point to a valid node.
- *
- * The `node_names` parameter must be allocated and zero initialized.
- * `node_names` is the output for this function, and contains allocated memory.
- * Use rcutils_get_zero_initialized_string_array() for initializing an empty
- * rcutils_string_array_t struct.
- * This `node_names` struct should therefore be passed to rcutils_string_array_fini()
- * when it is no longer needed.
- * Failing to do so will result in leaked memory.
- *
- * Example:
+ * 示例：
  *
  * ```c
  * rcutils_string_array_t node_names =
  *   rcutils_get_zero_initialized_string_array();
  * rcl_ret_t ret = rcl_get_node_names(node, &node_names);
  * if (ret != RCL_RET_OK) {
- *   // ... error handling
+ *   // ... 错误处理
  * }
- * // ... use the node_names struct, and when done:
+ * // ... 使用 node_names 结构，完成后：
  * rcutils_ret_t rcutils_ret = rcutils_string_array_fini(&node_names);
  * if (rcutils_ret != RCUTILS_RET_OK) {
- *   // ... error handling
+ *   // ... 错误处理
  * }
  * ```
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 可能 [1]
+ * <i>[1] 实现可能需要使用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator used to control allocation and deallocation of names
- * \param[out] node_names struct storing discovered node names
- * \param[out] node_namespaces struct storing discovered node namespaces
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_BAD_ALLOC if an error occurred while allocating memory, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_NODE_INVALID_NAME if a node with an invalid name is detected, or
- * \return #RCL_RET_NODE_INVALID_NAMESPACE if a node with an invalid namespace is detected, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 用于控制名称分配和释放的分配器
+ * \param[out] node_names 存储发现的节点名称的结构
+ * \param[out] node_namespaces 存储发现的节点命名空间的结构
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存时发生错误，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_NODE_INVALID_NAME 如果检测到具有无效名称的节点，或
+ * \return #RCL_RET_NODE_INVALID_NAMESPACE 如果检测到具有无效命名空间的节点，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_node_names(
-  const rcl_node_t * node,
-  rcl_allocator_t allocator,
-  rcutils_string_array_t * node_names,
+rcl_ret_t rcl_get_node_names(
+  const rcl_node_t * node, rcl_allocator_t allocator, rcutils_string_array_t * node_names,
   rcutils_string_array_t * node_namespaces);
 
-/// Return a list of available nodes in the ROS graph, including their enclave names.
+/// 返回 ROS 图中可用节点的列表，包括它们的围场名称。
 /**
- * An rcl_get_node_names() equivalent, but including in its output the enclave
- * name the node is using.
+ * 一个与 rcl_get_node_names() 等效的函数，但在输出中包含节点使用的围场名称。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] RMW implementation in use may need to protect the data structure with a lock</i>
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 可能 [1]
+ * <i>[1] 使用的 RMW 实现可能需要使用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator used to control allocation and deallocation of names
- * \param[out] node_names struct storing discovered node names
- * \param[out] node_namespaces struct storing discovered node namespaces
- * \param[out] enclaves struct storing discovered node enclaves
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_BAD_ALLOC if an error occurred while allocating memory, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 用于控制名称分配和释放的分配器
+ * \param[out] node_names 存储发现的节点名称的结构
+ * \param[out] node_namespaces 存储发现的节点命名空间的结构
+ * \param[out] enclaves 存储发现的节点围场的结构
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存时发生错误，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_node_names_with_enclaves(
-  const rcl_node_t * node,
-  rcl_allocator_t allocator,
-  rcutils_string_array_t * node_names,
-  rcutils_string_array_t * node_namespaces,
-  rcutils_string_array_t * enclaves);
+rcl_ret_t rcl_get_node_names_with_enclaves(
+  const rcl_node_t * node, rcl_allocator_t allocator, rcutils_string_array_t * node_names,
+  rcutils_string_array_t * node_namespaces, rcutils_string_array_t * enclaves);
 
-/// Return the number of publishers on a given topic.
+/// 返回给定主题上的发布者数量。
 /**
- * The `node` parameter must point to a valid node.
+ * `node` 参数必须指向一个有效的节点。
  *
- * The `topic_name` parameter must not be `NULL`, and must not be an empty string.
- * It should also follow the topic name rules.
- * \todo TODO(wjwwood): link to the topic name rules.
+ * `topic_name` 参数不能为空（`NULL`），也不能是空字符串。
+ * 它还应遵循主题名称规则。
+ * \todo TODO(wjwwood): 链接到主题名称规则。
  *
- * The `count` parameter must point to a valid bool.
- * The `count` parameter is the output for this function and will be set.
+ * `count` 参数必须指向一个有效的布尔值。
+ * `count` 参数是此函数的输出，将被设置。
  *
- * In the event that error handling needs to allocate memory, this function
- * will try to use the node's allocator.
+ * 如果错误处理需要分配内存，此函数将尝试使用节点的分配器。
  *
- * The topic name is not automatically remapped by this function.
- * If there is a publisher created with topic name `foo` and remap rule `foo:=bar` then calling
- * this with `topic_name` set to `bar` will return a count of 1, and with `topic_name` set to `foo`
- * will return a count of 0.
+ * 此函数不会自动重新映射主题名称。
+ * 如果有一个创建了主题名为 `foo` 的发布者和重映射规则 `foo:=bar`，那么调用
+ * 这个函数并将 `topic_name` 设置为 `bar` 将返回计数 1，将 `topic_name` 设置为 `foo`
+ * 将返回计数 0。
  * /sa rcl_remap_topic_name()
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] topic_name the name of the topic in question
- * \param[out] count number of publishers on the given topic
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] topic_name 要查询的主题名称
+ * \param[out] count 给定主题上的发布者数量
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_count_publishers(
-  const rcl_node_t * node,
-  const char * topic_name,
-  size_t * count);
+rcl_ret_t rcl_count_publishers(const rcl_node_t * node, const char * topic_name, size_t * count);
 
-/// Return the number of subscriptions on a given topic.
+/// 返回给定主题上的订阅者数量。
 /**
- * The `node` parameter must point to a valid node.
+ * `node` 参数必须指向一个有效的节点。
  *
- * The `topic_name` parameter must not be `NULL`, and must not be an empty string.
- * It should also follow the topic name rules.
- * \todo TODO(wjwwood): link to the topic name rules.
+ * `topic_name` 参数不能为空（`NULL`），也不能是空字符串。
+ * 它还应遵循主题名称规则。
+ * \todo TODO(wjwwood): 链接到主题名称规则。
  *
- * The `count` parameter must point to a valid bool.
- * The `count` parameter is the output for this function and will be set.
+ * `count` 参数必须指向一个有效的布尔值。
+ * `count` 参数是此函数的输出，将被设置。
  *
- * In the event that error handling needs to allocate memory, this function
- * will try to use the node's allocator.
+ * 如果错误处理需要分配内存，此函数将尝试使用节点的分配器。
  *
- * The topic name is not automatically remapped by this function.
- * If there is a subscriber created with topic name `foo` and remap rule `foo:=bar` then calling
- * this with `topic_name` set to `bar` will return a count of 1, and with `topic_name` set to `foo`
- * will return a count of 0.
+ * 此函数不会自动重新映射主题名称。
+ * 如果有一个创建了主题名为 `foo` 的订阅者和重映射规则 `foo:=bar`，那么调用
+ * 这个函数并将 `topic_name` 设置为 `bar` 将返回计数 1，将 `topic_name` 设置为 `foo`
+ * 将返回计数 0。
  * /sa rcl_remap_topic_name()
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] topic_name the name of the topic in question
- * \param[out] count number of subscriptions on the given topic
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] topic_name 要查询的主题名称
+ * \param[out] count 给定主题上的订阅者数量
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_count_subscribers(
-  const rcl_node_t * node,
-  const char * topic_name,
-  size_t * count);
+rcl_ret_t rcl_count_subscribers(const rcl_node_t * node, const char * topic_name, size_t * count);
 
-/// Wait for there to be a specified number of publishers on a given topic.
+/// 等待给定主题上的发布者数量达到指定数量。
 /**
- * The `node` parameter must point to a valid node.
- * The nodes graph guard condition is used by this function, and therefore the caller should
- * take care not to use the guard condition concurrently in any other wait sets.
+ * `node` 参数必须指向一个有效的节点。
+ * 该节点的图形保护条件将被此函数使用，因此调用者应注意不要在其他等待集中并发使用保护条件。
  *
- * The `allocator` parameter must point to a valid allocator.
+ * `allocator` 参数必须指向一个有效的分配器。
  *
- * The `topic_name` parameter must not be `NULL`, and must not be an empty string.
- * It should also follow the topic name rules.
+ * `topic_name` 参数不能为空（`NULL`），也不能是空字符串。
+ * 它还应遵循主题名称规则。
  *
- * This function blocks and will return when the number of publishers for `topic_name`
- * is greater than or equal to the `count` parameter, or the specified `timeout` is reached.
+ * 此函数会阻塞，并在 `topic_name` 的发布者数量大于或等于 `count` 参数，或达到指定的 `timeout` 时返回。
  *
- * The `timeout` parameter is in nanoseconds.
- * The timeout is based on system time elapsed.
- * A negative value disables the timeout (i.e. this function blocks until the number of
- * publishers is greater than or equals to `count`).
+ * `timeout` 参数以纳秒为单位。
+ * 超时基于系统时间消耗。
+ * 负值将禁用超时（即此函数将阻塞，直到发布者数量大于或等于 `count`）。
  *
- * The `success` parameter must point to a valid bool.
- * The `success` parameter is the output for this function and will be set.
+ * `success` 参数必须指向一个有效的布尔值。
+ * `success` 参数是此函数的输出，将被设置。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator to allocate space for the rcl_wait_set_t used to wait for graph events
- * \param[in] topic_name the name of the topic in question
- * \param[in] count number of publishers to wait for
- * \param[in] timeout maximum duration to wait for publishers
- * \param[out] success `true` if the number of publishers is equal to or greater than count, or
- *   `false` if a timeout occurred waiting for publishers.
- * \return #RCL_RET_OK if there was no errors, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMEOUT if a timeout occurs before the number of publishers is detected, or
- * \return #RCL_RET_ERROR if an unspecified error occurred.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] allocator 为 rcl_wait_set_t 分配空间，用于等待图形事件
+ * \param[in] topic_name 要查询的主题名称
+ * \param[in] count 要等待的发布者数量
+ * \param[in] timeout 等待发布者的最长时间
+ * \param[out] success 如果发布者数量等于或大于计数，则为 `true`，
+ *   或者如果在等待发布者时发生超时，则为 `false`。
+ * \return #RCL_RET_OK 如果没有错误，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_TIMEOUT 如果在检测到发布者数量之前发生超时，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_wait_for_publishers(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  const char * topic_name,
-  const size_t count,
-  rcutils_duration_value_t timeout,
-  bool * success);
+rcl_ret_t rcl_wait_for_publishers(
+  const rcl_node_t * node, rcl_allocator_t * allocator, const char * topic_name, const size_t count,
+  rcutils_duration_value_t timeout, bool * success);
 
-/// Wait for there to be a specified number of subscribers on a given topic.
+/// 等待指定主题上有指定数量的订阅者。
 /**
  * \see rcl_wait_for_publishers
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator to allocate space for the rcl_wait_set_t used to wait for graph events
- * \param[in] topic_name the name of the topic in question
- * \param[in] count number of subscribers to wait for
- * \param[in] timeout maximum duration to wait for subscribers
- * \param[out] success `true` if the number of subscribers is equal to or greater than count, or
- *   `false` if a timeout occurred waiting for subscribers.
- * \return #RCL_RET_OK if there was no errors, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_TIMEOUT if a timeout occurs before the number of subscribers is detected, or
- * \return #RCL_RET_ERROR if an unspecified error occurred.
+ * \param[in] node 正在使用的节点句柄，用于查询ROS图
+ * \param[in] allocator 为rcl_wait_set_t分配空间，用于等待图形事件
+ * \param[in] topic_name 相关主题的名称
+ * \param[in] count 要等待的订阅者数量
+ * \param[in] timeout 等待订阅者的最长时间
+ * \param[out] success 如果订阅者数量等于或大于count，则为`true`，
+ *   否则，如果在等待订阅者时发生超时，则为`false`。
+ * \return #RCL_RET_OK 如果没有错误，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_TIMEOUT 如果在检测到订阅者数量之前发生超时，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_wait_for_subscribers(
-  const rcl_node_t * node,
-  rcl_allocator_t * allocator,
-  const char * topic_name,
-  const size_t count,
-  rcutils_duration_value_t timeout,
-  bool * success);
+rcl_ret_t rcl_wait_for_subscribers(
+  const rcl_node_t * node, rcl_allocator_t * allocator, const char * topic_name, const size_t count,
+  rcutils_duration_value_t timeout, bool * success);
 
-/// Return a list of all publishers to a topic.
+/// 返回一个主题的所有发布者列表。
 /**
- * The `node` parameter must point to a valid node.
+ * `node` 参数必须指向一个有效的节点。
  *
- * The `topic_name` parameter must not be `NULL`.
+ * `topic_name` 参数不能为空（`NULL`）。
  *
- * When the `no_mangle` parameter is `true`, the provided `topic_name` should be a valid topic name
- * for the middleware (useful when combining ROS with native middleware (e.g. DDS) apps).
- * When the `no_mangle` parameter is `false`, the provided `topic_name` should follow
- * ROS topic name conventions.
- * In either case, the topic name should always be fully qualified.
+ * 当 `no_mangle` 参数为 `true` 时，提供的 `topic_name` 应该是中间件的有效主题名称
+ * （在将 ROS 与原生中间件（如 DDS）应用程序结合使用时有用）。
+ * 当 `no_mangle` 参数为 `false` 时，提供的 `topic_name` 应遵循
+ * ROS 主题命名约定。
+ * 在任何情况下，主题名称都应该是完全限定的。
  *
- * Each element in the `publishers_info` array will contain the node name, node namespace,
- * topic type, gid and the qos profile of the publisher.
- * It is the responsibility of the caller to ensure that `publishers_info` parameter points
- * to a valid struct of type rcl_topic_endpoint_info_array_t.
- * The `count` field inside the struct must be set to 0 and the `info_array` field inside
- * the struct must be set to null.
+ * `publishers_info` 数组中的每个元素都将包含节点名称、节点命名空间、
+ * 主题类型、gid 和发布者的 qos 配置文件。
+ * 调用者有责任确保 `publishers_info` 参数指向
+ * 类型为 rcl_topic_endpoint_info_array_t 的有效结构。
+ * 结构内的 `count` 字段必须设置为 0，结构内的 `info_array` 字段必须设置为 null。
  * \see rmw_get_zero_initialized_topic_endpoint_info_array
  *
- * The `allocator` will be used to allocate memory to the `info_array` member
- * inside of `publishers_info`.
- * Moreover, every const char * member inside of
- * rmw_topic_endpoint_info_t will be assigned a copied value on allocated memory.
- * \see rmw_topic_endpoint_info_set_node_name and the likes.
- * However, it is the responsibility of the caller to
- * reclaim any allocated resources to `publishers_info` to avoid leaking memory.
+ * `allocator` 将用于为 `publishers_info` 内的 `info_array` 成员分配内存。
+ * 此外，rmw_topic_endpoint_info_t 内的每个 const char * 成员都将在分配的内存上分配一个复制值。
+ * \see rmw_topic_endpoint_info_set_node_name 等。
+ * 但是，调用者有责任
+ * 回收分配给 `publishers_info` 的任何资源，以避免内存泄漏。
  * \see rmw_topic_endpoint_info_array_fini
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator to be used when allocating space for
- *            the array inside publishers_info
- * \param[in] topic_name the name of the topic in question
- * \param[in] no_mangle if `true`, `topic_name` needs to be a valid middleware topic name,
- *            otherwise it should be a valid ROS topic name
- * \param[out] publishers_info a struct representing a list of publisher information
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if memory allocation fails, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 正在使用的节点句柄，用于查询ROS图
+ * \param[in] allocator 在 publishers_info 内为数组分配空间时使用的分配器
+ * \param[in] topic_name 相关主题的名称
+ * \param[in] no_mangle 如果为 `true`，`topic_name` 需要是有效的中间件主题名称，
+ *            否则应该是有效的 ROS 主题名称
+ * \param[out] publishers_info 表示发布者信息列表的结构
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果内存分配失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_publishers_info_by_topic(
-  const rcl_node_t * node,
-  rcutils_allocator_t * allocator,
-  const char * topic_name,
-  bool no_mangle,
+rcl_ret_t rcl_get_publishers_info_by_topic(
+  const rcl_node_t * node, rcutils_allocator_t * allocator, const char * topic_name, bool no_mangle,
   rcl_topic_endpoint_info_array_t * publishers_info);
 
-/// Return a list of all subscriptions to a topic.
+/// 返回一个主题的所有订阅者列表。
 /**
- * The `node` parameter must point to a valid node.
+ * `node` 参数必须指向一个有效的节点。
  *
- * The `topic_name` parameter must not be `NULL`.
+ * `topic_name` 参数不能为空（`NULL`）。
  *
- * When the `no_mangle` parameter is `true`, the provided `topic_name` should be a valid topic name
- * for the middleware (useful when combining ROS with native middleware (e.g. DDS) apps).
- * When the `no_mangle` parameter is `false`, the provided `topic_name` should follow
- * ROS topic name conventions.
- * In either case, the topic name should always be fully qualified.
+ * 当 `no_mangle` 参数为 `true` 时，提供的 `topic_name` 应该是中间件的有效主题名称
+ * （在将 ROS 与原生中间件（如 DDS）应用程序结合使用时有用）。
+ * 当 `no_mangle` 参数为 `false` 时，提供的 `topic_name` 应遵循
+ * ROS 主题命名约定。
+ * 在任何情况下，主题名称都应该是完全限定的。
  *
- * Each element in the `subscriptions_info` array will contain the node name, node namespace,
- * topic type, gid and the qos profile of the subscription.
- * It is the responsibility of the caller to ensure that `subscriptions_info` parameter points
- * to a valid struct of type rcl_topic_endpoint_info_array_t.
- * The `count` field inside the struct must be set to 0 and the `info_array` field inside
- * the struct must be set to null.
+ * `subscriptions_info` 数组中的每个元素都将包含节点名称、节点命名空间、
+ * 主题类型、gid 和订阅的 qos 配置文件。
+ * 调用者有责任确保 `subscriptions_info` 参数指向
+ * 类型为 rcl_topic_endpoint_info_array_t 的有效结构。
+ * 结构内的 `count` 字段必须设置为 0，结构内的 `info_array` 字段必须设置为 null。
  * \see rmw_get_zero_initialized_topic_endpoint_info_array
  *
- * The `allocator` will be used to allocate memory to the `info_array` member
- * inside of `subscriptions_info`.
- * Moreover, every const char * member inside of
- * rmw_topic_endpoint_info_t will be assigned a copied value on allocated memory.
- * \see rmw_topic_endpoint_info_set_node_name and the likes.
- * However, it is the responsibility of the caller to
- * reclaim any allocated resources to `subscriptions_info` to avoid leaking memory.
+ * `allocator` 将用于为 `subscriptions_info` 内的 `info_array` 成员分配内存。
+ * 此外，rmw_topic_endpoint_info_t 内的每个 const char * 成员都将在分配的内存上分配一个复制值。
+ * \see rmw_topic_endpoint_info_set_node_name 等。
+ * 但是，调用者有责任
+ * 回收分配给 `subscriptions_info` 的任何资源，以避免内存泄漏。
  * \see rmw_topic_endpoint_info_array_fini
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] allocator allocator to be used when allocating space for
- *            the array inside publishers_info
- * \param[in] topic_name the name of the topic in question
- * \param[in] no_mangle if `true`, `topic_name` needs to be a valid middleware topic name,
- *            otherwise it should be a valid ROS topic name
- * \param[out] subscriptions_info a struct representing a list of subscriptions information
- * \return #RCL_RET_OK if the query was successful, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if memory allocation fails, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 正在使用的节点句柄，用于查询ROS图
+ * \param[in] allocator 在 publishers_info 内为数组分配空间时使用的分配器
+ * \param[in] topic_name 相关主题的名称
+ * \param[in] no_mangle 如果为 `true`，`topic_name` 需要是有效的中间件主题名称，
+ *            否则应该是有效的 ROS 主题名称
+ * \param[out] subscriptions_info 表示订阅信息列表的结构
+ * \return #RCL_RET_OK 如果查询成功，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果内存分配失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_get_subscriptions_info_by_topic(
-  const rcl_node_t * node,
-  rcutils_allocator_t * allocator,
-  const char * topic_name,
-  bool no_mangle,
+rcl_ret_t rcl_get_subscriptions_info_by_topic(
+  const rcl_node_t * node, rcutils_allocator_t * allocator, const char * topic_name, bool no_mangle,
   rcl_topic_endpoint_info_array_t * subscriptions_info);
 
-/// Check if a service server is available for the given service client.
+/// 检查给定服务客户端是否有可用的服务服务器。
 /**
- * This function will return true for `is_available` if there is a service server
- * available for the given client.
+ * 如果给定客户端有可用的服务服务器，此函数将为 `is_available` 返回 true。
  *
- * The `node` parameter must point to a valid node.
+ * `node` 参数必须指向一个有效的节点。
  *
- * The `client` parameter must point to a valid client.
+ * `client` 参数必须指向一个有效的客户端。
  *
- * The given client and node must match, i.e. the client must have been created
- * using the given node.
+ * 给定的客户端和节点必须匹配，即客户端必须使用给定的节点创建。
  *
- * The `is_available` parameter must not be `NULL`, and must point a bool variable.
- * The result of the check will be stored in the `is_available` parameter.
+ * `is_available` 参数不能为空（`NULL`），并且必须指向一个布尔变量。
+ * 检查结果将存储在 `is_available` 参数中。
  *
- * In the event that error handling needs to allocate memory, this function
- * will try to use the node's allocator.
+ * 如果错误处理需要分配内存，此函数
+ * 将尝试使用节点的分配器。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 可能 [1]
+ * <i>[1] 实现可能需要用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] client the handle to the service client being queried
- * \param[out] is_available set to true if there is a service server available, else false
- * \return #RCL_RET_OK if the check was made successfully (regardless of the service readiness), or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] node 正在用于查询ROS图的节点句柄
+ * \param[in] client 正在查询的服务客户端句柄
+ * \param[out] is_available 如果有可用的服务服务器，则设置为true，否则为false
+ * \return #RCL_RET_OK 如果检查成功完成（无论服务是否准备好），或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_service_server_is_available(
-  const rcl_node_t * node,
-  const rcl_client_t * client,
-  bool * is_available);
+rcl_ret_t rcl_service_server_is_available(
+  const rcl_node_t * node, const rcl_client_t * client, bool * is_available);
 
 #ifdef __cplusplus
 }

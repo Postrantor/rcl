@@ -26,21 +26,20 @@
 #include "rcl/visibility_control.h"
 
 #if __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-// Forward declaration
+// 前向声明
 typedef struct rcl_lexer_lookahead2_impl_s rcl_lexer_lookahead2_impl_t;
 
-/// Track lexical analysis and allow looking ahead 2 lexemes.
+/// 跟踪词法分析并允许查看2个词素。
 typedef struct rcl_lexer_lookahead2_s
 {
-  /// Pointer to the lexer look ahead2 implementation
+  /// 指向 lexer look ahead2 实现的指针
   rcl_lexer_lookahead2_impl_t * impl;
 } rcl_lexer_lookahead2_t;
 
-/// Get a zero initialized rcl_lexer_lookahead2_t instance.
+/// 获取一个零初始化的 rcl_lexer_lookahead2_t 实例。
 /**
  * \sa rcl_lexer_lookahead2_init()
  * <hr>
@@ -51,18 +50,17 @@ typedef struct rcl_lexer_lookahead2_s
  * Uses Atomics       | No
  * Lock-Free          | Yes
  *
- * \return zero initialized lookahead2 buffer.
+ * \return 零初始化的 lookahead2 缓冲区。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_lexer_lookahead2_t
-rcl_get_zero_initialized_lexer_lookahead2();
+rcl_lexer_lookahead2_t rcl_get_zero_initialized_lexer_lookahead2();
 
-/// Initialize an rcl_lexer_lookahead2_t instance.
+/// 初始化 rcl_lexer_lookahead2_t 实例。
 /**
- * The lookahead2 buffer borrows a reference to the provided text.
- * The text must not be freed before the buffer is finalized.
- * The lookahead2 buffer only needs to be finalized if this function does not return RCL_RET_OK.
+ * lookahead2 缓冲区借用对提供的文本的引用。
+ * 在缓冲区完成之前，文本不能被释放。
+ * 只有当此函数返回 RCL_RET_OK 时，lookahead2 缓冲区才需要完成。
  * \sa rcl_lexer_lookahead2_fini()
  *
  * <hr>
@@ -73,24 +71,21 @@ rcl_get_zero_initialized_lexer_lookahead2();
  * Uses Atomics       | No
  * Lock-Free          | Yes
  *
- * \param[in] buffer A buffer that is zero initialized.
+ * \param[in] buffer 零初始化的缓冲区。
  * \sa rcl_get_zero_initialized_lexer_lookahead2()
- * \param[in] text The string to analyze.
- * \param[in] allocator An allocator to use if an error occurs.
- * \return #RCL_RET_OK if the buffer is successfully initialized, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurrs.
+ * \param[in] text 要分析的字符串。
+ * \param[in] allocator 发生错误时使用的分配器。
+ * \return 如果缓冲区成功初始化，则返回 #RCL_RET_OK，或
+ * \return 如果任何函数参数无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果分配内存失败，则返回 #RCL_RET_BAD_ALLOC，或
+ * \return 如果发生未指定的错误，则返回 #RCL_RET_ERROR。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lexer_lookahead2_init(
-  rcl_lexer_lookahead2_t * buffer,
-  const char * text,
-  rcl_allocator_t allocator);
+rcl_ret_t rcl_lexer_lookahead2_init(
+  rcl_lexer_lookahead2_t * buffer, const char * text, rcl_allocator_t allocator);
 
-/// Finalize an instance of an rcl_lexer_lookahead2_t structure.
+/// 完成 rcl_lexer_lookahead2_t 结构的实例。
 /**
  * \sa rcl_lexer_lookahead2_init()
  *
@@ -101,23 +96,21 @@ rcl_lexer_lookahead2_init(
  * Thread-Safe        | No
  * Uses Atomics       | No
  * Lock-Free          | Yes
- * <i>[1] Only allocates if an argument is invalid.</i>
+ * <i>[1] 只有在参数无效时才分配。</i>
  *
- * \param[in] buffer The structure to be deallocated.
- * \return #RCL_RET_OK if the structure was successfully finalized, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] buffer 要释放的结构。
+ * \return 如果结构成功完成，则返回 #RCL_RET_OK，或
+ * \return 如果任何函数参数无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果发生未指定的错误，则返回 #RCL_RET_ERROR。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lexer_lookahead2_fini(
-  rcl_lexer_lookahead2_t * buffer);
+rcl_ret_t rcl_lexer_lookahead2_fini(rcl_lexer_lookahead2_t * buffer);
 
-/// Look ahead at the next lexeme in the string.
+/// 查看字符串中的下一个词素。
 /**
- * Repeated calls to peek will return the same lexeme.
- * A parser that deems the next lexeme as valid must accept it to advance lexing.
+ * 对 peek 的重复调用将返回相同的词素。
+ * 将下一个词素视为有效的解析器必须接受它以推进词法分析。
  * \sa rcl_lexer_lookahead2_accept()
  *
  * <hr>
@@ -127,25 +120,22 @@ rcl_lexer_lookahead2_fini(
  * Thread-Safe        | No
  * Uses Atomics       | No
  * Lock-Free          | Yes
- * <i>[1] Only allocates if an argument is invalid or an internal bug is detected.</i>
+ * <i>[1] 只有在参数无效或检测到内部错误时才分配。</i>
  *
- * \param[in] buffer the lookahead2 buffer being used to analyze a string.
- * \param[out] next_type an output variable for the next lexeme in the string.
- * \return #RCL_RET_OK if peeking was successfull, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] buffer 正在用于分析字符串的 lookahead2 缓冲区。
+ * \param[out] next_type 字符串中下一个词素的输出变量。
+ * \return 如果查看成功，则返回 #RCL_RET_OK，或
+ * \return 如果任何函数参数无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果发生未指定的错误，则返回 #RCL_RET_ERROR。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lexer_lookahead2_peek(
-  rcl_lexer_lookahead2_t * buffer,
-  rcl_lexeme_t * next_type);
+rcl_ret_t rcl_lexer_lookahead2_peek(rcl_lexer_lookahead2_t * buffer, rcl_lexeme_t * next_type);
 
-/// Look ahead at the next two lexemes in the string.
+/// 查看字符串中的下两个词素。
 /**
- * Repeated calls to peek2 will return the same two lexemes.
- * A parser that deems the next two lexemes as valid must accept twice to advance lexing.
+ * 对 peek2 的重复调用将返回相同的两个词素。
+ * 将下两个词素视为有效的解析器必须接受两次以推进词法分析。
  * \sa rcl_lexer_lookahead2_accept()
  *
  * <hr>
@@ -155,26 +145,23 @@ rcl_lexer_lookahead2_peek(
  * Thread-Safe        | No
  * Uses Atomics       | No
  * Lock-Free          | Yes
- * <i>[1] Only allocates if an argument is invalid or an internal bug is detected.</i>
+ * <i>[1] 只有在参数无效或检测到内部错误时才分配。</i>
  *
- * \param[in] buffer the lookahead2 buffer being used to analyze a string.
- * \param[out] next_type1 an output variable for the next lexeme in the string.
- * \param[out] next_type2 an output variable for the lexeme after the next lexeme in the string.
- * \return #RCL_RET_OK if peeking was successfull, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] buffer 正在用于分析字符串的 lookahead2 缓冲区。
+ * \param[out] next_type1 字符串中下一个词素的输出变量。
+ * \param[out] next_type2 字符串中下一个词素之后的词素的输出变量。
+ * \return 如果查看成功，则返回 #RCL_RET_OK，或
+ * \return 如果任何函数参数无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果发生未指定的错误，则返回 #RCL_RET_ERROR。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lexer_lookahead2_peek2(
-  rcl_lexer_lookahead2_t * buffer,
-  rcl_lexeme_t * next_type1,
-  rcl_lexeme_t * next_type2);
+rcl_ret_t rcl_lexer_lookahead2_peek2(
+  rcl_lexer_lookahead2_t * buffer, rcl_lexeme_t * next_type1, rcl_lexeme_t * next_type2);
 
-/// Accept a lexeme and advance analysis.
+/// 接受词素并推进分析。
 /**
- * A token must have been peeked before it can be accepted.
+ * 必须先查看令牌才能接受它。
  * \sa rcl_lexer_lookahead2_peek()
  * \sa rcl_lexer_lookahead2_peek2()
  *
@@ -185,27 +172,24 @@ rcl_lexer_lookahead2_peek2(
  * Thread-Safe        | No
  * Uses Atomics       | No
  * Lock-Free          | Yes
- * <i>[1] Only allocates if an argument is invalid or an error occurs.</i>
+ * <i>[1] 只有在参数无效或发生错误时才分配。</i>
  *
- * \param[in] buffer the lookahead2 buffer being used to analyze a string.
- * \param[out] lexeme_text pointer to where lexeme begins in string.
- * \param[out] lexeme_text_length length of lexeme_text.
- * \return #RCL_RET_OK if peeking was successfull, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] buffer 正在用于分析字符串的 lookahead2 缓冲区。
+ * \param[out] lexeme_text 词素在字符串中开始的指针。
+ * \param[out] lexeme_text_length lexeme_text 的长度。
+ * \return 如果查看成功，则返回 #RCL_RET_OK，或
+ * \return 如果任何函数参数无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果发生未指定的错误，则返回 #RCL_RET_ERROR。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lexer_lookahead2_accept(
-  rcl_lexer_lookahead2_t * buffer,
-  const char ** lexeme_text,
-  size_t * lexeme_text_length);
+rcl_ret_t rcl_lexer_lookahead2_accept(
+  rcl_lexer_lookahead2_t * buffer, const char ** lexeme_text, size_t * lexeme_text_length);
 
-/// Require the next lexeme to be a certain type and advance analysis.
+/// 要求下一个词素为某种类型并推进分析。
 /**
- * This method is a shortcut to peeking and accepting a lexeme.
- * It should be used by a parser when there is only one valid lexeme that could come next.
+ * 此方法是查看和接受词素的快捷方式。
+ * 当只有一个有效的词素可能接下来时，解析器应使用它。
  * \sa rcl_lexer_lookahead2_peek()
  * \sa rcl_lexer_lookahead2_accept()
  *
@@ -216,46 +200,41 @@ rcl_lexer_lookahead2_accept(
  * Thread-Safe        | No
  * Uses Atomics       | No
  * Lock-Free          | Yes
- * <i>[1] Only allocates if an argument is invalid or an error occurs.</i>
+ * <i>[1] 只有在参数无效或发生错误时才分配。</i>
  *
- * \param[in] buffer the lookahead2 buffer being used to analyze a string.
- * \param[in] type the type the next lexeme must be.
- * \param[out] lexeme_text pointer to where lexeme begins in string.
- * \param[out] lexeme_text_length length of lexeme_text.
- * \return #RCL_RET_OK if the next lexeme was the expected one, or
- * \return #RCL_RET_WRONG_LEXEME if the next lexeme was not the expected one, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] buffer 正在用于分析字符串的 lookahead2 缓冲区。
+ * \param[in] type 下一个词素必须是的类型。
+ * \param[out] lexeme_text 词素在字符串中开始的指针。
+ * \param[out] lexeme_text_length lexeme_text 的长度。
+ * \return 如果下一个词素是预期的，则返回 #RCL_RET_OK，或
+ * \return 如果下一个词素不是预期的，则返回 #RCL_RET_WRONG_LEXEME，或
+ * \return 如果任何函数参数无效，则返回 #RCL_RET_INVALID_ARGUMENT，或
+ * \return 如果发生未指定的错误，则返回 #RCL_RET_ERROR。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_lexer_lookahead2_expect(
-  rcl_lexer_lookahead2_t * buffer,
-  rcl_lexeme_t type,
-  const char ** lexeme_text,
+rcl_ret_t rcl_lexer_lookahead2_expect(
+  rcl_lexer_lookahead2_t * buffer, rcl_lexeme_t type, const char ** lexeme_text,
   size_t * lexeme_text_length);
 
-/// Get the text at the point where it is currently being analyzed.
+/// 获取当前正在分析的位置的文本。
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 符合性
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 否
+ * 线程安全            | 是
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] buffer the lookahead2 buffer being used to analyze a string.
- * \return a pointer inside the original text at the position being analyzed, or
- * \return `NULL` if buffer is itself `NULL` or zero initialized, or
- * \return an undefined value if buffer is not initialized or has been finalized.
+ * \param[in] buffer 正在用于分析字符串的lookahead2缓冲区。
+ * \return 如果buffer非空且已初始化，返回指向原始文本中正在分析的位置的指针；
+ * \return 如果buffer为空或零初始化，返回`NULL`；
+ * \return 如果buffer未初始化或已完成，返回未定义的值。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const char *
-rcl_lexer_lookahead2_get_text(
-  const rcl_lexer_lookahead2_t * buffer);
+const char * rcl_lexer_lookahead2_get_text(const rcl_lexer_lookahead2_t * buffer);
 
 #if __cplusplus
 }

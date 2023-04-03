@@ -16,8 +16,7 @@
 #define RCL__SERVICE_EVENT_PUBLISHER_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcl/macros.h"
@@ -27,186 +26,182 @@ extern "C"
 #include "rcl/time.h"
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
-
 #include "rosidl_runtime_c/service_type_support_struct.h"
 
-typedef struct rcl_service_event_publisher_s
-{
-  /// Handle to publisher for publishing service events
-  rcl_publisher_t * publisher;
-  /// Name of service introspection topic: <service_name>/<RCL_SERVICE_INTROSPECTION_TOPIC_POSTFIX>
-  char * service_event_topic_name;
-  /// Current state of introspection; off, metadata, or contents
+/**
+ * @struct rcl_service_event_publisher_s
+ * @brief 用于发布服务事件的结构体
+ */
+typedef struct rcl_service_event_publisher_s {
+  /// 指向用于发布服务事件的publisher的句柄
+  rcl_publisher_t* publisher;
+  /// 服务内省主题的名称：<service_name>/<RCL_SERVICE_INTROSPECTION_TOPIC_POSTFIX>
+  char* service_event_topic_name;
+  /// 当前内省状态；关闭，元数据或内容
   rcl_service_introspection_state_t introspection_state;
-  /// Handle to clock for timestamping service events
-  rcl_clock_t * clock;
-  /// Publisher options for service event publisher
+  /// 用于给服务事件加时间戳的时钟句柄
+  rcl_clock_t* clock;
+  /// 服务事件发布者的发布选项
   rcl_publisher_options_t publisher_options;
-  /// Handle to service typesupport
-  const rosidl_service_type_support_t * service_type_support;
+  /// 指向服务类型支持的句柄
+  const rosidl_service_type_support_t* service_type_support;
 } rcl_service_event_publisher_t;
 
-/// Return a rcl_service_event_publisher_t struct with members set to `NULL`.
 /**
- * Should be called to get a null rcl_service_event_publisher_t before passing to
- * rcl_service_event_publisher_init().
+ * @brief 返回一个成员设置为`NULL`的rcl_service_event_publisher_t结构体。
+ *
+ * 在传递给rcl_service_event_publisher_init()之前，应该调用此函数以获取一个空的rcl_service_event_publisher_t。
+ *
+ * @return rcl_service_event_publisher_t 结构体，其成员设置为`NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_service_event_publisher_t
-rcl_get_zero_initialized_service_event_publisher();
+rcl_service_event_publisher_t rcl_get_zero_initialized_service_event_publisher();
 
-/// Initialize a service event publisher.
+/// 初始化服务事件发布器。
 /**
- * After calling this function on a rcl_service_event_publisher_t, it can be used to
- * send service introspection messages by calling rcl_send_service_event_message().
+ * 在 rcl_service_event_publisher_t 上调用此函数后，可以通过调用 rcl_send_service_event_message()
+ * 发送服务内省消息。
  *
- * The given rcl_node_t must be valid and the resulting rcl_service_event_publisher_t is
- * only valid as long as the given rcl_node_t remains valid.
+ * 给定的 rcl_node_t 必须是有效的，且生成的 rcl_service_event_publisher_t 只有在给定的 rcl_node_t
+ * 保持有效时才有效。
  *
- * Similarly, the given rcl_clock_t must be valid and the resulting rcl_service_event_publisher_t
- * is only valid as long as the given rcl_clock_t remains valid.
+ * 同样，给定的 rcl_clock_t 必须是有效的，且生成的 rcl_service_event_publisher_t 只有在给定的
+ * rcl_clock_t 保持有效时才有效。
  *
- * The passed in service_name should be the fully-qualified, remapped service name.
- * The service event publisher will add a custom suffix as the topic name.
+ * 传入的 service_name
+ * 应该是完全限定的、重新映射的服务名称。服务事件发布器将添加一个自定义后缀作为主题名称。
  *
- * The rosidl_service_type_support_t is obtained on a per `.srv` type basis.
- * When the user defines a ROS service, code is generated which provides the
- * required rosidl_service_type_support_t object.
+ * rosidl_service_type_support_t 是基于每个 `.srv` 类型获得的。当用户定义一个 ROS
+ * 服务时，会生成提供所需 rosidl_service_type_support_t 对象的代码。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | Maybe [1]
- * Lock-Free          | Maybe [1]
- * <i>[1] rmw implementation defined</i>
+ * 分配内存            | 是
+ * 线程安全            | 否
+ * 使用原子操作        | 可能 [1]
+ * 无锁                | 可能 [1]
+ * <i>[1] rmw 实现定义</i>
  *
- * \param[inout] service_event_publisher preallocated rcl_service_event_publisher_t
- * \param[in] node valid rcl_node_t to use to create the introspection publisher
- * \param[in] clock valid rcl_clock_t to use to generate the introspection timestamps
- * \param[in] publisher_options options to use when creating the introspection publisher
- * \param[in] service_name fully-qualified and remapped service name
- * \param[in] service_type_support type support library associated with this service
- * \return #RCL_RET_OK if the call was successful
- * \return #RCL_RET_INVALID_ARGUMENT if the event publisher, client, or node is invalid,
- * \return #RCL_RET_NODE_INVALID if the given node is invalid, or
- * \return #RCL_RET_BAD_ALLOC if a memory allocation failed, or
+ * \param[inout] service_event_publisher 预分配的 rcl_service_event_publisher_t
+ * \param[in] node 用于创建内省发布器的有效 rcl_node_t
+ * \param[in] clock 用于生成内省时间戳的有效 rcl_clock_t
+ * \param[in] publisher_options 创建内省发布器时使用的选项
+ * \param[in] service_name 完全限定且重新映射的服务名称
+ * \param[in] service_type_support 与此服务关联的类型支持库
+ * \return #RCL_RET_OK 如果调用成功
+ * \return #RCL_RET_INVALID_ARGUMENT 如果事件发布器、客户端或节点无效，
+ * \return #RCL_RET_NODE_INVALID 如果给定节点无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果内存分配失败，或
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_service_event_publisher_init(
-  rcl_service_event_publisher_t * service_event_publisher,
-  const rcl_node_t * node,
-  rcl_clock_t * clock,
-  const rcl_publisher_options_t publisher_options,
-  const char * service_name,
-  const rosidl_service_type_support_t * service_type_support);
+rcl_ret_t rcl_service_event_publisher_init(
+    rcl_service_event_publisher_t* service_event_publisher,
+    const rcl_node_t* node,
+    rcl_clock_t* clock,
+    const rcl_publisher_options_t publisher_options,
+    const char* service_name,
+    const rosidl_service_type_support_t* service_type_support);
 
-/// Finalize a rcl_service_event_publisher_t.
+/// 结束一个 rcl_service_event_publisher_t.
 /**
- * After calling this function, calls to any of the other functions here
- * (except for rcl_service_event_publisher_init()) will fail.
- * However, the given node handle is still valid.
+ * 调用此函数后，对这里的其他任何函数的调用
+ * （除了 rcl_service_event_publisher_init()）都将失败。
+ * 但是，给定的节点句柄仍然有效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[inout] service_event_publisher handle to the event publisher to be finalized
- * \param[in] node a valid (not finalized) handle to the node used to create the client
- * \return #RCL_RET_OK if client was finalized successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_NODE_INVALID if the node is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[inout] service_event_publisher 要完成的事件发布器句柄
+ * \param[in] node 用于创建客户端的有效（未完成）节点句柄
+ * \return #RCL_RET_OK 如果客户端成功完成，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_NODE_INVALID 如果节点无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_service_event_publisher_fini(
-  rcl_service_event_publisher_t * service_event_publisher,
-  rcl_node_t * node);
+rcl_ret_t rcl_service_event_publisher_fini(
+    rcl_service_event_publisher_t* service_event_publisher, rcl_node_t* node);
 
-/// Check that the service event publisher is valid.
+/// 检查服务事件发布器是否有效。
 /**
- * The bool returned is `false` if the service event publisher is invalid.
- * The bool returned is `true` otherwise.
- * In the case where `false` is returned, an error message is set.
- * This function cannot fail.
+ * 如果服务事件发布器无效，则返回的布尔值为 `false`。
+ * 否则，返回的布尔值为 `true`。
+ * 在返回 `false` 的情况下，会设置错误消息。
+ * 此功能不能失败。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] service_event_publisher pointer to the service event publisher
- * \return `true` if `service_event_publisher` is valid, otherwise `false`
+ * \param[in] service_event_publisher 指向服务事件发布器的指针
+ * \return 如果 `service_event_publisher` 有效，则为 `true`，否则为 `false`
  */
 RCL_PUBLIC
-bool
-rcl_service_event_publisher_is_valid(const rcl_service_event_publisher_t * service_event_publisher);
+bool rcl_service_event_publisher_is_valid(
+    const rcl_service_event_publisher_t* service_event_publisher);
 
-/// Send a service event message.
+/// 发送服务事件消息。
 /**
- * It is the job of the caller to ensure that the type of the `ros_request`
- * parameter and the type associated with the event publisher (via the type support)
- * match.
- * Passing a different type to publish produces undefined behavior and cannot
- * be checked by this function and therefore no deliberate error will occur.
+ * 调用者有责任确保 `ros_request` 参数的类型与
+ * 通过类型支持关联的事件发布器的类型匹配。
+ * 将不同类型传递给发布会产生未定义的行为，并且不能
+ * 由此功能检查，因此不会发生故意错误。
  *
- * rcl_send_service_event_message() is a potentially blocking call.
+ * rcl_send_service_event_message() 是一个可能阻塞的调用。
  *
- * The ROS request message given by the `ros_response_request` void pointer is always
- * owned by the calling code, but should remain constant during rcl_send_service_event_message().
+ * 由 `ros_response_request` void 指针给出的 ROS 请求消息始终
+ * 属于调用代码，但在 rcl_send_service_event_message() 期间应保持不变。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] service_event_publisher pointer to the service event publisher
- * \param[in] event_type introspection event type from service_msgs::msg::ServiceEventInfo
- * \param[in] ros_response_request type-erased pointer to the ROS response request
- * \param[in] sequence_number sequence number of the event
- * \param[in] guid GUID associated with this event
- * \return #RCL_RET_OK if the event was published successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] service_event_publisher 指向服务事件发布器的指针
+ * \param[in] event_type 来自 service_msgs::msg::ServiceEventInfo 的内省事件类型
+ * \param[in] ros_response_request 类型擦除的指向 ROS 响应请求的指针
+ * \param[in] sequence_number 事件的序列号
+ * \param[in] guid 与此事件关联的 GUID
+ * \return #RCL_RET_OK 如果事件成功发布，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_send_service_event_message(
-  const rcl_service_event_publisher_t * service_event_publisher,
-  uint8_t event_type,
-  const void * ros_response_request,
-  int64_t sequence_number,
-  const uint8_t guid[16]);
+rcl_ret_t rcl_send_service_event_message(
+    const rcl_service_event_publisher_t* service_event_publisher,
+    uint8_t event_type,
+    const void* ros_response_request,
+    int64_t sequence_number,
+    const uint8_t guid[16]);
 
-/// Change the operating state of this service event publisher.
+/// 更改此服务事件发布器的操作状态。
 /**
- * \param[in] service_event_publisher pointer to the service event publisher
- * \param[in] introspection_state new introspection state
- * \return #RCL_RET_OK if the event was published successfully, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] service_event_publisher 指向服务事件发布器的指针
+ * \param[in] introspection_state 新的内省状态
+ * \return #RCL_RET_OK 如果事件成功发布，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
-rcl_ret_t
-rcl_service_event_publisher_change_state(
-  rcl_service_event_publisher_t * service_event_publisher,
-  rcl_service_introspection_state_t introspection_state);
+rcl_ret_t rcl_service_event_publisher_change_state(
+    rcl_service_event_publisher_t* service_event_publisher,
+    rcl_service_introspection_state_t introspection_state);
 
 #ifdef __cplusplus
 }

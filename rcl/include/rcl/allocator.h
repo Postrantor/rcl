@@ -18,40 +18,44 @@
 #define RCL__ALLOCATOR_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcutils/allocator.h"
 
-/// Encapsulation of an allocator.
+/// 封装分配器
 /**
  * \sa rcutils_allocator_t
  */
 typedef rcutils_allocator_t rcl_allocator_t;
 
-/// Return a properly initialized rcl_allocator_t with default values.
+/// 返回一个使用默认值正确初始化的 rcl_allocator_t。
 /**
  * \sa rcutils_get_default_allocator()
  */
 #define rcl_get_default_allocator rcutils_get_default_allocator
 
-/// Emulate the behavior of [reallocf](https://linux.die.net/man/3/reallocf).
+/// 模拟 [reallocf](https://linux.die.net/man/3/reallocf) 的行为。
 /**
  * \sa rcutils_reallocf()
  */
 #define rcl_reallocf rcutils_reallocf
 
-/// Check that the given allocator is initialized.
+/// 检查给定的分配器是否已初始化。
 /**
- * If the allocator is not initialized, run the fail_statement.
+ * 如果分配器未初始化，则运行 fail_statement。
+ * \param[in] allocator 要检查的分配器
+ * \param[in] fail_statement 如果分配器未初始化，要执行的语句
  */
 #define RCL_CHECK_ALLOCATOR(allocator, fail_statement) \
   RCUTILS_CHECK_ALLOCATOR(allocator, fail_statement)
 
-/// Check that the given allocator is initialized, or fail with a message.
+/// 检查给定的分配器是否已初始化，如果没有则带有消息失败。
 /**
- * If the allocator is not initialized, set the error to msg, and run the fail_statement.
+ * 如果分配器未初始化，设置错误为 msg，并运行 fail_statement。
+ * \param[in] allocator 要检查的分配器
+ * \param[in] msg 设置的错误消息
+ * \param[in] fail_statement 如果分配器未初始化，要执行的语句
  */
 #define RCL_CHECK_ALLOCATOR_WITH_MSG(allocator, msg, fail_statement) \
   RCUTILS_CHECK_ALLOCATOR_WITH_MSG(allocator, msg, fail_statement)

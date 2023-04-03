@@ -16,266 +16,209 @@
 #define RCL_ACTION__WAIT_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
+#include "rcl/wait.h"
 #include "rcl_action/action_client.h"
 #include "rcl_action/action_server.h"
 #include "rcl_action/visibility_control.h"
-#include "rcl/wait.h"
 
-/// Add a rcl_action_client_t to a wait set.
+/// 向 wait set 中添加一个 rcl_action_client_t。
 /**
- * This function will add the underlying service clients and subscribers to the wait set.
+ * 此函数将底层服务客户端和订阅者添加到 wait set 中。
  *
- * This function behaves similar to adding subscriptions to the wait set, but will add
- * five entities:
+ * 该函数的行为类似于向 wait set 添加订阅，但会添加五个实体：
  *
- * - Three service clients
- * - Two subscriptions
+ * - 三个服务客户端
+ * - 两个订阅
  *
  * \see rcl_wait_set_add_subscription
  *
- * If this function fails for any reason, `client_index` and `subscription_index` are not set.
- * It is also possible the provided wait set is left in an inconsistent state (e.g. some
- * of the clients and subscriptions were added to the wait set, but not all).
+ * 如果此函数因任何原因失败，`client_index` 和 `subscription_index` 不会被设置。
+ * 还可能导致提供的 wait set 处于不一致状态（例如，某些客户端和订阅已添加到 wait set 中，但并非全部）。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[inout] wait_set struct where action client service client and subscription
- *   are to be stored
- * \param[in] action_client the action client to be added to the wait set
- * \param[out] client_index the starting index in the wait set's client container where
- *   the action clients underlying service clients were added. Optionally, set to `NULL`
- *   if ignored.
- * \param[out] subscription_index the starting index in the wait set's subscription container
- *   where the action clients underlying subscriptions were added. Optionally, set to `NULL`
- *   if ignored.
- * \return `RCL_RET_OK` if added successfully, or
- * \return `RCL_RET_WAIT_SET_INVALID` if the wait set is zero initialized, or
- * \return `RCL_RET_WAIT_SET_FULL` if the subscription set is full, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[inout] wait_set 结构，用于存储 action client 服务客户端和订阅
+ * \param[in] action_client 要添加到 wait set 的 action client
+ * \param[out] client_index 在 wait set 的客户端容器中的起始索引，其中添加了 action clients 底层服务客户端。如果忽略，则可选地设置为 `NULL`。
+ * \param[out] subscription_index 在 wait set 的订阅容器中的起始索引，其中添加了 action clients 底层订阅。如果忽略，则可选地设置为 `NULL`。
+ * \return `RCL_RET_OK` 如果成功添加，或
+ * \return `RCL_RET_WAIT_SET_INVALID` 如果 wait set 为零初始化，或
+ * \return `RCL_RET_WAIT_SET_FULL` 如果订阅集已满，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果 action client 无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
 */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_wait_set_add_action_client(
-  rcl_wait_set_t * wait_set,
-  const rcl_action_client_t * action_client,
-  size_t * client_index,
+rcl_ret_t rcl_action_wait_set_add_action_client(
+  rcl_wait_set_t * wait_set, const rcl_action_client_t * action_client, size_t * client_index,
   size_t * subscription_index);
 
-/// Add a rcl_action_server_t to a wait set.
+/// 向 wait set 中添加一个 rcl_action_server_t。
 /**
- * This function will add the underlying services to the wait set.
+ * 此函数将底层服务添加到 wait set 中。
  *
- * This function behaves similar to adding services to the wait set, but will add
- * three services.
+ * 该函数的行为类似于向 wait set 添加服务，但会添加三个服务。
  *
  * \see rcl_wait_set_add_service
  *
- * * If this function fails for any reason, `service_index` is not set.
- * It is also possible the provided wait set is left in an inconsistent state (e.g. some
- * of the clients and subscribers were added to the wait set, but not all).
-
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 如果此函数因任何原因失败，`service_index` 不会被设置。
+ * 还可能导致提供的 wait set 处于不一致状态（例如，某些客户端和订阅者已添加到 wait set 中，但并非全部）。
  *
- * \param[inout] wait_set struct where action server services are to be stored
- * \param[in] action_server the action server to be added to the wait set
- * \param[out] service_index the starting index in the wait set's service container where
- *   the action servers underlying services were added. Optionally, set to `NULL`
- *   if ignored.
- * \return `RCL_RET_OK` if added successfully, or
- * \return `RCL_RET_WAIT_SET_INVALID` if the wait set is zero initialized, or
- * \return `RCL_RET_WAIT_SET_FULL` if the subscription set is full, or
- * \return `RCL_RET_ACTION_SERVER_INVALID` if the action server is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * <hr>
+ * 属性              | 遵循
+ * ------------------ | -------------
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
+ *
+ * \param[inout] wait_set 结构，用于存储 action server 服务
+ * \param[in] action_server 要添加到 wait set 的 action server
+ * \param[out] service_index 在 wait set 的服务容器中的起始索引，其中添加了 action servers 底层服务。如果忽略，则可选地设置为 `NULL`。
+ * \return `RCL_RET_OK` 如果成功添加，或
+ * \return `RCL_RET_WAIT_SET_INVALID` 如果 wait set 为零初始化，或
+ * \return `RCL_RET_WAIT_SET_FULL` 如果订阅集已满，或
+ * \return `RCL_RET_ACTION_SERVER_INVALID` 如果 action server 无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
 */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_wait_set_add_action_server(
-  rcl_wait_set_t * wait_set,
-  const rcl_action_server_t * action_server,
-  size_t * service_index);
+rcl_ret_t rcl_action_wait_set_add_action_server(
+  rcl_wait_set_t * wait_set, const rcl_action_server_t * action_server, size_t * service_index);
 
-/// Get the number of wait set entities associated with a rcl_action_client_t.
+/// 获取与 rcl_action_client_t 关联的 wait set 实体数量。
 /**
- * Returns the number of entities that are added to the wait set if
- * rcl_action_wait_set_add_action_client() is called.
+ * 返回在调用 rcl_action_wait_set_add_action_client() 时添加到 wait set 的实体数量。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] action_client an action client to query
- * \param[out] num_subscriptions the number of subscriptions added when the action client
- *   is added to the wait set
- * \param[out] num_guard_conditions the number of guard conditions added when the action client
- *   is added to the wait set
- * \param[out] num_timers the number of timers added when the action client
- *   is added to the wait set
- * \param[out] num_clients the number of clients added when the action client
- *   is added to the wait set
- * \param[out] num_services the number of services added when the action client
- *   is added to the wait set
- * \return `RCL_RET_OK` if call is successful, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] action_client 要查询的 action client
+ * \param[out] num_subscriptions 当将 action client 添加到 wait set 时添加的订阅数量
+ * \param[out] num_guard_conditions 当将 action client 添加到 wait set 时添加的保护条件数量
+ * \param[out] num_timers 当将 action client 添加到 wait set 时添加的计时器数量
+ * \param[out] num_clients 当将 action client 添加到 wait set 时添加的客户端数量
+ * \param[out] num_services 当将 action client 添加到 wait set 时添加的服务数量
+ * \return `RCL_RET_OK` 如果调用成功，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果 action client 无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
 */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_wait_set_get_num_entities(
-  const rcl_action_client_t * action_client,
-  size_t * num_subscriptions,
-  size_t * num_guard_conditions,
-  size_t * num_timers,
-  size_t * num_clients,
-  size_t * num_services);
+rcl_ret_t rcl_action_client_wait_set_get_num_entities(
+  const rcl_action_client_t * action_client, size_t * num_subscriptions,
+  size_t * num_guard_conditions, size_t * num_timers, size_t * num_clients, size_t * num_services);
 
-/// Get the number of wait set entities associated with a rcl_action_server_t.
+/// 获取与 rcl_action_server_t 关联的等待集实体数量。
 /**
- * Returns the number of entities that are added to the wait set if
- * rcl_action_wait_set_add_action_server() is called.
+ * 如果调用 rcl_action_wait_set_add_action_server()，则返回添加到等待集的实体数量。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] action_server an action server to query
- * \param[out] num_subscriptions the number of subscriptions added when the action server
- *   is added to the wait set
- * \param[out] num_guard_conditions the number of guard conditions added when the action server
- *   is added to the wait set
- * \param[out] num_timers the number of timers added when the action server
- *   is added to the wait set
- * \param[out] num_clients the number of clients added when the action server
- *   is added to the wait set
- * \param[out] num_services the number of services added when the action server
- *   is added to the wait set
- * \return `RCL_RET_OK` if call is successful, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_SERVER_INVALID` if the action server is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] action_server 要查询的动作服务器
+ * \param[out] num_subscriptions 当将动作服务器添加到等待集时添加的订阅数
+ * \param[out] num_guard_conditions 当将动作服务器添加到等待集时添加的保护条件数
+ * \param[out] num_timers 当将动作服务器添加到等待集时添加的计时器数
+ * \param[out] num_clients 当将动作服务器添加到等待集时添加的客户端数
+ * \param[out] num_services 当将动作服务器添加到等待集时添加的服务数
+ * \return `RCL_RET_OK` 如果调用成功，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_SERVER_INVALID` 如果动作服务器无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
 */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_server_wait_set_get_num_entities(
-  const rcl_action_server_t * action_server,
-  size_t * num_subscriptions,
-  size_t * num_guard_conditions,
-  size_t * num_timers,
-  size_t * num_clients,
-  size_t * num_services);
+rcl_ret_t rcl_action_server_wait_set_get_num_entities(
+  const rcl_action_server_t * action_server, size_t * num_subscriptions,
+  size_t * num_guard_conditions, size_t * num_timers, size_t * num_clients, size_t * num_services);
 
-/// Get the wait set entities that are ready for a rcl_action_client_t.
+/// 获取 rcl_action_client_t 的准备好的等待集实体。
 /**
- * The caller can use this function to determine the relevant action client functions
- * to call: rcl_action_take_feedback(), rcl_action_take_status(),
- * rcl_action_take_goal_response(), rcl_action_take_cancel_response(), or
- * rcl_action_take_result_response().
+ * 调用者可以使用此函数确定要调用的相关动作客户端函数：
+ * rcl_action_take_feedback()、rcl_action_take_status()、
+ * rcl_action_take_goal_response()、rcl_action_take_cancel_response() 或
+ * rcl_action_take_result_response()。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] wait_set struct where action server services are to be stored
- * \param[in] action_client an action client to query
- * \param[out] is_feedback_ready `true` if there is a feedback message ready to take,
- *   `false` otherwise
- * \param[out] is_status_ready `true` if there is a status message ready to take,
- *   `false` otherwise
- * \param[out] is_goal_response_ready `true` if there is a goal response message ready
- *   to take, `false` otherwise
- * \param[out] is_cancel_response_ready `true` if there is a cancel response message ready
- *   to take, `false` otherwise
- * \param[out] is_result_response_ready `true` if there is a result response message ready
- *   to take, `false` otherwise
- * \return `RCL_RET_OK` if call is successful, or
- * \return `RCL_RET_WAIT_SET_INVALID` if the wait set is invalid, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] wait_set 存储动作服务器服务的结构
+ * \param[in] action_client 要查询的动作客户端
+ * \param[out] is_feedback_ready 如果有准备好的反馈消息可获取，则为 `true`，否则为 `false`
+ * \param[out] is_status_ready 如果有准备好的状态消息可获取，则为 `true`，否则为 `false`
+ * \param[out] is_goal_response_ready 如果有准备好的目标响应消息可获取，则为 `true`，否则为 `false`
+ * \param[out] is_cancel_response_ready 如果有准备好的取消响应消息可获取，则为 `true`，否则为 `false`
+ * \param[out] is_result_response_ready 如果有准备好的结果响应消息可获取，则为 `true`，否则为 `false`
+ * \return `RCL_RET_OK` 如果调用成功，或
+ * \return `RCL_RET_WAIT_SET_INVALID` 如果等待集无效，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果动作客户端无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
 */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_wait_set_get_entities_ready(
-  const rcl_wait_set_t * wait_set,
-  const rcl_action_client_t * action_client,
-  bool * is_feedback_ready,
-  bool * is_status_ready,
-  bool * is_goal_response_ready,
-  bool * is_cancel_response_ready,
-  bool * is_result_response_ready);
+rcl_ret_t rcl_action_client_wait_set_get_entities_ready(
+  const rcl_wait_set_t * wait_set, const rcl_action_client_t * action_client,
+  bool * is_feedback_ready, bool * is_status_ready, bool * is_goal_response_ready,
+  bool * is_cancel_response_ready, bool * is_result_response_ready);
 
-/// Get the wait set entities that are ready for a rcl_action_server_t.
+/// 获取 rcl_action_server_t 的准备好的等待集实体。
 /**
- * The caller can use this function to determine the relevant action server functions
- * to call: rcl_action_take_goal_request(), rcl_action_take_cancel_request(), or
- * rcl_action_take_result_request().
+ * 调用者可以使用此函数确定要调用的相关动作服务器函数：
+ * rcl_action_take_goal_request()、rcl_action_take_cancel_request() 或
+ * rcl_action_take_result_request()。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] wait_set struct where action server services are to be stored
- * \param[in] action_server an action server to query
- * \param[out] is_goal_request_ready `true` if there is a goal request message ready
- *   to take, `false` otherwise
- * \param[out] is_cancel_request_ready `true` if there is a cancel request message ready
- *   to take, `false` otherwise
- * \param[out] is_result_request_ready `true` if there is a result request message ready
- *   to take, `false` otherwise
- * \param[out] is_goal_expired `true` if there is a goal that expired, `false` otherwise
- * \return `RCL_RET_OK` if call is successful, or
- * \return `RCL_RET_WAIT_SET_INVALID` if the wait set is invalid, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action server is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] wait_set 存储动作服务器服务的结构
+ * \param[in] action_server 要查询的动作服务器
+ * \param[out] is_goal_request_ready 如果有准备好的目标请求消息可获取，则为 `true`，否则为 `false`
+ * \param[out] is_cancel_request_ready 如果有准备好的取消请求消息可获取，则为 `true`，否则为 `false`
+ * \param[out] is_result_request_ready 如果有准备好的结果请求消息可获取，则为 `true`，否则为 `false`
+ * \param[out] is_goal_expired 如果有过期的目标，则为 `true`，否则为 `false`
+ * \return `RCL_RET_OK` 如果调用成功，或
+ * \return `RCL_RET_WAIT_SET_INVALID` 如果等待集无效，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果动作服务器无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
 */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_server_wait_set_get_entities_ready(
-  const rcl_wait_set_t * wait_set,
-  const rcl_action_server_t * action_server,
-  bool * is_goal_request_ready,
-  bool * is_cancel_request_ready,
-  bool * is_result_request_ready,
+rcl_ret_t rcl_action_server_wait_set_get_entities_ready(
+  const rcl_wait_set_t * wait_set, const rcl_action_server_t * action_server,
+  bool * is_goal_request_ready, bool * is_cancel_request_ready, bool * is_result_request_ready,
   bool * is_goal_expired);
 
 #ifdef __cplusplus

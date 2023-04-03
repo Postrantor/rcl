@@ -18,8 +18,7 @@
 #define RCL__GUARD_CONDITION_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcl/allocator.h"
@@ -28,239 +27,223 @@ extern "C"
 #include "rcl/types.h"
 #include "rcl/visibility_control.h"
 
-/// Internal rcl guard condition implementation struct.
+/// 内部 rcl 守护条件实现结构体。
 typedef struct rcl_guard_condition_impl_s rcl_guard_condition_impl_t;
 
-/// Handle for a rcl guard condition.
-typedef struct rcl_guard_condition_s
-{
-  /// Context associated with this guard condition.
-  rcl_context_t * context;
+/// rcl 守护条件的句柄。
+typedef struct rcl_guard_condition_s {
+  /// 与此守护条件关联的上下文。
+  rcl_context_t* context;
 
-  /// Pointer to the guard condition implementation
-  rcl_guard_condition_impl_t * impl;
+  /// 指向守护条件实现的指针
+  rcl_guard_condition_impl_t* impl;
 } rcl_guard_condition_t;
 
-/// Options available for a rcl guard condition.
-typedef struct rcl_guard_condition_options_s
-{
-  /// Custom allocator for the guard condition, used for internal allocations.
+/// rcl 守护条件可用的选项。
+typedef struct rcl_guard_condition_options_s {
+  /// 守护条件的自定义分配器，用于内部分配。
   rcl_allocator_t allocator;
 } rcl_guard_condition_options_t;
 
-/// Return a rcl_guard_condition_t struct with members set to `NULL`.
+/// 返回一个 rcl_guard_condition_t 结构，其成员设置为 `NULL`。
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_guard_condition_t
-rcl_get_zero_initialized_guard_condition(void);
+rcl_guard_condition_t rcl_get_zero_initialized_guard_condition(void);
 
-/// Initialize a rcl guard_condition.
+/// 初始化 rcl 守护条件。
 /**
- * After calling this function on a rcl_guard_condition_t, it can be passed to
- * rcl_wait() and then concurrently it can be triggered to wake-up rcl_wait().
+ * 在 rcl_guard_condition_t 上调用此函数后，可以将其传递给
+ * rcl_wait()，然后并发地触发它以唤醒 rcl_wait()。
  *
- * Expected usage:
+ * 预期用法：
  *
  * ```c
  * #include <rcl/rcl.h>
  *
- * // ... error handling
+ * // ... 错误处理
  * rcl_guard_condition_t guard_condition = rcl_get_zero_initialized_guard_condition();
- * // ... customize guard condition options
+ * // ... 自定义守护条件选项
  * rcl_ret_t ret = rcl_guard_condition_init(
  *   &guard_condition, context, rcl_guard_condition_get_default_options());
- * // ... error handling, and on shutdown do deinitialization:
+ * // ... 错误处理，并在关闭时进行反初始化：
  * ret = rcl_guard_condition_fini(&guard_condition);
- * // ... error handling for rcl_guard_condition_fini()
+ * // ... rcl_guard_condition_fini() 的错误处理
  * ```
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[inout] guard_condition preallocated guard_condition structure
- * \param[in] context the context instance with which the guard condition
- *   should be associated
- * \param[in] options the guard_condition's options
- * \return #RCL_RET_OK if guard_condition was initialized successfully, or
- * \return #RCL_RET_ALREADY_INIT if the guard condition is already initialized, or
- * \return #RCL_RET_NOT_INIT if the given context is invalid, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[inout] guard_condition 预分配的守护条件结构
+ * \param[in] context 应与守护条件关联的上下文实例
+ * \param[in] options 守护条件的选项
+ * \return #RCL_RET_OK 如果守护条件成功初始化，或
+ * \return #RCL_RET_ALREADY_INIT 如果守护条件已经初始化，或
+ * \return #RCL_RET_NOT_INIT 如果给定的上下文无效，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_guard_condition_init(
-  rcl_guard_condition_t * guard_condition,
-  rcl_context_t * context,
-  const rcl_guard_condition_options_t options);
+rcl_ret_t rcl_guard_condition_init(
+    rcl_guard_condition_t* guard_condition,
+    rcl_context_t* context,
+    const rcl_guard_condition_options_t options);
 
-/// Same as rcl_guard_condition_init(), but reusing an existing rmw handle.
+/// 与 rcl_guard_condition_init() 相同，但重用现有的 rmw 句柄。
 /**
- * In addition to the documentation for rcl_guard_condition_init(), the
- * `rmw_guard_condition` parameter must not be `NULL` and must point to a valid
- * rmw guard condition.
+ * 除了 rcl_guard_condition_init() 的文档外，
+ * `rmw_guard_condition` 参数不能为 `NULL`，并且必须指向有效的
+ * rmw 守护条件。
  *
- * Also the life time of the rcl guard condition is tied to the life time of
- * the rmw guard condition.
- * So if the rmw guard condition is destroyed before the rcl guard condition,
- * the rcl guard condition becomes invalid.
+ * 同样，rcl 守护条件的生命周期与 rmw 守护条件的生命周期相绑定。
+ * 因此，如果在 rcl 守护条件之前销毁 rmw 守护条件，
+ * 则 rcl 守护条件变为无效。
  *
- * Similarly if the resulting rcl guard condition is fini'ed before the rmw
- * guard condition, then the rmw guard condition is no longer valid.
+ * 类似地，如果在 rmw 守护条件之前完成了生成的 rcl 守护条件，
+ * 那么 rmw 守护条件将不再有效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[inout] guard_condition preallocated guard_condition structure
- * \param[in] rmw_guard_condition existing rmw guard condition to reuse
- * \param[in] context the context instance with which the rmw guard condition
- *   was initialized with, i.e. the rmw context inside rcl context needs to
- *   match rmw context in rmw guard condition
- * \param[in] options the guard_condition's options
- * \return #RCL_RET_OK if guard_condition was initialized successfully, or
- * \return #RCL_RET_ALREADY_INIT if the guard condition is already initialized, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[inout] guard_condition 预分配的守护条件结构
+ * \param[in] rmw_guard_condition 要重用的现有 rmw 守护条件
+ * \param[in] context 初始化 rmw 守护条件的上下文实例，即 rcl 上下文中的 rmw 上下文需要
+ *   与 rmw 守护条件中的 rmw 上下文匹配
+ * \param[in] options 守护条件的选项
+ * \return #RCL_RET_OK 如果守护条件成功初始化，或
+ * \return #RCL_RET_ALREADY_INIT 如果守护条件已经初始化，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
-rcl_ret_t
-rcl_guard_condition_init_from_rmw(
-  rcl_guard_condition_t * guard_condition,
-  const rmw_guard_condition_t * rmw_guard_condition,
-  rcl_context_t * context,
-  const rcl_guard_condition_options_t options);
+rcl_ret_t rcl_guard_condition_init_from_rmw(
+    rcl_guard_condition_t* guard_condition,
+    const rmw_guard_condition_t* rmw_guard_condition,
+    rcl_context_t* context,
+    const rcl_guard_condition_options_t options);
 
-/// Finalize a rcl_guard_condition_t.
+/// 结束 rcl_guard_condition_t。
 /**
- * After calling, calls to rcl_trigger_guard_condition() will fail when using
- * this guard condition.
+ * 调用后，使用此守护条件的 rcl_trigger_guard_condition() 调用将失败。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No [1]
- * Uses Atomics       | No
- * Lock-Free          | Yes
- * <i>[1] specifically not thread-safe with rcl_trigger_guard_condition()</i>
+ * 分配内存           | 是
+ * 线程安全           | 否 [1]
+ * 使用原子操作       | 否
+ * 无锁               | 是
+ * <i>[1] 与 rcl_trigger_guard_condition() 特别不是线程安全的</i>
  *
- * \param[inout] guard_condition handle to the guard_condition to be finalized
- * \return #RCL_RET_OK if guard_condition was finalized successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[inout] guard_condition 要完成的守护条件句柄
+ * \return #RCL_RET_OK 如果守护条件成功完成，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_guard_condition_fini(rcl_guard_condition_t * guard_condition);
+rcl_ret_t rcl_guard_condition_fini(rcl_guard_condition_t* guard_condition);
 
-/// Return the default options in a rcl_guard_condition_options_t struct.
+/// 返回 rcl_guard_condition_options_t 结构中的默认选项。
 /**
- * The defaults are:
+ * 默认值为：
  *
  * - allocator = rcl_get_default_allocator()
  *
- * \return the default options in an rcl_guard_condition_options_t struct.
+ * \return rcl_guard_condition_options_t 结构中的默认选项。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_guard_condition_options_t
-rcl_guard_condition_get_default_options(void);
+rcl_guard_condition_options_t rcl_guard_condition_get_default_options(void);
 
-/// Trigger a rcl guard condition.
+/// 触发 rcl 守护条件。
 /**
- * This function can fail, and return RCL_RET_INVALID_ARGUMENT, if the:
- *   - guard condition is `NULL`
- *   - guard condition is invalid (never called init or called fini)
+ * 此函数可能失败，并返回 RCL_RET_INVALID_ARGUMENT，如果：
+ *   - 守护条件为 `NULL`
+ *   - 守护条件无效（从未调用 init 或调用 fini）
  *
- * A guard condition can be triggered from any thread.
+ * 守护条件可以从任何线程触发。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No [1]
- * Uses Atomics       | No
- * Lock-Free          | Yes
- * <i>[1] it can be called concurrently with itself, even on the same guard condition</i>
+ * 分配内存           | 是
+ * 线程安全           | 否 [1]
+ * 使用原子操作       | 否
+ * 无锁               | 是
+ * <i>[1] 即使在相同的守护条件上，也可以与自身并发调用</i>
  *
- * \param[in] guard_condition handle to the guard_condition to be triggered
- * \return #RCL_RET_OK if the guard condition was triggered, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] guard_condition 要触发的守护条件句柄
+ * \return #RCL_RET_OK 如果守护条件被触发，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_trigger_guard_condition(rcl_guard_condition_t * guard_condition);
+rcl_ret_t rcl_trigger_guard_condition(rcl_guard_condition_t* guard_condition);
 
-/// Return the guard condition options.
+/// 返回守护条件选项。
 /**
- * Returned is a pointer to the internally held rcl_guard_condition_options_t.
- * This function can fail, and therefore return `NULL`, if the:
- *   - guard_condition is `NULL`
- *   - guard_condition is invalid (never called init, called fini, or invalid node)
+ * 返回的是指向内部持有的 rcl_guard_condition_options_t 的指针。
+ * 如果以下情况之一成立，此函数可能失败，因此返回 `NULL`：
+ *   - guard_condition 为 `NULL`
+ *   - guard_condition 无效（从未调用 init、调用 fini 或无效节点）
  *
- * The returned pointer is made invalid if the guard condition is finalized.
+ * 如果守护条件被完成，则返回的指针变为无效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存           | 否
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[in] guard_condition pointer to the rcl guard_condition
- * \return rcl guard condition options if successful, otherwise `NULL`
+ * \param[in] guard_condition 指向 rcl 守护条件的指针
+ * \return 如果成功，则返回 rcl 守护条件选项，否则返回 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const rcl_guard_condition_options_t *
-rcl_guard_condition_get_options(const rcl_guard_condition_t * guard_condition);
+const rcl_guard_condition_options_t* rcl_guard_condition_get_options(
+    const rcl_guard_condition_t* guard_condition);
 
-/// Return the rmw guard condition handle.
+/// 返回 rmw 守护条件句柄。
 /**
- * The handle returned is a pointer to the internally held rmw handle.
- * This function can fail, and therefore return `NULL`, if the:
- *   - guard_condition is `NULL`
- *   - guard_condition is invalid (never called init, called fini, or invalid node)
+ * 返回的句柄是指向内部持有的 rmw 句柄的指针。
+ * 如果以下情况之一成立，此函数可能失败，因此返回 `NULL`：
+ *   - guard_condition 为 `NULL`
+ *   - guard_condition 无效（从未调用 init、调用 fini 或无效节点）
  *
- * The returned handle is made invalid if the guard condition is finalized or
- * if rcl_shutdown() is called.
- * The returned handle is not guaranteed to be valid for the life time of the
- * guard condition as it may be finalized and recreated itself.
- * Therefore it is recommended to get the handle from the guard condition using
- * this function each time it is needed and avoid use of the handle
- * concurrently with functions that might change it.
+ * 如果守护条件被完成或调用 rcl_shutdown()，则返回的句柄将变为无效。
+ * 返回的句柄不能保证在守护条件的生命周期内始终有效，因为它可能自身被完成并重新创建。
+ * 因此，建议使用此函数在每次需要时从守护条件获取句柄，并避免与可能更改它的函数同时使用句柄。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存           | 否
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[in] guard_condition pointer to the rcl guard_condition
- * \return rmw guard condition handle if successful, otherwise `NULL`
+ * \param[in] guard_condition 指向 rcl 守护条件的指针
+ * \return 如果成功，则返回 rmw 守护条件句柄，否则返回 `NULL`
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rmw_guard_condition_t *
-rcl_guard_condition_get_rmw_handle(const rcl_guard_condition_t * guard_condition);
+rmw_guard_condition_t* rcl_guard_condition_get_rmw_handle(
+    const rcl_guard_condition_t* guard_condition);
 
 #ifdef __cplusplus
 }

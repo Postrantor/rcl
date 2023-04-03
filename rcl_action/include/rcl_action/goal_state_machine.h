@@ -16,29 +16,25 @@
 #define RCL_ACTION__GOAL_STATE_MACHINE_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include "rcl_action/types.h"
 #include "rcl_action/visibility_control.h"
 
-
-/// Transition a goal from one state to the next.
+/// 转换目标状态。
 /**
- * Given a goal state and a goal event, return the next state.
+ * 根据给定的目标状态和目标事件，返回下一个状态。
  *
- * \param[in] state the state to transition from
- * \param[in] event the event triggering a transition
- * \return the next goal state if the transition is valid, or
- * \return `GOAL_STATE_UNKNOWN` if the transition is invalid or an error occured
+ * \param[in] state 要转换的状态
+ * \param[in] event 触发转换的事件
+ * \return 如果转换有效，则返回下一个目标状态，或者
+ * \return 如果转换无效或发生错误，则返回 `GOAL_STATE_UNKNOWN`
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_action_goal_state_t
-rcl_action_transition_goal_state(
-  const rcl_action_goal_state_t state,
-  const rcl_action_goal_event_t event);
+rcl_action_goal_state_t rcl_action_transition_goal_state(
+  const rcl_action_goal_state_t state, const rcl_action_goal_event_t event);
 
 #ifdef __cplusplus
 }

@@ -16,89 +16,76 @@
 #define RCL_ACTION__ACTION_CLIENT_H_
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-#include "rcl_action/types.h"
-#include "rcl_action/visibility_control.h"
 #include "rcl/event_callback.h"
 #include "rcl/macros.h"
 #include "rcl/node.h"
+#include "rcl_action/types.h"
+#include "rcl_action/visibility_control.h"
 
-
-/// Internal action client implementation struct.
+/// 内部 action 客户端实现结构体。
 typedef struct rcl_action_client_impl_s rcl_action_client_impl_t;
 
-/// Structure which encapsulates a ROS action client.
+/// 封装了一个 ROS action 客户端的结构体。
 typedef struct rcl_action_client_s
 {
-  /// Pointer to the action client implementation
+  /// 指向 action 客户端实现的指针
   rcl_action_client_impl_t * impl;
 } rcl_action_client_t;
 
-/// Options available for a rcl_action_client_t.
+/// rcl_action_client_t 可用的选项。
 typedef struct rcl_action_client_options_s
 {
-  /// Middleware quality of service settings for the action client.
-  /// Goal service quality of service
+  /// action 客户端的中间件服务质量设置。
+  /// 目标服务的服务质量
   rmw_qos_profile_t goal_service_qos;
-  /// Result service quality of service
+  /// 结果服务的服务质量
   rmw_qos_profile_t result_service_qos;
-  /// Cancel service quality of service
+  /// 取消服务的服务质量
   rmw_qos_profile_t cancel_service_qos;
-  /// Feedback topic quality of service
+  /// 反馈主题的服务质量
   rmw_qos_profile_t feedback_topic_qos;
-  /// Status topic quality of service
+  /// 状态主题的服务质量
   rmw_qos_profile_t status_topic_qos;
-  /// Custom allocator for the action client, used for incidental allocations.
-  /** For default behavior (malloc/free), see: rcl_get_default_allocator() */
+  /// action 客户端的自定义分配器，用于偶发性分配。
+  /** 默认行为（malloc/free），请参阅：rcl_get_default_allocator() */
   rcl_allocator_t allocator;
 } rcl_action_client_options_t;
 
-/// Return a rcl_action_client_t struct with members set to `NULL`.
+/// 返回一个成员设置为 `NULL` 的 rcl_action_client_t 结构体。
 /**
- * Should be called to get a null rcl_action_client_t before passing to
- * rcl_action_client_init().
+ * 在传递给 rcl_action_client_init() 之前，应调用此函数以获取空的 rcl_action_client_t。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_action_client_t
-rcl_action_get_zero_initialized_client(void);
+rcl_action_client_t rcl_action_get_zero_initialized_client(void);
 
-/// Initialize a rcl_action_client_t.
+/// 初始化一个 rcl_action_client_t。
 /**
- * After calling this function on a rcl_action_client_t, it can be used to send
- * goals of the given type to the given topic using rcl_action_send_goal_request().
- * If a goal request is sent to a (possibly remote) server and if the server
- * sends a response, the client can access the response with
- * rcl_take_goal_response() once the response is available.
+ * 在对 rcl_action_client_t 调用此函数之后，可以使用 rcl_action_send_goal_request() 向给定主题发送给定类型的目标。
+ * 如果将目标请求发送到（可能是远程）服务器并且服务器发送响应，则一旦响应可用，客户端就可以使用 rcl_take_goal_response() 访问响应。
  *
- * After a goal request has been accepted, the rcl_action_client_t associated with the
- * goal can perform the following operations:
+ * 在目标请求被接受之后，与目标关联的 rcl_action_client_t 可以执行以下操作：
  *
- * - Send a request for the result with rcl_action_send_result_request().
- * If the server sends a response when the goal terminates, the result can be accessed
- * with rcl_action_take_result_response(), once the response is available.
- * - Send a cancel request for the goal with rcl_action_send_cancel_request().
- * If the server sends a response to a cancel request, the client can access the
- * response with rcl_action_take_cancel_response() once the response is available.
- * - Take feedback about the goal with rcl_action_take_feedback().
+ * - 使用 rcl_action_send_result_request() 发送结果请求。
+ *   如果在目标终止时服务器发送响应，则一旦响应可用，就可以使用 rcl_action_take_result_response() 访问结果。
+ * - 使用 rcl_action_send_cancel_request() 为目标发送取消请求。
+ *   如果服务器对取消请求发送响应，则一旦响应可用，客户端就可以使用 rcl_action_take_cancel_response() 访问响应。
+ * - 使用 rcl_action_take_feedback() 获取关于目标的反馈。
  *
- * A rcl_action_client_t can be used to access the current status of all accepted goals
- * communicated by the action server with rcl_action_take_status().
+ * rcl_action_client_t 可用于访问由 action 服务器传达的所有已接受目标的当前状态，方法是使用 rcl_action_take_status()。
  *
- * The given rcl_node_t must be valid and the resulting rcl_action_client_t is
- * only valid as long as the given rcl_node_t remains valid.
+ * 给定的 rcl_node_t 必须有效，生成的 rcl_action_client_t 仅在给定的 rcl_node_t 保持有效时有效。
  *
- * The rosidl_action_type_support_t is obtained on a per .action type basis.
- * When the user defines a ROS action, code is generated which provides the
- * required rosidl_action_type_support_t object.
- * This object can be obtained using a language appropriate mechanism.
+ * rosidl_action_type_support_t 是基于每个 .action 类型获得的。
+ * 当用户定义一个 ROS action 时，会生成提供所需 rosidl_action_type_support_t 对象的代码。
+ * 可以使用适合语言的机制获取此对象。
  *
- * \todo TODO(jacobperron) write these instructions once and link to it instead
+ * \todo TODO(jacobperron) 编写这些说明一次并链接到它
  *
- * For C, a macro can be used (for example `example_interfaces/Fibonacci`):
+ * 对于 C，可以使用宏（例如 `example_interfaces/Fibonacci`）：
  *
  * ```c
  * #include <rosidl_runtime_c/action_type_support_struct.h>
@@ -107,7 +94,7 @@ rcl_action_get_zero_initialized_client(void);
  *   ROSIDL_GET_ACTION_TYPE_SUPPORT(example_interfaces, Fibonacci);
  * ```
  *
- * For C++, a template function is used:
+ * 对于 C++，使用模板函数：
  *
  * ```cpp
  * #include <rosidl_runtime_cpp/action_type_support.hpp>
@@ -117,19 +104,15 @@ rcl_action_get_zero_initialized_client(void);
  *   get_action_type_support_handle<example_interfaces::action::Fibonacci>();
  * ```
  *
- * The rosidl_action_type_support_t object contains action type specific
- * information used to send or take goals, results, and feedback.
+ * rosidl_action_type_support_t 对象包含用于发送或接收目标、结果和反馈的 action 类型特定信息。
  *
- * The topic name must be a c string that follows the topic and service name
- * format rules for unexpanded names, also known as non-fully qualified names:
+ * 主题名称必须是遵循未展开名称的主题和服务名称格式规则的 c 字符串，也称为非完全限定名称：
  *
  * \see rcl_expand_topic_name
  *
- * The options struct allows the user to set the quality of service settings as
- * well as a custom allocator that is used when initializing/finalizing the
- * client to allocate space for incidentals, e.g. the action client name string.
+ * options 结构允许用户设置服务质量设置以及在初始化/终止客户端时用于分配空间的自定义分配器，例如 action 客户端名称字符串。
  *
- * Expected usage (for C action clients):
+ * 预期用法（对于 C action 客户端）：
  *
  * ```c
  * #include <rcl/rcl.h>
@@ -140,89 +123,85 @@ rcl_action_get_zero_initialized_client(void);
  * rcl_node_t node = rcl_get_zero_initialized_node();
  * rcl_node_options_t node_ops = rcl_node_get_default_options();
  * rcl_ret_t ret = rcl_node_init(&node, "node_name", "/my_namespace", &node_ops);
- * // ... error handling
+ * // ... 错误处理
  * const rosidl_action_type_support_t * ts =
  *   ROSIDL_GET_ACTION_TYPE_SUPPORT(example_interfaces, Fibonacci);
  * rcl_action_client_t action_client = rcl_action_get_zero_initialized_client();
  * rcl_action_client_options_t action_client_ops = rcl_action_client_get_default_options();
  * ret = rcl_action_client_init(&action_client, &node, ts, "fibonacci", &action_client_ops);
- * // ... error handling, and on shutdown do finalization:
+ * // ... 错误处理，以及在关闭时执行终止操作：
  * ret = rcl_action_client_fini(&action_client, &node);
- * // ... error handling for rcl_action_client_fini()
+ * // ... rcl_action_client_fini() 的错误处理
  * ret = rcl_node_fini(&node);
- * // ... error handling for rcl_node_fini()
+ * // ... rcl_node_fini() 的错误处理
  * ```
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性          | 符合性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存   | 是
+ * 线程安全        | 否
+ * 使用原子       | 否
+ * 无锁          | 是
  *
- * \param[out] action_client a preallocated, zero-initialized action client structure
- *   to be initialized
- * \param[in] node valid rcl node handle
- * \param[in] type_support type support object for the action's type
- * \param[in] action_name the name of the action
- * \param[in] options action_client options, including quality of service settings
- * \return `RCL_RET_OK` if action_client was initialized successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_ALREADY_INIT` if the action client is already initialized, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_ACTION_NAME_INVALID` if the given action name is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[out] action_client 要初始化的预分配、零初始化的 action 客户端结构
+ * \param[in] node 有效的 rcl 节点句柄
+ * \param[in] type_support action 类型的类型支持对象
+ * \param[in] action_name action 的名称
+ * \param[in] options 包括服务质量设置在内的 action_client 选项
+ * \return `RCL_RET_OK` 如果 action_client 初始化成功，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_NODE_INVALID` 如果节点无效，或
+ * \return `RCL_RET_ALREADY_INIT` 如果 action 客户端已经初始化，或
+ * \return `RCL_RET_BAD_ALLOC` 如果分配内存失败，或
+ * \return `RCL_RET_ACTION_NAME_INVALID` 如果给定的 action 名称无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_init(
-  rcl_action_client_t * action_client,
-  rcl_node_t * node,
-  const rosidl_action_type_support_t * type_support,
-  const char * action_name,
+rcl_ret_t rcl_action_client_init(
+  rcl_action_client_t * action_client, rcl_node_t * node,
+  const rosidl_action_type_support_t * type_support, const char * action_name,
   const rcl_action_client_options_t * options);
 
-/// Finalize a rcl_action_client_t.
+/// 结束一个 rcl_action_client_t.
 /**
- * After calling, the node will no longer listen for goals for this action client
- * (assuming this is the only action client of this type in this node).
+ * 调用后，节点将不再为此操作客户端监听目标
+ * （假设这是此节点中此类型的唯一操作客户端）。
  *
- * After calling, calls to rcl_wait(), rcl_action_send_goal_request(),
- * rcl_action_take_goal_response(), rcl_action_send_cancel_request(),
- * rcl_action_take_cancel_response(), rcl_action_send_result_request(),
- * rcl_action_take_result_response(), rcl_action_take_feedback(), and
- * rcl_action_take_status(), will fail when using this action client.
+ * 调用后，使用此操作客户端时，
+ * 对 rcl_wait()、rcl_action_send_goal_request()、
+ * rcl_action_take_goal_response()、rcl_action_send_cancel_request()、
+ * rcl_action_take_cancel_response()、rcl_action_send_result_request()、
+ * rcl_action_take_result_response()、rcl_action_take_feedback() 和
+ * rcl_action_take_status() 的调用将失败。
  *
- * Additionally, rcl_wait() will be interrupted if currently blocking.
+ * 此外，如果当前阻塞，rcl_wait() 将被中断。
  *
- * The given node handle is still valid.
+ * 给定的节点句柄仍然有效。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[inout] action_client handle to the action_client to be deinitialized
- * \param[in] node handle to the node used to create the action client
- * \return `RCL_RET_OK` if the action client was deinitialized successfully, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[inout] action_client 要取消初始化的 action_client 句柄
+ * \param[in] node 用于创建操作客户端的节点句柄
+ * \return `RCL_RET_OK` 如果操作客户端成功取消初始化，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果操作客户端无效，或
+ * \return `RCL_RET_NODE_INVALID` 如果节点无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_fini(rcl_action_client_t * action_client, rcl_node_t * node);
+rcl_ret_t rcl_action_client_fini(rcl_action_client_t * action_client, rcl_node_t * node);
 
-/// Return the default action client options in a rcl_action_client_options_t.
+/// 返回 rcl_action_client_options_t 中的默认操作客户端选项。
 /**
- * The defaults are:
+ * 默认值为：
  *
  * - goal_service_qos = rmw_qos_profile_services_default;
  * - result_service_qos = rmw_qos_profile_services_default;
@@ -233,554 +212,486 @@ rcl_action_client_fini(rcl_action_client_t * action_client, rcl_node_t * node);
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_action_client_options_t
-rcl_action_client_get_default_options(void);
+rcl_action_client_options_t rcl_action_client_get_default_options(void);
 
-/// Check if an action server is available for the given action client.
+/// 检查给定操作客户端是否有可用的操作服务器。
 /**
- * This function will return true for is_available if there is an action server
- * available for the given action client.
+ * 如果给定操作客户端有可用的操作服务器，
+ * 此函数将为 is_available 返回 true。
  *
- * The node parameter must not be `NULL`, and must point to a valid node.
+ * 节点参数不能为 `NULL`，并且必须指向有效节点。
  *
- * The client parameter must not be `NULL`, and must point to a valid client.
+ * 客户端参数不能为 `NULL`，并且必须指向有效客户端。
  *
- * The given client and node must match, i.e. the client must have been created
- * using the given node.
+ * 给定的客户端和节点必须匹配，即客户端必须使用给定节点创建。
  *
- * The is_available parameter must not be `NULL`, and must point a bool variable.
- * The result of the check will be stored in the is_available parameter.
+ * is_available 参数不能为 `NULL`，并且必须指向一个 bool 变量。
+ * 检查结果将存储在 is_available 参数中。
  *
- * In the event that error handling needs to allocate memory, this function
- * will try to use the node's allocator.
+ * 如果错误处理需要分配内存，此函数将尝试使用节点的分配器。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Maybe [1]
- * <i>[1] implementation may need to protect the data structure with a lock</i>
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 可能 [1]
+ * <i>[1] 实现可能需要使用锁保护数据结构</i>
  *
- * \param[in] node the handle to the node being used to query the ROS graph
- * \param[in] client the handle to the action client being queried
- * \param[out] is_available set to true if there is an action server available, else false
- * \return `RCL_RET_OK` if successful (regardless of the action server availability), or
- * \return `RCL_RET_NODE_INVALID` if the node is invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] node 正在用于查询 ROS 图的节点句柄
+ * \param[in] client 被查询的操作客户端句柄
+ * \param[out] is_available 如果有可用的操作服务器，则设置为 true，否则为 false
+ * \return `RCL_RET_OK` 如果成功（无论操作服务器是否可用），或
+ * \return `RCL_RET_NODE_INVALID` 如果节点无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果操作客户端无效，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_server_is_available(
-  const rcl_node_t * node,
-  const rcl_action_client_t * client,
-  bool * is_available);
+rcl_ret_t rcl_action_server_is_available(
+  const rcl_node_t * node, const rcl_action_client_t * client, bool * is_available);
 
-/// Send a ROS goal using a rcl_action_client_t.
+/// 使用 rcl_action_client_t 发送一个 ROS 目标。
 /**
- * This is a non-blocking call.
+ * 这是一个非阻塞调用。
  *
- * The caller is responsible for ensuring that the type of `ros_goal_request`
- * and the type associate with the client (via the type support) match.
- * Passing a different type produces undefined behavior and cannot be checked
- * by this function and therefore no deliberate error will occur.
+ * 调用者有责任确保 `ros_goal_request` 的类型
+ * 与客户端关联的类型（通过类型支持）匹配。
+ * 传递不同的类型会产生未定义的行为，这个函数无法检查，
+ * 因此不会发生故意的错误。
  *
- * The ROS goal message given by the `ros_goal_request` void pointer is always
- * owned by the calling code, but should remain constant during execution of this
- * function. i.e. The message cannot change during the rcl_action_send_goal_request() call.
- * Before calling rcl_action_send_goal_request() the message can change but after calling
- * rcl_action_send_goal_request() it depends on RMW implementation behavior.
- * The same `ros_goal_request` can be passed to multiple calls of this function
- * simultaneously, even if the action clients differ.
+ * 由 `ros_goal_request` void 指针给出的 ROS 目标消息始终
+ * 由调用代码拥有，但在此功能执行期间应保持不变。即在 rcl_action_send_goal_request() 调用期间，
+ * 消息不能更改。在调用 rcl_action_send_goal_request() 之前，消息可以更改，但在调用
+ * rcl_action_send_goal_request() 之后，它取决于 RMW 实现行为。
+ * 同一个 `ros_goal_request` 可以同时传递给此函数的多个调用，
+ * 即使操作客户端不同。
  *
- * This function is thread safe so long as access to both the rcl_action_client_t
- * and the `ros_goal_request` are synchronized.
- * That means that calling rcl_action_send_goal_request() from multiple threads is allowed,
- * but calling rcl_action_send_goal_request() at the same time as non-thread safe action
- * client functions is not, e.g. calling rcl_action_send_goal_request() and
- * rcl_action_client_fini() concurrently is not allowed.
+ * 只要对 rcl_action_client_t 和 `ros_goal_request` 的访问得到同步，
+ * 此功能就是线程安全的。
+ * 这意味着允许从多个线程调用 rcl_action_send_goal_request()，
+ * 但与非线程安全操作一起调用 rcl_action_send_goal_request() 是不允许的，
+ * 例如，同时调用 rcl_action_send_goal_request() 和 rcl_action_client_fini() 是不允许的。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes [1]
- * Uses Atomics       | No
- * Lock-Free          | Yes
- * <i>[1] for unique pairs of clients and goals, see above for more</i>
+ * 分配内存          | 否
+ * 线程安全          | 是 [1]
+ * 使用原子操作      | 否
+ * 无锁              | 是
+ * <i>[1] 对于唯一的客户端和目标对，参见上文了解更多信息</i>
  *
- * \param[in] action_client handle to the client that will make the goal request
- * \param[in] ros_goal_request pointer to the ROS goal message
- * \param[out] sequence_number pointer to the goal request sequence number
- * \return `RCL_RET_OK` if the request was sent successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the client is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] action_client 将发出目标请求的客户端句柄
+ * \param[in] ros_goal_request 指向 ROS 目标消息的指针
+ * \param[out] sequence_number 指向目标请求序列号的指针
+ * \return `RCL_RET_OK` 如果请求发送成功，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果客户端无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_send_goal_request(
-  const rcl_action_client_t * action_client,
-  const void * ros_goal_request,
+rcl_ret_t rcl_action_send_goal_request(
+  const rcl_action_client_t * action_client, const void * ros_goal_request,
   int64_t * sequence_number);
 
-/// Take a response for a goal request from an action server using a rcl_action_client_t.
+/// 使用 rcl_action_client_t 从操作服务器获取目标请求的响应。
 /**
- * \todo TODO(jacobperron) blocking of take?
+ * \todo TODO(jacobperron) 获取阻塞？
  *
- * \todo TODO(jacobperron) pre-, during-, and post-conditions for message ownership?
+ * \todo TODO(jacobperron) 消息所有权的前置条件、过程中和后置条件？
  *
- * \todo TODO(jacobperron) is this thread-safe?
+ * \todo TODO(jacobperron) 这是线程安全的吗？
  *
- * The caller is responsible for ensuring that the type of `ros_goal_response`
- * and the type associate with the client (via the type support) match.
- * Passing a different type produces undefined behavior and cannot be checked
- * by this function and therefore no deliberate error will occur.
+ * 调用者有责任确保 `ros_goal_response` 的类型
+ * 与客户端关联的类型（通过类型支持）匹配。
+ * 传递不同的类型会产生未定义的行为，这个函数无法检查，
+ * 因此不会发生故意的错误。
  *
- * The caller must provide a pointer to an allocated message for the `ros_goal_response`.
- * If the take is successful, this function will populate the fields of `ros_goal_response`.
- * The ROS message given by the `ros_goal_response` void pointer is always
- * owned by the calling code, but should remain constant during execution of this
- * function. i.e. The message cannot change during the rcl_action_send_goal_response() call.
- * Before calling rcl_action_send_goal_response() the message can change but after calling
- * rcl_action_send_goal_response() it depends on RMW implementation behavior.
+ * 调用者必须为 `ros_goal_response` 提供一个指向已分配消息的指针。
+ * 如果获取成功，此函数将填充 `ros_goal_response` 的字段。
+ * 由 `ros_goal_response` void 指针给出的 ROS 消息始终
+ * 由调用代码拥有，但在此功能执行期间应保持不变。即在 rcl_action_send_goal_response() 调用期间，
+ * 消息不能更改。在调用 rcl_action_send_goal_response() 之前，消息可以更改，但在调用
+ * rcl_action_send_goal_response() 之后，它取决于 RMW 实现行为。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] action_client handle to the client that will take the goal response
- * \param[out] response_header pointer to the goal response header
- * \param[out] ros_goal_response pointer to the response of a goal request
- * \return `RCL_RET_OK` if the response was taken successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_ACTION_CLIENT_TAKE_FAILED` if take failed but no error occurred
- *         in the middleware, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] action_client 将获取目标响应的客户端句柄
+ * \param[out] response_header 指向目标响应头的指针
+ * \param[out] ros_goal_response 指向目标请求响应的指针
+ * \return `RCL_RET_OK` 如果响应成功获取，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果操作客户端无效，或
+ * \return `RCL_RET_ACTION_CLIENT_TAKE_FAILED` 如果获取失败但中间件中没有错误发生，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_take_goal_response(
-  const rcl_action_client_t * action_client,
-  rmw_request_id_t * response_header,
+rcl_ret_t rcl_action_take_goal_response(
+  const rcl_action_client_t * action_client, rmw_request_id_t * response_header,
   void * ros_goal_response);
 
-/// Take a ROS feedback message for an active goal associated with a rcl_action_client_t.
+/// 使用 rcl_action_client_t 获取与活动目标关联的 ROS 反馈消息。
 /**
- * The caller is responsible for ensuring that the type of `ros_feedback`
- * and the type associate with the client (via the type support) match.
- * Passing a different type produces undefined behavior and cannot be checked
- * by this function and therefore no deliberate error will occur.
+ * 调用者有责任确保 `ros_feedback` 的类型
+ * 与客户端关联的类型（通过类型支持）匹配。
+ * 传递不同的类型会产生未定义的行为，这个函数无法检查，
+ * 因此不会发生故意的错误。
  *
- * \todo TODO(jacobperron) blocking of take?
+ * \todo TODO(jacobperron) 获取阻塞？
  *
- * \todo TODO(jacobperron) pre-, during-, and post-conditions for message ownership?
+ * \todo TODO(jacobperron) 消息所有权的前置条件、过程中和后置条件？
  *
- * \todo TODO(jacobperron) is this thread-safe?
+ * \todo TODO(jacobperron) 这是线程安全的吗？
  *
- * `ros_feedback` should point to a preallocated ROS message struct of the
- * correct type.
- * If feedback is successfully taken, the feedback message is copied to into the
- * `ros_feedback` struct.
+ * `ros_feedback` 应该指向一个预先分配的正确类型的 ROS 消息结构。
+ * 如果成功获取反馈，则将反馈消息复制到 `ros_feedback` 结构中。
  *
- * If allocation is required when taking the feedback, e.g. if space needs to
- * be allocated for a dynamically sized array in the target message, then the
- * allocator given in the action client options is used.
+ * 如果在获取反馈时需要分配内存，例如，如果需要为目标消息中的动态大小数组分配空间，
+ * 则使用操作客户端选项中给定的分配器。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Maybe [1]
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- * <i>[1] only if required when filling the feedback message, avoided for fixed sizes</i>
+ * 分配内存          | 可能 [1]
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
+ * <i>[1] 仅在填充反馈消息时需要，对于固定大小避免</i>
  *
- * \param[in] action_client handle to the client that will take action feedback
- * \param[out] ros_feedback pointer to the ROS feedback message.
- * \return `RCL_RET_OK` if the response was taken successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_ACTION_CLIENT_TAKE_FAILED` if take failed but no error occurred
- *         in the middleware, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] action_client 将获取操作反馈的客户端句柄
+ * \param[out] ros_feedback 指向 ROS 反馈消息的指针。
+ * \return `RCL_RET_OK` 如果响应成功获取，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果操作客户端无效，或
+ * \return `RCL_RET_BAD_ALLOC` 如果分配内存失败，或
+ * \return `RCL_RET_ACTION_CLIENT_TAKE_FAILED` 如果获取失败但中间件中没有错误发生，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_take_feedback(
-  const rcl_action_client_t * action_client,
-  void * ros_feedback);
+rcl_ret_t rcl_action_take_feedback(const rcl_action_client_t * action_client, void * ros_feedback);
 
-/// Take a ROS status message using a rcl_action_client_t.
+/// 使用 rcl_action_client_t 获取一个 ROS 状态消息。
 /**
- * The caller is responsible for ensuring that the type of `ros_status_array`
- * and the type associate with the client (via the type support) match.
- * Passing a different type produces undefined behavior and cannot be checked
- * by this function and therefore no deliberate error will occur.
+ * 调用者有责任确保 `ros_status_array` 的类型与
+ * 通过类型支持与客户端关联的类型匹配。
+ * 传递不同的类型会产生未定义的行为，这个函数无法检查，
+ * 因此不会发生故意的错误。
  *
- * \todo TODO(jacobperron) blocking of take?
+ * \todo TODO(jacobperron) 获取时是否阻塞？
  *
- * \todo TODO(jacobperron) pre-, during-, and post-conditions for message ownership?
+ * \todo TODO(jacobperron) 消息所有权的前置条件、过程中和后置条件？
  *
- * \todo TODO(jacobperron) is this thread-safe?
+ * \todo TODO(jacobperron) 这是线程安全的吗？
  *
- * The caller is responsible for allocating the `ros_status_array` struct with a
- * zero-initialization (the internal array should not be allocated).
- * If there is a successful take, then `ros_status_array` is populated
- * with the allocator given in the action client options.
- * It is the callers responsibility to deallocate the `ros_status_array` struct using
- * the allocator given in the action client options.
+ * 调用者负责使用零初始化分配 `ros_status_array` 结构（内部数组不应分配）。
+ * 如果成功获取，则使用操作客户端选项中给定的分配器填充 `ros_status_array`。
+ * 调用者有责任使用操作客户端选项中给定的分配器释放 `ros_status_array` 结构。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存           | 是
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
  *
- * \param[in] action_client handle to the client that will take status message
- * \param[out] ros_status_array pointer to ROS aciton_msgs/StatusArray message that
- *   will be populated with information about goals that have accepted the cancel request.
- * \return `RCL_RET_OK` if the response was taken successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_ACTION_CLIENT_TAKE_FAILED` if take failed but no error occurred
- *         in the middleware, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] action_client 将获取状态消息的客户端句柄
+ * \param[out] ros_status_array 将填充有关已接受取消请求的目标信息的
+ *   ROS aciton_msgs/StatusArray 消息指针。
+ * \return `RCL_RET_OK` 如果成功获取响应，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果操作客户端无效，或
+ * \return `RCL_RET_BAD_ALLOC` 如果分配内存失败，或
+ * \return `RCL_RET_ACTION_CLIENT_TAKE_FAILED` 如果获取失败但中间件中没有错误发生，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_take_status(
-  const rcl_action_client_t * action_client,
-  void * ros_status_array);
+rcl_ret_t rcl_action_take_status(
+  const rcl_action_client_t * action_client, void * ros_status_array);
 
-/// Send a request for the result of a completed goal associated with a rcl_action_client_t.
+/// 发送一个与 rcl_action_client_t 关联的已完成目标的结果请求。
 /**
- * This is a non-blocking call.
+ * 这是一个非阻塞调用。
  *
- * The caller is responsible for ensuring that the type of `ros_result_request`
- * and the type associate with the client (via the type support) match.
- * Passing a different type produces undefined behavior and cannot be checked
- * by this function and therefore no deliberate error will occur.
+ * 调用者有责任确保 `ros_result_request` 的类型与
+ * 通过类型支持与客户端关联的类型匹配。
+ * 传递不同的类型会产生未定义的行为，这个函数无法检查，
+ * 因此不会发生故意的错误。
  *
- * The ROS message given by the `ros_result_request` void pointer is always
- * owned by the calling code, but should remain constant during execution of this
- * function. i.e. The message cannot change during the rcl_action_send_result_request() call.
- * Before calling rcl_action_send_result_request() the message can change but after calling
- * rcl_action_send_result_request() it depends on RMW implementation behavior.
- * The same `ros_result_request` can be passed to multiple calls of this function
- * simultaneously, even if the action clients differ.
+ * 给定的 `ros_result_request` 空指针的 ROS 消息始终由调用代码拥有，
+ * 但在此功能执行期间应保持不变。即，在 rcl_action_send_result_request() 调用期间，
+ * 消息不能更改。在调用 rcl_action_send_result_request() 之前，消息可以更改，
+ * 但在调用 rcl_action_send_result_request() 之后，它取决于 RMW 实现行为。
+ * 同一个 `ros_result_request` 可以同时传递给此函数的多个调用，即使操作客户端不同。
  *
- * This function is thread safe so long as access to both the rcl_action_client_t
- * and the `ros_result_request` are synchronized.
- * That means that calling rcl_action_send_result_request() from multiple threads is allowed,
- * but calling rcl_action_send_result_request() at the same time as non-thread safe action
- * client functions is not, e.g. calling rcl_action_send_result_request() and
- * rcl_action_client_fini() concurrently is not allowed.
+ * 只要对 rcl_action_client_t 和 `ros_result_request` 的访问得到同步，
+ * 此功能就是线程安全的。
+ * 这意味着允许从多个线程调用 rcl_action_send_result_request()，
+ * 但在与非线程安全操作客户端功能同时调用 rcl_action_send_result_request() 是不允许的，
+ * 例如，在 rcl_action_send_result_request() 和 rcl_action_client_fini() 并发调用是不允许的。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes [1]
- * Uses Atomics       | No
- * Lock-Free          | Yes
- * <i>[1] for unique pairs of clients and result requests, see above for more</i>
-
- * \param[in] action_client handle to the client that will send the result request
- * \param[in] ros_result_request pointer to a ROS result request message
- * \param[out] sequence_number pointer to the result request sequence number
- * \return `RCL_RET_OK` if the request was sent successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * 分配内存           | 否
+ * 线程安全           | 是 [1]
+ * 使用原子操作       | 否
+ * 无锁               | 是
+ * <i>[1] 对于唯一的客户端和结果请求对，如上所述</i>
+ *
+ * \param[in] action_client 将发送结果请求的客户端句柄
+ * \param[in] ros_result_request 指向 ROS 结果请求消息的指针
+ * \param[out] sequence_number 指向结果请求序列号的指针
+ * \return `RCL_RET_OK` 如果请求发送成功，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果操作客户端无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_send_result_request(
-  const rcl_action_client_t * action_client,
-  const void * ros_result_request,
+rcl_ret_t rcl_action_send_result_request(
+  const rcl_action_client_t * action_client, const void * ros_result_request,
   int64_t * sequence_number);
 
-/// Take a ROS result message for a completed goal associated with a rcl_action_client_t.
+/// 获取与 rcl_action_client_t 关联的已完成目标的 ROS 结果消息。
 /**
- * \todo TODO(jacobperron) blocking of take?
+ * \todo TODO(jacobperron) 获取时是否阻塞？
  *
- * \todo TODO(jacobperron) pre-, during-, and post-conditions for message ownership?
+ * \todo TODO(jacobperron) 消息所有权的前置条件、过程中和后置条件？
  *
- * \todo TODO(jacobperron) is this thread-safe?
+ * \todo TODO(jacobperron) 这是线程安全的吗？
  *
- * The caller is responsible for ensuring that the type of `ros_result_response`
- * and the type associate with the client (via the type support) match.
- * Passing a different type produces undefined behavior and cannot be checked
- * by this function and therefore no deliberate error will occur.
+ * 调用者有责任确保 `ros_result_response` 的类型与
+ * 通过类型支持与客户端关联的类型匹配。
+ * 传递不同的类型会产生未定义的行为，这个函数无法检查，
+ * 因此不会发生故意的错误。
  *
- * The caller must provide a pointer to an allocated message for the `ros_result_response`.
- * If the take is successful, this function will populate the fields of `ros_result_response`.
- * The ROS message given by the `ros_result_response` void pointer is always
- * owned by the calling code, but should remain constant during execution of this
- * function. i.e. The message cannot change during the rcl_action_take_result_response() call.
- * Before calling rcl_action_take_result_response() the message can change but after calling
- * rcl_action_take_result_response() it depends on RMW implementation behavior.
+ * 调用者必须为 `ros_result_response` 提供一个分配的消息指针。
+ * 如果获取成功，此函数将填充 `ros_result_response` 的字段。
+ * 给定的 `ros_result_response` 空指针的 ROS 消息始终由调用代码拥有，
+ * 但在此功能执行期间应保持不变。即，在 rcl_action_take_result_response() 调用期间，
+ * 消息不能更改。在调用 rcl_action_take_result_response() 之前，消息可以更改，
+ * 但在调用 rcl_action_take_result_response() 之后，它取决于 RMW 实现行为。
  *
- * If allocation is required when taking the result, e.g. if space needs to
- * be allocated for a dynamically sized array in the target message, then the
- * allocator given in the action client options is used.
+ * 如果在获取结果时需要分配内存，例如，如果需要为目标消息中的动态大小数组分配空间，
+ * 则使用操作客户端选项中给定的分配器。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Maybe [1]
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- * <i>[1] only if required when filling the result response message, avoided for fixed sizes</i>
+ * 分配内存           | 可能 [1]
+ * 线程安全           | 否
+ * 使用原子操作       | 否
+ * 无锁               | 是
+ * <i>[1] 仅在填充结果响应消息时需要，对于固定大小避免</i>
  *
- * \param[in] action_client handle to the client that will take the result response
- * \param[out] response_header pointer to the result response header
- * \param[out] ros_result preallocated, zero-initialized, struct where the ROS
- *   result message is copied.
- * \return `RCL_RET_OK` if the response was taken successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_ACTION_CLIENT_TAKE_FAILED` if take failed but no error occurred
- *         in the middleware, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] action_client 将获取结果响应的客户端句柄
+ * \param[out] response_header 指向结果响应头的指针
+ * \param[out] ros_result 预先分配的、零初始化的结构，其中将复制 ROS 结果消息。
+ * \return `RCL_RET_OK` 如果成功获取响应，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果操作客户端无效，或
+ * \return `RCL_RET_BAD_ALLOC` 如果分配内存失败，或
+ * \return `RCL_RET_ACTION_CLIENT_TAKE_FAILED` 如果获取失败但中间件中没有错误发生，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_take_result_response(
-  const rcl_action_client_t * action_client,
-  rmw_request_id_t * response_header,
-  void * ros_result);
+rcl_ret_t rcl_action_take_result_response(
+  const rcl_action_client_t * action_client, rmw_request_id_t * response_header, void * ros_result);
 
-/// Send a cancel request for a goal using a rcl_action_client_t.
+/// 使用 rcl_action_client_t 发送取消目标请求。
 /**
- * This is a non-blocking call.
+ * 这是一个非阻塞调用。
  *
- * The caller is responsible for ensuring that the type of `ros_cancel_request`
- * and the type associate with the client (via the type support) match.
- * Passing a different type produces undefined behavior and cannot be checked
- * by this function and therefore no deliberate error will occur.
+ * 调用者有责任确保 `ros_cancel_request` 的类型与
+ * 通过类型支持与客户端关联的类型匹配。
+ * 传递不同的类型会产生未定义的行为，这个函数无法检查，
+ * 因此不会发生故意的错误。
  *
- * The following cancel policy applies based on the goal ID and the timestamp provided
- * by the `ros_cancel_request` message:
+ * 根据 `ros_cancel_request` 消息提供的目标 ID 和时间戳，
+ * 以下取消策略适用：
  *
- * - If the goal ID is zero and timestamp is zero, cancel all goals.
- * - If the goal ID is zero and timestamp is not zero, cancel all goals accepted
- *   at or before the timestamp.
- * - If the goal ID is not zero and timestamp is zero, cancel the goal with the
- *   given ID regardless of the time it was accepted.
- * - If the goal ID is not zero and timestamp is not zero, cancel the goal with the
- *   given ID and all goals accepted at or before the timestamp.
+ * - 如果目标 ID 为零且时间戳为零，则取消所有目标。
+ * - 如果目标 ID 为零且时间戳不为零，则取消在时间戳之前或接受的所有目标。
+ * - 如果目标 ID 不为零且时间戳为零，则取消具有给定 ID 的目标，而不考虑接受时间。
+ * - 如果目标 ID 不为零且时间戳不为零，则取消具有给定 ID 的目标以及在时间戳之前或接受的所有目标。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] action_client handle to the client that will make the cancel request
- * \param[in] ros_cancel_request pointer the ROS cancel request message
- * \param[out] sequence_number pointer to the cancel request sequence number
- * \return `RCL_RET_OK` if the response was taken successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] action_client 将发出取消请求的客户端句柄
+ * \param[in] ros_cancel_request 指向 ROS 取消请求消息的指针
+ * \param[out] sequence_number 指向取消请求序列号的指针
+ * \return `RCL_RET_OK` 如果成功发送响应，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果操作客户端无效，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_send_cancel_request(
-  const rcl_action_client_t * action_client,
-  const void * ros_cancel_request,
+rcl_ret_t rcl_action_send_cancel_request(
+  const rcl_action_client_t * action_client, const void * ros_cancel_request,
   int64_t * sequence_number);
 
-/// Take a cancel response using a rcl_action_client_t.
+/// 使用 rcl_action_client_t 获取取消响应。
 /**
- * \todo TODO(jacobperron) blocking of take?
+ * \todo TODO(jacobperron) 阻塞 take？
  *
- * \todo TODO(jacobperron) pre-, during-, and post-conditions for message ownership?
+ * \todo TODO(jacobperron) 消息所有权的前置条件、过程中和后置条件？
  *
- * \todo TODO(jacobperron) is this thread-safe?
+ * \todo TODO(jacobperron) 这是线程安全的吗？
  *
- * The caller is responsible for ensuring that the type of `ros_cancel_response`
- * and the type associate with the client (via the type support) match.
- * Passing a different type produces undefined behavior and cannot be checked
- * by this function and therefore no deliberate error will occur.
-
- * The caller is responsible for allocating the `ros_cancel_response` message
- * with a zero-initialization (the internal array should not be allocated).
- * If a successful response is taken, then `ros_cancel_response` is populated
- * using the allocator given in the action client options.
- * It is the callers responsibility to deallocate `ros_cancel_response` using
- * the allocator given in the action client options.
+ * 调用者有责任确保 `ros_cancel_response` 的类型与
+ * 通过类型支持与客户端关联的类型匹配。
+ * 传递不同的类型会产生未定义的行为，这个函数无法检查，
+ * 因此不会发生故意的错误。
+ *
+ * 调用者有责任使用零初始化分配 `ros_cancel_response` 消息
+ * （内部数组不应分配）。
+ * 如果成功获取响应，则使用操作客户端选项中给定的分配器填充 `ros_cancel_response`。
+ * 调用者有责任使用操作客户端选项中给定的分配器释放 `ros_cancel_response`。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] action_client handle to the client that will take the cancel response
- * \param[out] response_header pointer to the cancel response header
- * \param[out] ros_cancel_response a zero-initialized ROS cancel response message where
- *   the cancel response is copied.
- * \return `RCL_RET_OK` if the response was taken successfully, or
- * \return `RCL_RET_INVALID_ARGUMENT` if any arguments are invalid, or
- * \return `RCL_RET_ACTION_CLIENT_INVALID` if the action client is invalid, or
- * \return `RCL_RET_BAD_ALLOC` if allocating memory failed, or
- * \return `RCL_RET_ACTION_CLIENT_TAKE_FAILED` if take failed but no error occurred
- *         in the middleware, or
- * \return `RCL_RET_ERROR` if an unspecified error occurs.
+ * \param[in] action_client 将获取取消响应的客户端句柄
+ * \param[out] response_header 指向取消响应头的指针
+ * \param[out] ros_cancel_response 取消响应将被复制到的零初始化 ROS 取消响应消息
+ * \return `RCL_RET_OK` 如果成功获取响应，或
+ * \return `RCL_RET_INVALID_ARGUMENT` 如果任何参数无效，或
+ * \return `RCL_RET_ACTION_CLIENT_INVALID` 如果操作客户端无效，或
+ * \return `RCL_RET_BAD_ALLOC` 如果分配内存失败，或
+ * \return `RCL_RET_ACTION_CLIENT_TAKE_FAILED` 如果获取失败但中间件中没有错误发生，或
+ * \return `RCL_RET_ERROR` 如果发生未指定的错误。
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_take_cancel_response(
-  const rcl_action_client_t * action_client,
-  rmw_request_id_t * response_header,
+rcl_ret_t rcl_action_take_cancel_response(
+  const rcl_action_client_t * action_client, rmw_request_id_t * response_header,
   void * ros_cancel_response);
 
-/// Get the name of the action for a rcl_action_client_t.
+/// 获取 rcl_action_client_t 的操作名称。
 /**
- * This function returns the action client's name string.
- * This function can fail, and therefore return `NULL`, if the:
- *   - action client is `NULL`
- *   - action client is invalid (never called init, called fini, or invalid)
+ * 此函数返回操作客户端的名称字符串。
+ * 如果以下情况之一成立，此函数可能失败，因此返回 `NULL`：
+ *   - 操作客户端为 `NULL`
+ *   - 操作客户端无效（从未调用 init、调用 fini 或无效）
  *
- * The returned string is only valid as long as the action client is valid.
- * The value of the string may change if the topic name changes, and therefore
- * copying the string is recommended if this is a concern.
+ * 只要操作客户端有效，返回的字符串就有效。
+ * 如果主题名称更改，则字符串值可能会更改，因此
+ * 如果这是一个问题，建议复制字符串。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] action_client the pointer to the action client
- * \return name string if successful, otherwise `NULL`
+ * \param[in] action_client 指向操作客户端的指针
+ * \return 成功时的名称字符串，否则为 `NULL`
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-const char *
-rcl_action_client_get_action_name(const rcl_action_client_t * action_client);
+const char * rcl_action_client_get_action_name(const rcl_action_client_t * action_client);
 
-/// Return the options for a rcl_action_client_t.
+/// 返回 rcl_action_client_t 的选项。
 /**
- * This function returns the action client's internal options struct.
- * This function can fail, and therefore return `NULL`, if the:
- *   - action client is `NULL`
- *   - action client is invalid (never called init, called fini, or invalid)
+ * 此函数返回操作客户端的内部选项结构。
+ * 如果以下情况之一成立，此函数可能失败，因此返回 `NULL`：
+ *   - 操作客户端为 `NULL`
+ *   - 操作客户端无效（从未调用 init、调用 fini 或无效）
  *
- * The returned struct is only valid as long as the action client is valid.
- * The values in the struct may change if the action client's options change,
- * and therefore copying the struct is recommended if this is a concern.
+ * 只要操作客户端有效，返回的结构就有效。
+ * 如果操作客户端的选项更改，则结构中的值可能会更改，因此
+ * 如果这是一个问题，建议复制结构。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] action_client pointer to the action client
- * \return options struct if successful, otherwise `NULL`
+ * \param[in] action_client 指向操作客户端的指针
+ * \return 成功时的选项结构，否则为 `NULL`
  */
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-const rcl_action_client_options_t *
-rcl_action_client_get_options(const rcl_action_client_t * action_client);
-
-/// Check that a rcl_action_client_t is valid.
-/**
- * The bool returned is `false` if `action_client` is invalid.
- * The bool returned is `true` otherwise.
- * In the case where `false` is to be returned, an error message is set.
- * This function cannot fail.
- *
- * <hr>
- * Attribute          | Adherence
- * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
- *
- * \param[in] action_client pointer to the rcl action client
- * \return `true` if `action_client` is valid, otherwise `false`
- */
-RCL_ACTION_PUBLIC
-bool
-rcl_action_client_is_valid(
+const rcl_action_client_options_t * rcl_action_client_get_options(
   const rcl_action_client_t * action_client);
 
+/// 检查 rcl_action_client_t 是否有效。
+/**
+ * 如果 `action_client` 无效，则返回的布尔值为 `false`。
+ * 否则返回的布尔值为 `true`。
+ * 在返回 `false` 的情况下，会设置错误消息。
+ * 此函数不能失败。
+ *
+ * <hr>
+ * 属性              | 遵循
+ * ------------------ | -------------
+ * 分配内存          | 否
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
+ *
+ * \param[in] action_client 指向 rcl 操作客户端的指针
+ * \return 如果 `action_client` 有效，则为 `true`，否则为 `false`
+ */
 RCL_ACTION_PUBLIC
-RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_set_goal_client_callback(
-  const rcl_action_client_t * action_client,
-  rcl_event_callback_t callback,
-  const void * user_data);
+bool rcl_action_client_is_valid(const rcl_action_client_t * action_client);
 
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_set_cancel_client_callback(
-  const rcl_action_client_t * action_client,
-  rcl_event_callback_t callback,
-  const void * user_data);
+rcl_ret_t rcl_action_client_set_goal_client_callback(
+  const rcl_action_client_t * action_client, rcl_event_callback_t callback, const void * user_data);
 
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_set_result_client_callback(
-  const rcl_action_client_t * action_client,
-  rcl_event_callback_t callback,
-  const void * user_data);
+rcl_ret_t rcl_action_client_set_cancel_client_callback(
+  const rcl_action_client_t * action_client, rcl_event_callback_t callback, const void * user_data);
 
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_set_feedback_subscription_callback(
-  const rcl_action_client_t * action_client,
-  rcl_event_callback_t callback,
-  const void * user_data);
+rcl_ret_t rcl_action_client_set_result_client_callback(
+  const rcl_action_client_t * action_client, rcl_event_callback_t callback, const void * user_data);
 
 RCL_ACTION_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_action_client_set_status_subscription_callback(
-  const rcl_action_client_t * action_client,
-  rcl_event_callback_t callback,
-  const void * user_data);
+rcl_ret_t rcl_action_client_set_feedback_subscription_callback(
+  const rcl_action_client_t * action_client, rcl_event_callback_t callback, const void * user_data);
+
+RCL_ACTION_PUBLIC
+RCL_WARN_UNUSED
+rcl_ret_t rcl_action_client_set_status_subscription_callback(
+  const rcl_action_client_t * action_client, rcl_event_callback_t callback, const void * user_data);
 
 #ifdef __cplusplus
 }

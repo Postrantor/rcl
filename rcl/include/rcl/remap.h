@@ -24,276 +24,234 @@
 #include "rcl/visibility_control.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 typedef struct rcl_remap_impl_s rcl_remap_impl_t;
 
-/// Hold remapping rules.
+/// 保存重映射规则的结构体.
 typedef struct rcl_remap_s
 {
-  /// Private implementation pointer.
+  /// 私有实现指针.
   rcl_remap_impl_t * impl;
 } rcl_remap_t;
 
-/// Return a rcl_remap_t struct with members initialized to `NULL`.
+/// 返回一个成员初始化为 `NULL` 的 rcl_remap_t 结构体.
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_remap_t
-rcl_get_zero_initialized_remap(void);
+rcl_remap_t rcl_get_zero_initialized_remap(void);
 
-// TODO(sloretz) add documentation about rostopic:// when it is supported
-/// Remap a topic name based on given rules.
+// TODO(sloretz) 当支持 rostopic:// 时添加文档
+/// 根据给定的规则重映射主题名称.
 /**
- * The supplied topic name must have already been expanded to a fully qualified name.
+ * 提供的主题名称必须已经扩展为完全限定名称。
  * \sa rcl_expand_topic_name()
  *
- * If `local_arguments` is not NULL and not zero intialized then its remap rules are checked first.
- * If no rules matched and `global_arguments` is not NULL and not zero intitialized then its rules
- * are checked next.
- * If both `local_arguments` and global_arguments are NULL or zero intialized then the function will
- * return RCL_RET_INVALID_ARGUMENT.
+ * 如果 `local_arguments` 不是 NULL 且不是零初始化，则首先检查其重映射规则。
+ * 如果没有规则匹配且 `global_arguments` 不是 NULL 且不是零初始化，则接下来检查其规则。
+ * 如果 `local_arguments` 和 global_arguments 都是 NULL 或零初始化，则函数将返回 RCL_RET_INVALID_ARGUMENT。
  *
- * `global_arguments` is usually the arguments passed to rcl_init().
+ * `global_arguments` 通常是传递给 rcl_init() 的参数。
  * \sa rcl_init()
  * \sa rcl_get_global_arguments()
  *
- * Remap rules are checked in the order they were given.
- * For rules passed to rcl_init() this usually is the order they were passed on the command line.
+ * 按照给定的顺序检查重映射规则。
+ * 对于传递给 rcl_init() 的规则，这通常是它们在命令行上的顺序。
  * \sa rcl_parse_arguments()
  *
- * Only the first remap rule that matches is used to remap a name.
- * For example, if the command line arguments are `foo:=bar bar:=baz` the topic `foo` is remapped to
- * `bar` and not `baz`.
+ * 只有第一个匹配的重映射规则才用于重映射名称。
+ * 例如，如果命令行参数是 `foo:=bar bar:=baz`，主题 `foo` 被重映射为 `bar` 而不是 `baz`。
  *
- * `node_name` and `node_namespace` are used to expand the match and replacement into fully
- * qualified names.
- * Given node_name `trudy`, namespace `/ns`, and rule `foo:=~/bar` the names in the rule are
- * expanded to `/ns/foo:=/ns/trudy/bar`.
- * The rule will only apply if the given topic name is `/ns/foo`.
+ * 使用 `node_name` 和 `node_namespace` 将匹配和替换扩展为完全限定名称。
+ * 给定节点名 `trudy`、命名空间 `/ns` 和规则 `foo:=~/bar`，规则中的名称将扩展为 `/ns/foo:=/ns/trudy/bar`。
+ * 只有在给定的主题名称为 `/ns/foo` 时，规则才会生效。
  *
- * `node_name` is also used to match against node specific rules.
- * Given rules `alice:foo:=bar foo:=baz`, node name `alice`, and topic `foo` the remapped topic
- * name will be `bar`.
- * If given the node name `bob` and topic `foo` the remaped topic name would be `baz` instead.
- * Note that processing always stops at the first matching rule even if there is a more specific one
- * later on.
- * Given `foo:=bar alice:foo:=baz` and topic name `foo` the remapped topic name will always be
- * `bar` regardless of the node name given.
+ * `node_name` 也用于匹配特定节点的规则。
+ * 给定规则 `alice:foo:=bar foo:=baz`、节点名 `alice` 和主题 `foo`，重映射的主题名称将是 `bar`。
+ * 如果给定节点名 `bob` 和主题 `foo`，重映射的主题名称将是 `baz`。
+ * 请注意，即使后面有更具体的规则，处理过程也总是在第一个匹配的规则处停止。
+ * 给定 `foo:=bar alice:foo:=baz` 和主题名 `foo`，重映射的主题名始终为 `bar`，而与给定的节点名无关。
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性                | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存            | 是
+ * 线程安全            | 否
+ * 使用原子操作        | 否
+ * 无锁                | 是
  *
- * \param[in] local_arguments Command line arguments to be used before global arguments, or
- *   if NULL or zero-initialized then only global arguments are used.
- * \param[in] global_arguments Command line arguments to use if no local rules matched, or
- *   `NULL` or zero-initialized to ignore global arguments.
- * \param[in] topic_name A fully qualified and expanded topic name to be remapped.
- * \param[in] node_name The name of the node to which name belongs.
- * \param[in] node_namespace The namespace of a node to which name belongs.
- * \param[in] allocator A valid allocator to use.
- * \param[out] output_name Either an allocated string with the remapped name, or
- *   `NULL` if no remap rules matched the name.
- * \return #RCL_RET_OK if the topic name was remapped or no rules matched, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_TOPIC_NAME_INVALID if the given topic name is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] local_arguments 在全局参数之前使用的命令行参数，如果为 NULL 或零初始化，则只使用全局参数。
+ * \param[in] global_arguments 如果没有本地规则匹配，则使用的命令行参数，或者 `NULL` 或零初始化以忽略全局参数。
+ * \param[in] topic_name 要重映射的完全限定和扩展主题名称。
+ * \param[in] node_name 名称所属节点的名称。
+ * \param[in] node_namespace 名称所属节点的命名空间。
+ * \param[in] allocator 要使用的有效分配器。
+ * \param[out] output_name 分配的重映射名称字符串，或者如果没有重映射规则匹配名称，则为 `NULL`。
+ * \return #RCL_RET_OK 如果主题名称被重映射或没有规则匹配，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_TOPIC_NAME_INVALID 如果给定的主题名称无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_remap_topic_name(
-  const rcl_arguments_t * local_arguments,
-  const rcl_arguments_t * global_arguments,
-  const char * topic_name,
-  const char * node_name,
-  const char * node_namespace,
-  rcl_allocator_t allocator,
-  char ** output_name);
+rcl_ret_t rcl_remap_topic_name(
+  const rcl_arguments_t * local_arguments, const rcl_arguments_t * global_arguments,
+  const char * topic_name, const char * node_name, const char * node_namespace,
+  rcl_allocator_t allocator, char ** output_name);
 
 // TODO(sloretz) add documentation about rosservice:// when it is supported
-/// Remap a service name based on given rules.
+/// 根据给定的规则重新映射服务名称。
 /**
- * The supplied service name must have already been expanded to a fully qualified name.
+ * 提供的服务名称必须已经扩展为完全限定名称。
  *
- * The behavior of this function is identical to rcl_expand_topic_name() except that it applies
- * to service names instead of topic names.
+ * 该函数的行为与 rcl_expand_topic_name() 相同，只是它适用于服务名称而不是主题名称。
  * \sa rcl_expand_topic_name()
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] local_arguments Command line arguments to be used before global arguments, or
- *   if NULL or zero-initialized then only global arguments are used.
- * \param[in] global_arguments Command line arguments to use if no local rules matched, or
- *   `NULL` or zero-initialized to ignore global arguments.
- * \param[in] service_name A fully qualified and expanded service name to be remapped.
- * \param[in] node_name The name of the node to which name belongs.
- * \param[in] node_namespace The namespace of a node to which name belongs.
- * \param[in] allocator A valid allocator to use.
- * \param[out] output_name Either an allocated string with the remapped name, or
- *   `NULL` if no remap rules matched the name.
- * \return #RCL_RET_OK if the name was remapped or no rules matched, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_SERVICE_NAME_INVALID if the given name is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] local_arguments 在全局参数之前使用的命令行参数，或
+ *   如果为 NULL 或零初始化，则仅使用全局参数。
+ * \param[in] global_arguments 如果没有匹配的本地规则，则使用的命令行参数，或
+ *   `NULL` 或零初始化以忽略全局参数。
+ * \param[in] service_name 要重新映射的完全限定和扩展服务名称。
+ * \param[in] node_name 名称所属节点的名称。
+ * \param[in] node_namespace 名称所属节点的命名空间。
+ * \param[in] allocator 要使用的有效分配器。
+ * \param[out] output_name 分配的字符串，包含重新映射的名称，或
+ *   如果没有重新映射规则匹配名称，则为 `NULL`。
+ * \return #RCL_RET_OK 如果名称被重新映射或没有规则匹配，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_SERVICE_NAME_INVALID 如果给定名称无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_remap_service_name(
-  const rcl_arguments_t * local_arguments,
-  const rcl_arguments_t * global_arguments,
-  const char * service_name,
-  const char * node_name,
-  const char * node_namespace,
-  rcl_allocator_t allocator,
-  char ** output_name);
+rcl_ret_t rcl_remap_service_name(
+  const rcl_arguments_t * local_arguments, const rcl_arguments_t * global_arguments,
+  const char * service_name, const char * node_name, const char * node_namespace,
+  rcl_allocator_t allocator, char ** output_name);
 
-/// Remap a node name based on given rules.
+/// 根据给定的规则重新映射节点名称。
 /**
- * This function returns the node name that a node with the given name would be remapped to.
- * When a node's name is remapped it changes its logger name and the output of expanding relative
- * topic and service names.
+ * 此函数返回具有给定名称的节点将被重新映射到的节点名称。
+ * 当节点的名称被重新映射时，它会更改其记录器名称和扩展相对主题和服务名称的输出。
  *
- * When composing nodes make sure that the final node names used are unique per process.
- * There is not currently a way to independently remap the names of two nodes that were created
- * with the same node name and are manually composed into one process.
+ * 在组合节点时，请确保最终使用的节点名称在每个进程中都是唯一的。
+ * 目前还没有一种方法可以独立地重新映射两个具有相同节点名称并手动组合到一个进程中的节点的名称。
  *
- * The behavior of `local_arguments`, `global_arguments`, `node_name`, the order remap rules are
- * applied, and node specific rules is identical to rcl_remap_topic_name().
+ * `local_arguments`、`global_arguments`、`node_name` 的行为，以及重新映射规则的应用顺序和节点特定规则与 rcl_remap_topic_name() 相同。
  * \sa rcl_remap_topic_name()
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循性
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] local_arguments Arguments to be used before global arguments.
- * \param[in] global_arguments Command line arguments to use if no local rules matched, or
- *   `NULL` or zero-initialized to ignore global arguments.
- * \param[in] node_name The current name of the node.
- * \param[in] allocator A valid allocator to use.
- * \param[out] output_name Either an allocated string with the remapped name, or
- *   `NULL` if no remap rules matched the name.
- * \return #RCL_RET_OK If the name was remapped or no rules matched, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_NODE_INVALID_NAME if the name is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] local_arguments 在全局参数之前使用的参数。
+ * \param[in] global_arguments 如果没有匹配的本地规则，则使用的命令行参数，或
+ *   `NULL` 或零初始化以忽略全局参数。
+ * \param[in] node_name 当前节点的名称。
+ * \param[in] allocator 要使用的有效分配器。
+ * \param[out] output_name 分配的字符串，包含重新映射的名称，或
+ *   如果没有重新映射规则匹配名称，则为 `NULL`。
+ * \return #RCL_RET_OK 如果名称被重新映射或没有规则匹配，或
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或
+ * \return #RCL_RET_NODE_INVALID_NAME 如果名称无效，或
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_remap_node_name(
-  const rcl_arguments_t * local_arguments,
-  const rcl_arguments_t * global_arguments,
-  const char * node_name,
-  rcl_allocator_t allocator,
-  char ** output_name);
+rcl_ret_t rcl_remap_node_name(
+  const rcl_arguments_t * local_arguments, const rcl_arguments_t * global_arguments,
+  const char * node_name, rcl_allocator_t allocator, char ** output_name);
 
-/// Remap a namespace based on given rules.
+/// 基于给定规则重新映射命名空间。
 /**
- * This function returns the namespace that a node with the given name would be remapped to.
- * When a node's namespace is remapped it changes its logger name and the output of expanding
- * relative topic and service names.
+ * 此函数返回具有给定名称的节点将被重新映射到的命名空间。
+ * 当节点的命名空间被重新映射时，它会更改其记录器名称和扩展相对主题和服务名称的输出。
  *
- * The behavior of `local_arguments`, `global_arguments`, `node_name`, the order remap rules are
- * applied, and node specific rules is identical to rcl_remap_topic_name().
+ * `local_arguments`、`global_arguments`、`node_name` 的行为，以及重新映射规则的应用顺序和节点特定规则与 rcl_remap_topic_name() 相同。
  * \sa rcl_remap_topic_name()
  *
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] local_arguments Arguments to be used before global arguments.
- * \param[in] global_arguments Command line arguments to use if no local rules matched, or
- *   `NULL` or zero-initialized to ignore global arguments.
- * \param[in] node_name The name of the node whose namespace is being remapped.
- * \param[in] allocator A valid allocator to be used.
- * \param[out] output_namespace Either an allocated string with the remapped namespace, or
- *   `NULL` if no remap rules matched the name.
- * \return #RCL_RET_OK if the node name was remapped or no rules matched, or
- * \return #RCL_RET_INVALID_ARGUMENT if any arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_NODE_INVALID_NAMESPACE if the remapped namespace is invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] local_arguments 在全局参数之前使用的参数。
+ * \param[in] global_arguments 如果没有匹配的本地规则，则使用的命令行参数，或者
+ *   `NULL` 或零初始化以忽略全局参数。
+ * \param[in] node_name 被重新映射的命名空间的节点名称。
+ * \param[in] allocator 要使用的有效分配器。
+ * \param[out] output_namespace 分配的字符串，其中包含重新映射的命名空间，或者
+ *   如果没有重新映射规则匹配名称，则为 `NULL`。
+ * \return #RCL_RET_OK 如果节点名称被重新映射或没有规则匹配，或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何参数无效，或者
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或者
+ * \return #RCL_RET_NODE_INVALID_NAMESPACE 如果重新映射的命名空间无效，或者
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_remap_node_namespace(
-  const rcl_arguments_t * local_arguments,
-  const rcl_arguments_t * global_arguments,
-  const char * node_name,
-  rcl_allocator_t allocator,
-  char ** output_namespace);
+rcl_ret_t rcl_remap_node_namespace(
+  const rcl_arguments_t * local_arguments, const rcl_arguments_t * global_arguments,
+  const char * node_name, rcl_allocator_t allocator, char ** output_namespace);
 
-/// Copy one remap structure into another.
+/// 将一个重新映射结构复制到另一个。
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | Yes
- * Thread-Safe        | No
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 是
+ * 线程安全          | 否
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] rule The structure to be copied.
- *  Its allocator is used to copy memory into the new structure.
- * \param[out] rule_out A zero-initialized rcl_remap_t structure to be copied into.
- * \return #RCL_RET_OK if the structure was copied successfully, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_BAD_ALLOC if allocating memory failed, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] rule 要复制的结构。
+ *  其分配器用于将内存复制到新结构中。
+ * \param[out] rule_out 要复制到的零初始化 rcl_remap_t 结构。
+ * \return #RCL_RET_OK 如果结构成功复制，或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或者
+ * \return #RCL_RET_BAD_ALLOC 如果分配内存失败，或者
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_remap_copy(
-  const rcl_remap_t * rule,
-  rcl_remap_t * rule_out);
+rcl_ret_t rcl_remap_copy(const rcl_remap_t * rule, rcl_remap_t * rule_out);
 
-/// Reclaim resources held inside rcl_remap_t structure.
+/// 回收 rcl_remap_t 结构内部持有的资源。
 /**
  * <hr>
- * Attribute          | Adherence
+ * 属性              | 遵循
  * ------------------ | -------------
- * Allocates Memory   | No
- * Thread-Safe        | Yes
- * Uses Atomics       | No
- * Lock-Free          | Yes
+ * 分配内存          | 否
+ * 线程安全          | 是
+ * 使用原子操作      | 否
+ * 无锁              | 是
  *
- * \param[in] remap The structure to be deallocated.
- * \return #RCL_RET_OK if the memory was successfully freed, or
- * \return #RCL_RET_INVALID_ARGUMENT if any function arguments are invalid, or
- * \return #RCL_RET_ERROR if an unspecified error occurs.
+ * \param[in] remap 要释放的结构。
+ * \return #RCL_RET_OK 如果内存成功释放，或者
+ * \return #RCL_RET_INVALID_ARGUMENT 如果任何函数参数无效，或者
+ * \return #RCL_RET_ERROR 如果发生未指定的错误。
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t
-rcl_remap_fini(
-  rcl_remap_t * remap);
+rcl_ret_t rcl_remap_fini(rcl_remap_t * remap);
 
 #ifdef __cplusplus
 }
