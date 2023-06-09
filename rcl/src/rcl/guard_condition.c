@@ -35,13 +35,12 @@ extern "C" {
  * @brief rcl_guard_condition_impl_s 结构体，用于存储守护条件的实现细节。
  */
 struct rcl_guard_condition_impl_s {
-  rmw_guard_condition_t
-      *rmw_handle;  ///< rmw_handle
-                    ///< 指向一个rmw_guard_condition_t类型的指针，用于存储底层中间件的守护条件句柄。
-  bool allocated_rmw_guard_condition;  ///< allocated_rmw_guard_condition
-                                       ///< 布尔值，表示是否已分配底层中间件的守护条件句柄。
-  rcl_guard_condition_options_t
-      options;  ///< options 是一个rcl_guard_condition_options_t类型的变量，用于存储守护条件的选项。
+  ///< rmw_handle 指向一个rmw_guard_condition_t类型的指针，用于存储底层中间件的守护条件句柄。
+  rmw_guard_condition_t *rmw_handle;
+  ///< allocated_rmw_guard_condition 布尔值，表示是否已分配底层中间件的守护条件句柄。
+  bool allocated_rmw_guard_condition;
+  ///< options 是一个rcl_guard_condition_options_t类型的变量，用于存储守护条件的选项。
+  rcl_guard_condition_options_t options;
 };
 
 /**

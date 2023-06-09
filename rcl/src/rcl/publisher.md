@@ -82,6 +82,7 @@ Crafted by [Genie](https://marketplace.visualstudio.com/items?itemName=genieai.c
    - 使用 `rcl_publisher_can_loan_messages()` 函数检查发布者是否可以借用消息。
 
 6. 销毁发布者：
+
    - 使用 `rcl_publisher_fini()` 函数销毁发布者对象并释放相关资源。需要提供发布者和节点。
 
 这些函数共同支持了发布者对象的创建、初始化、消息发布、状态管理以及资源回收等功能。用户可以根据需要调用相应的函数来实现特定的操作。

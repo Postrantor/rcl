@@ -31,21 +31,17 @@ extern "C" {
 typedef struct rcl_publisher_impl_s rcl_publisher_impl_t;
 
 /// @brief 封装ROS发布者的结构体
-typedef struct rcl_publisher_s
-{
+typedef struct rcl_publisher_s {
   /// 指向发布者实现的指针
-  rcl_publisher_impl_t * impl;
+  rcl_publisher_impl_t* impl;
 } rcl_publisher_t;
 
 /// @brief rcl发布者可用选项
-typedef struct rcl_publisher_options_s
-{
+typedef struct rcl_publisher_options_s {
   /// 发布者的中间件服务质量设置
   rmw_qos_profile_t qos;
   /// 发布者的自定义分配器，用于偶发性分配
-  /**
-   * 对于默认行为（malloc/free），使用：rcl_get_default_allocator()
-   */
+  /// 对于默认行为（malloc/free），使用：rcl_get_default_allocator()
   rcl_allocator_t allocator;
   /// rmw特定的发布者选项，例如rmw实现特定的有效载荷
   rmw_publisher_options_t rmw_publisher_options;
@@ -96,7 +92,8 @@ rcl_publisher_t rcl_get_zero_initialized_publisher(void);
  *
  * \see rcl_expand_topic_name
  *
- * options 结构允许用户设置服务质量设置以及在初始化/终止发布者时用于分配杂项空间（例如主题名称字符串）的自定义分配器。
+ * options
+ * 结构允许用户设置服务质量设置以及在初始化/终止发布者时用于分配杂项空间（例如主题名称字符串）的自定义分配器。
  *
  * 预期用法（对于 C 消息）：
  *
@@ -144,9 +141,11 @@ rcl_publisher_t rcl_get_zero_initialized_publisher(void);
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_publisher_init(
-  rcl_publisher_t * publisher, const rcl_node_t * node,
-  const rosidl_message_type_support_t * type_support, const char * topic_name,
-  const rcl_publisher_options_t * options);
+    rcl_publisher_t* publisher,
+    const rcl_node_t* node,
+    const rosidl_message_type_support_t* type_support,
+    const char* topic_name,
+    const rcl_publisher_options_t* options);
 
 /// 结束一个 rcl_publisher_t.
 /**
@@ -173,7 +172,7 @@ rcl_ret_t rcl_publisher_init(
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t rcl_publisher_fini(rcl_publisher_t * publisher, rcl_node_t * node);
+rcl_ret_t rcl_publisher_fini(rcl_publisher_t* publisher, rcl_node_t* node);
 
 /// 返回 rcl_publisher_options_t 中的默认发布者选项。
 /**
@@ -192,7 +191,8 @@ rcl_publisher_options_t rcl_publisher_get_default_options(void);
 
 /// 借用一个已借出的消息。
 /**
- * 分配给 ros 消息的内存属于中间件，除非通过调用 \sa rcl_return_loaned_message_from_publisher，否则不得释放。
+ * 分配给 ros 消息的内存属于中间件，除非通过调用 \sa
+ * rcl_return_loaned_message_from_publisher，否则不得释放。
  *
  * <hr>
  * 属性              | 遵循
@@ -217,8 +217,9 @@ rcl_publisher_options_t rcl_publisher_get_default_options(void);
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_borrow_loaned_message(
-  const rcl_publisher_t * publisher, const rosidl_message_type_support_t * type_support,
-  void ** ros_message);
+    const rcl_publisher_t* publisher,
+    const rosidl_message_type_support_t* type_support,
+    void** ros_message);
 
 /// 归还先前从发布者借用的已借出消息。
 /**
@@ -244,7 +245,7 @@ rcl_ret_t rcl_borrow_loaned_message(
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_return_loaned_message_from_publisher(
-  const rcl_publisher_t * publisher, void * loaned_message);
+    const rcl_publisher_t* publisher, void* loaned_message);
 
 /// 使用发布器在主题上发布ROS消息。
 /**
@@ -259,17 +260,18 @@ rcl_ret_t rcl_return_loaned_message_from_publisher(
  * 调用 rcl_publish() 是一个可能阻塞的调用。
  * 当调用 rcl_publish() 时，它将立即执行任何与发布相关的工作，
  * 包括但不限于将消息转换为其他类型、序列化消息、收集发布统计信息等。
- * 它最后要做的事情是调用底层中间件的发布函数，该函数可能会根据通过 rcl_publisher_init() 中的发布器选项给出的服务质量设置阻塞或不阻塞。
+ * 它最后要做的事情是调用底层中间件的发布函数，该函数可能会根据通过 rcl_publisher_init()
+ * 中的发布器选项给出的服务质量设置阻塞或不阻塞。
  * 例如，如果可靠性设置为可靠，则发布可能会阻塞，直到发布队列中有空间可用；但如果可靠性设置为尽力而为，则不应阻塞。
  *
  * 由 `ros_message` void 指针给出的 ROS 消息始终由调用代码拥有，但在发布期间应保持不变。
  *
  * 只要对发布器和 `ros_message` 的访问得到同步，此函数就是线程安全的。
- * 这意味着允许从多个线程调用 rcl_publish()，但与非线程安全发布器函数同时调用 rcl_publish() 是不允许的，例如并发调用 rcl_publish() 和 rcl_publisher_fini() 是不允许的。
- * 在 rcl_publish() 调用期间，消息不能更改。
- * 在调用 rcl_publish() 之前，消息可以更改，但在调用 rcl_publish() 之后，它取决于 RMW 实现行为。
- * 同一个 `ros_message` 可以同时传递给多个 rcl_publish() 调用，即使发布器不同。
- * `ros_message` 不会被 rcl_publish() 修改。
+ * 这意味着允许从多个线程调用 rcl_publish()，但与非线程安全发布器函数同时调用 rcl_publish()
+ * 是不允许的，例如并发调用 rcl_publish() 和 rcl_publisher_fini() 是不允许的。 在 rcl_publish()
+ * 调用期间，消息不能更改。 在调用 rcl_publish() 之前，消息可以更改，但在调用 rcl_publish()
+ * 之后，它取决于 RMW 实现行为。 同一个 `ros_message` 可以同时传递给多个 rcl_publish()
+ * 调用，即使发布器不同。 `ros_message` 不会被 rcl_publish() 修改。
  *
  * <hr>
  * 属性                | 遵循
@@ -291,8 +293,9 @@ rcl_ret_t rcl_return_loaned_message_from_publisher(
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_publish(
-  const rcl_publisher_t * publisher, const void * ros_message,
-  rmw_publisher_allocation_t * allocation);
+    const rcl_publisher_t* publisher,
+    const void* ros_message,
+    rmw_publisher_allocation_t* allocation);
 
 /// 使用发布者在主题上发布序列化消息。
 /**
@@ -325,8 +328,9 @@ rcl_ret_t rcl_publish(
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_publish_serialized_message(
-  const rcl_publisher_t * publisher, const rcl_serialized_message_t * serialized_message,
-  rmw_publisher_allocation_t * allocation);
+    const rcl_publisher_t* publisher,
+    const rcl_serialized_message_t* serialized_message,
+    rmw_publisher_allocation_t* allocation);
 
 /// 使用发布者在主题上发布借用的消息。
 /**
@@ -360,7 +364,7 @@ rcl_ret_t rcl_publish_serialized_message(
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_publish_loaned_message(
-  const rcl_publisher_t * publisher, void * ros_message, rmw_publisher_allocation_t * allocation);
+    const rcl_publisher_t* publisher, void* ros_message, rmw_publisher_allocation_t* allocation);
 
 /// 手动声明此发布者是活跃的（对于 RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC）
 /**
@@ -383,7 +387,7 @@ rcl_ret_t rcl_publish_loaned_message(
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t rcl_publisher_assert_liveliness(const rcl_publisher_t * publisher);
+rcl_ret_t rcl_publisher_assert_liveliness(const rcl_publisher_t* publisher);
 
 /// 等待所有已发布的消息数据被确认或直到指定的超时时间过去。
 /**
@@ -391,9 +395,9 @@ rcl_ret_t rcl_publisher_assert_liveliness(const rcl_publisher_t * publisher);
  *
  * 超时单位为纳秒。
  * 如果超时为负，则此函数将无限期阻塞，直到所有已发布的消息数据被确认。
- * 如果超时为 0，则此函数将非阻塞；检查所有已发布的消息数据是否被确认（如果确认，则返回 RCL_RET_OK。否则，返回 RCL_RET_TIMEOUT），但
- * 不等待。
- * 如果超时大于 0，则此函数将在该时间段过去后返回（返回 RCL_RET_TIMEOUT）或所有已发布的消息数据被确认（返回
+ * 如果超时为 0，则此函数将非阻塞；检查所有已发布的消息数据是否被确认（如果确认，则返回
+ * RCL_RET_OK。否则，返回 RCL_RET_TIMEOUT），但 不等待。 如果超时大于
+ * 0，则此函数将在该时间段过去后返回（返回 RCL_RET_TIMEOUT）或所有已发布的消息数据被确认（返回
  * RCL_RET_OK）。
  *
  * 只有当发布者的 QOS 配置文件为 RELIABLE 时，此函数才会等待确认。
@@ -418,7 +422,7 @@ rcl_ret_t rcl_publisher_assert_liveliness(const rcl_publisher_t * publisher);
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_publisher_wait_for_all_acked(
-  const rcl_publisher_t * publisher, rcl_duration_value_t timeout);
+    const rcl_publisher_t* publisher, rcl_duration_value_t timeout);
 
 /// 获取发布者的主题名称。
 /**
@@ -443,7 +447,7 @@ rcl_ret_t rcl_publisher_wait_for_all_acked(
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const char * rcl_publisher_get_topic_name(const rcl_publisher_t * publisher);
+const char* rcl_publisher_get_topic_name(const rcl_publisher_t* publisher);
 
 /// 返回 rcl 发布者选项。
 /**
@@ -468,7 +472,7 @@ const char * rcl_publisher_get_topic_name(const rcl_publisher_t * publisher);
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const rcl_publisher_options_t * rcl_publisher_get_options(const rcl_publisher_t * publisher);
+const rcl_publisher_options_t* rcl_publisher_get_options(const rcl_publisher_t* publisher);
 
 /// 返回rmw发布者句柄。
 /**
@@ -494,7 +498,7 @@ const rcl_publisher_options_t * rcl_publisher_get_options(const rcl_publisher_t 
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rmw_publisher_t * rcl_publisher_get_rmw_handle(const rcl_publisher_t * publisher);
+rmw_publisher_t* rcl_publisher_get_rmw_handle(const rcl_publisher_t* publisher);
 
 /// 返回与此发布者关联的上下文。
 /**
@@ -518,7 +522,7 @@ rmw_publisher_t * rcl_publisher_get_rmw_handle(const rcl_publisher_t * publisher
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_context_t * rcl_publisher_get_context(const rcl_publisher_t * publisher);
+rcl_context_t* rcl_publisher_get_context(const rcl_publisher_t* publisher);
 
 /// 如果发布者有效，则返回true，否则返回false。
 /**
@@ -539,7 +543,7 @@ rcl_context_t * rcl_publisher_get_context(const rcl_publisher_t * publisher);
  * \return 如果 `publisher` 有效，则返回 `true`，否则返回 `false`
  */
 RCL_PUBLIC
-bool rcl_publisher_is_valid(const rcl_publisher_t * publisher);
+bool rcl_publisher_is_valid(const rcl_publisher_t* publisher);
 
 /// 如果发布者有效（除上下文外），则返回true，否则返回false。
 /**
@@ -549,7 +553,7 @@ bool rcl_publisher_is_valid(const rcl_publisher_t * publisher);
  * \sa rcl_publisher_is_valid()
  */
 RCL_PUBLIC
-bool rcl_publisher_is_valid_except_context(const rcl_publisher_t * publisher);
+bool rcl_publisher_is_valid_except_context(const rcl_publisher_t* publisher);
 
 /// 获取与发布者匹配的订阅数量。
 /**
@@ -574,7 +578,7 @@ bool rcl_publisher_is_valid_except_context(const rcl_publisher_t * publisher);
 RCL_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_publisher_get_subscription_count(
-  const rcl_publisher_t * publisher, size_t * subscription_count);
+    const rcl_publisher_t* publisher, size_t* subscription_count);
 
 /// 获取发布者的实际qos设置。
 /**
@@ -597,14 +601,14 @@ rcl_ret_t rcl_publisher_get_subscription_count(
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-const rmw_qos_profile_t * rcl_publisher_get_actual_qos(const rcl_publisher_t * publisher);
+const rmw_qos_profile_t* rcl_publisher_get_actual_qos(const rcl_publisher_t* publisher);
 
 /// 检查发布者实例是否可以借用消息。
 /**
  * 根据中间件和消息类型，如果中间件可以分配ROS消息实例，这将返回true。
  */
 RCL_PUBLIC
-bool rcl_publisher_can_loan_messages(const rcl_publisher_t * publisher);
+bool rcl_publisher_can_loan_messages(const rcl_publisher_t* publisher);
 
 #ifdef __cplusplus
 }

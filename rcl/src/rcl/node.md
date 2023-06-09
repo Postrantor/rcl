@@ -56,7 +56,13 @@ Crafted by [Genie](https://marketplace.visualstudio.com/items?itemName=genieai.c
 
 以下是这些函数之间的功能调用关系：
 
-1. `rcl_node_init`：
+> [!NOTE]
+> 这里创建 node 是最主要的，后面有 `rcl_node_get_rmw_handle`
+> 这里给出了获取 rmw 层中创建的 handle 的方法，或许可以参考
+> // 创建 rmw 节点句柄 (Create rmw node handle)
+> `node->impl->rmw_node_handle = rmw_create_node(&(node->context->impl->rmw_context), name, local_namespace_);`
+
+1. **`rcl_node_init`**：
 
    - 调用 `rcl_node_options_copy`
    - 调用 `rcl_remap_node_name`

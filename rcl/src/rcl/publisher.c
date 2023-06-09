@@ -130,11 +130,9 @@ rcl_ret_t rcl_publisher_init(
   }
   publisher->impl->actual_qos.avoid_ros_namespace_conventions =
       options->qos.avoid_ros_namespace_conventions;
-  // 选项
   publisher->impl->options = *options;
   // 记录调试信息
   RCUTILS_LOG_DEBUG_NAMED(ROS_PACKAGE_NAME, "Publisher initialized");
-  // 上下文
   publisher->impl->context = node->context;
   TRACEPOINT(
       rcl_publisher_init, (const void *)publisher, (const void *)node,
@@ -155,7 +153,6 @@ fail:
     allocator->deallocate(publisher->impl, allocator->state);
     publisher->impl = NULL;
   }
-
   ret = fail_ret;
 
 cleanup:  // 跳转到cleanup
@@ -293,7 +290,6 @@ rcl_ret_t rcl_publish(
   // 设置可能的错误返回值
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_PUBLISHER_INVALID);
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_ERROR);
-
   // 检查发布者是否有效
   if (!rcl_publisher_is_valid(publisher)) {
     return RCL_RET_PUBLISHER_INVALID;  // 错误已设置
@@ -302,12 +298,12 @@ rcl_ret_t rcl_publish(
   RCL_CHECK_ARGUMENT_FOR_NULL(ros_message, RCL_RET_INVALID_ARGUMENT);
   // 记录发布操作的跟踪点
   TRACEPOINT(rcl_publish, (const void *)publisher, (const void *)ros_message);
+
   // 如果发布失败，设置错误信息并返回错误
   if (rmw_publish(publisher->impl->rmw_handle, ros_message, allocation) != RMW_RET_OK) {
     RCL_SET_ERROR_MSG(rmw_get_error_string().str);
     return RCL_RET_ERROR;
   }
-  // 发布成功，返回成功状态
   return RCL_RET_OK;
 }
 

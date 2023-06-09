@@ -34,7 +34,6 @@ typedef struct rcl_guard_condition_impl_s rcl_guard_condition_impl_t;
 typedef struct rcl_guard_condition_s {
   /// 与此守护条件关联的上下文。
   rcl_context_t* context;
-
   /// 指向守护条件实现的指针
   rcl_guard_condition_impl_t* impl;
 } rcl_guard_condition_t;

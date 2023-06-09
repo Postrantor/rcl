@@ -23,39 +23,21 @@
 extern "C" {
 #endif
 
-/** \file rcl_context_impl_s.h
- *  \brief 文件描述 (File description)
- */
-
 /**
  * \internal
  * \struct rcl_context_impl_s
  * \brief ROS2 RCL 上下文实现结构体 (ROS2 RCL context implementation structure)
  */
 struct rcl_context_impl_s {
-  /**
-   * \brief 初始化和关闭时使用的分配器 (Allocator used during init and shutdown)
-   */
+  // 初始化和关闭时使用的分配器 (Allocator used during init and shutdown)
   rcl_allocator_t allocator;
-
-  /**
-   * \brief 初始化时给定的初始化选项副本 (Copy of init options given during init)
-   */
+  // 初始化时给定的初始化选项副本 (Copy of init options given during init)
   rcl_init_options_t init_options;
-
-  /**
-   * \brief argv 的长度（可能为 `0`）(Length of argv (may be `0`))
-   */
+  // argv 的长度（可能为 `0`）(Length of argv (may be `0`))
   int64_t argc;
-
-  /**
-   * \brief 初始化时使用的 argv 副本（可能为 `NULL`）(Copy of argv used during init (may be `NULL`))
-   */
+  // 初始化时使用的 argv 副本（可能为 `NULL`）(Copy of argv used during init (may be `NULL`))
   char** argv;
-
-  /**
-   * \brief RMW 上下文 (rmw context)
-   */
+  // RMW 上下文 (rmw context)
   rmw_context_t rmw_context;
 };
 

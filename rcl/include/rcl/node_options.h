@@ -29,27 +29,19 @@ extern "C" {
 #define RCL_NODE_OPTIONS_DEFAULT_DOMAIN_ID RCL_DEFAULT_DOMAIN_ID
 
 /// 封装创建 rcl_node_t 选项的结构体。
-typedef struct rcl_node_options_s
-{
+typedef struct rcl_node_options_s {
   // bool anonymous_name;
-
   // rmw_qos_profile_t parameter_qos;
-
   /// 如果为 true，则不设置参数基础设施。
   // bool no_parameters;
-
   /// 用于内部分配的自定义分配器。
   rcl_allocator_t allocator;
-
   /// 如果为 false，则仅使用此结构中的参数，否则还使用全局参数。
   bool use_global_arguments;
-
   /// 仅适用于此节点的命令行参数。
   rcl_arguments_t arguments;
-
   /// 启用此节点的 rosout 标志
   bool enable_rosout;
-
   /// /rosout 的中间件服务质量设置。
   rmw_qos_profile_t rosout_qos;
 } rcl_node_options_t;
@@ -89,8 +81,7 @@ rcl_node_options_t rcl_node_get_default_options(void);
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t rcl_node_options_copy(
-  const rcl_node_options_t * options, rcl_node_options_t * options_out);
+rcl_ret_t rcl_node_options_copy(const rcl_node_options_t* options, rcl_node_options_t* options_out);
 
 /// 结束给定的 node_options。
 /**
@@ -112,7 +103,7 @@ rcl_ret_t rcl_node_options_copy(
  */
 RCL_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t rcl_node_options_fini(rcl_node_options_t * options);
+rcl_ret_t rcl_node_options_fini(rcl_node_options_t* options);
 
 #ifdef __cplusplus
 }
