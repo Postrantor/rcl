@@ -25,16 +25,16 @@ extern "C" {
 #endif
 
 // 生命周期状态标签
-RCL_LIFECYCLE_PUBLIC extern const char * rcl_lifecycle_configure_label;   ///< 配置状态标签
-RCL_LIFECYCLE_PUBLIC extern const char * rcl_lifecycle_cleanup_label;     ///< 清理状态标签
-RCL_LIFECYCLE_PUBLIC extern const char * rcl_lifecycle_activate_label;    ///< 激活状态标签
-RCL_LIFECYCLE_PUBLIC extern const char * rcl_lifecycle_deactivate_label;  ///< 去激活状态标签
-RCL_LIFECYCLE_PUBLIC extern const char * rcl_lifecycle_shutdown_label;    ///< 关闭状态标签
+RCL_LIFECYCLE_PUBLIC extern const char* rcl_lifecycle_configure_label;   ///< 配置状态标签
+RCL_LIFECYCLE_PUBLIC extern const char* rcl_lifecycle_cleanup_label;     ///< 清理状态标签
+RCL_LIFECYCLE_PUBLIC extern const char* rcl_lifecycle_activate_label;    ///< 激活状态标签
+RCL_LIFECYCLE_PUBLIC extern const char* rcl_lifecycle_deactivate_label;  ///< 去激活状态标签
+RCL_LIFECYCLE_PUBLIC extern const char* rcl_lifecycle_shutdown_label;    ///< 关闭状态标签
 
 // 生命周期转换标签
-RCL_LIFECYCLE_PUBLIC extern const char * rcl_lifecycle_transition_success_label;  ///< 转换成功标签
-RCL_LIFECYCLE_PUBLIC extern const char * rcl_lifecycle_transition_failure_label;  ///< 转换失败标签
-RCL_LIFECYCLE_PUBLIC extern const char * rcl_lifecycle_transition_error_label;  ///< 转换错误标签
+RCL_LIFECYCLE_PUBLIC extern const char* rcl_lifecycle_transition_success_label;  ///< 转换成功标签
+RCL_LIFECYCLE_PUBLIC extern const char* rcl_lifecycle_transition_failure_label;  ///< 转换失败标签
+RCL_LIFECYCLE_PUBLIC extern const char* rcl_lifecycle_transition_error_label;  ///< 转换错误标签
 
 /// 初始化默认状态机
 /**
@@ -46,26 +46,34 @@ RCL_LIFECYCLE_PUBLIC extern const char * rcl_lifecycle_transition_error_label;  
  * 转换：
  *    - 从 unconfigured 到 configuring
  *    - 从 unconfigured 到 shuttingdown
+ *
  *    - 从 configuring 到 inactive
  *    - 从 configuring 到 unconfigured
  *    - 从 configuring 到 errorprocessing
+ *
  *    - 从 inactive 到 activating
  *    - 从 inactive 到 cleaningup
  *    - 从 inactive 到 shuttingdown
+ *
  *    - 从 cleaningup 到 unconfigured
  *    - 从 cleaningup 到 inactive
  *    - 从 cleaningup 到 errorprocessing
+ *
  *    - 从 activating 到 active
  *    - 从 activating 到 inactive
  *    - 从 activating 到 errorprocessing
+ *
  *    - 从 active 到 deactivating
  *    - 从 active 到 shuttingdown
+ *
  *    - 从 deactivating 到 inactive
  *    - 从 deactivating 到 active
  *    - 从 deactivating 到 errorprocessing
+ *
  *    - 从 shutting down 到 finalized
  *    - 从 shutting down 到 finalized
  *    - 从 shutting down 到 errorprocessing
+ *
  *    - 从 errorprocessing 到 uncofigured
  *    - 从 errorprocessing 到 finalized
  *    - 从 errorprocessing 到 finalized
@@ -86,7 +94,7 @@ RCL_LIFECYCLE_PUBLIC extern const char * rcl_lifecycle_transition_error_label;  
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_init_default_state_machine(
-  rcl_lifecycle_state_machine_t * state_machine, const rcl_allocator_t * allocator);
+    rcl_lifecycle_state_machine_t* state_machine, const rcl_allocator_t* allocator);
 
 #ifdef __cplusplus
 }

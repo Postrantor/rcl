@@ -64,7 +64,6 @@ struct rcl_service_impl_s {
 
 /**
  * @brief 获取一个零初始化的rcl_service_t实例
- *
  * @return 返回一个零初始化的rcl_service_t实例
  */
 rcl_service_t rcl_get_zero_initialized_service() {
@@ -74,7 +73,6 @@ rcl_service_t rcl_get_zero_initialized_service() {
 
 /**
  * @brief 取消配置服务内省
- *
  * @param[in] node 指向rcl_node_t实例的指针
  * @param[in] service_impl 指向rcl_service_impl_s实例的指针
  * @param[in] allocator 指向rcl_allocator_t实例的指针

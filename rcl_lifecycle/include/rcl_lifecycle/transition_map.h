@@ -54,7 +54,7 @@ rcl_lifecycle_transition_map_t rcl_lifecycle_get_zero_initialized_transition_map
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_transition_map_is_initialized(
-  const rcl_lifecycle_transition_map_t * transition_map);
+    const rcl_lifecycle_transition_map_t* transition_map);
 
 /// 结束 rcl_lifecycle_transition_map_t。
 /**
@@ -79,7 +79,7 @@ rcl_ret_t rcl_lifecycle_transition_map_is_initialized(
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_transition_map_fini(
-  rcl_lifecycle_transition_map_t * transition_map, const rcl_allocator_t * allocator);
+    rcl_lifecycle_transition_map_t* transition_map, const rcl_allocator_t* allocator);
 
 /// 注册状态
 /**
@@ -103,8 +103,9 @@ rcl_ret_t rcl_lifecycle_transition_map_fini(
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_register_state(
-  rcl_lifecycle_transition_map_t * transition_map, rcl_lifecycle_state_t state,
-  const rcl_allocator_t * allocator);
+    rcl_lifecycle_transition_map_t* transition_map,
+    rcl_lifecycle_state_t state,
+    const rcl_allocator_t* allocator);
 
 /// 注册转换
 /**
@@ -130,8 +131,9 @@ rcl_ret_t rcl_lifecycle_register_state(
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_register_transition(
-  rcl_lifecycle_transition_map_t * transition_map, rcl_lifecycle_transition_t transition,
-  const rcl_allocator_t * allocator);
+    rcl_lifecycle_transition_map_t* transition_map,
+    rcl_lifecycle_transition_t transition,
+    const rcl_allocator_t* allocator);
 
 /// 根据状态 ID 从转换映射中获取状态
 /**
@@ -151,8 +153,8 @@ rcl_ret_t rcl_lifecycle_register_transition(
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_lifecycle_state_t * rcl_lifecycle_get_state(
-  rcl_lifecycle_transition_map_t * transition_map, unsigned int state_id);
+rcl_lifecycle_state_t* rcl_lifecycle_get_state(
+    rcl_lifecycle_transition_map_t* transition_map, unsigned int state_id);
 
 /// 根据状态 ID 从转换映射中获取状态
 /**
@@ -172,8 +174,8 @@ rcl_lifecycle_state_t * rcl_lifecycle_get_state(
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_lifecycle_transition_t * rcl_lifecycle_get_transitions(
-  rcl_lifecycle_transition_map_t * transition_map, unsigned int transition_id);
+rcl_lifecycle_transition_t* rcl_lifecycle_get_transitions(
+    rcl_lifecycle_transition_map_t* transition_map, unsigned int transition_id);
 
 #ifdef __cplusplus
 }

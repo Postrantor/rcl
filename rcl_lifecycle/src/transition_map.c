@@ -28,9 +28,7 @@ extern "C" {
 
 /**
  * @brief 获取一个初始化为零的生命周期转换映射结构体
- *
  * 该函数创建并返回一个初始化为零的生命周期转换映射结构体。
- *
  * @return 初始化为零的生命周期转换映射结构体
  */
 rcl_lifecycle_transition_map_t rcl_lifecycle_get_zero_initialized_transition_map()

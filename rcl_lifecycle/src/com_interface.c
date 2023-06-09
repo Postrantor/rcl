@@ -42,7 +42,6 @@ static const char * srv_get_transition_graph = "~/get_transition_graph";
 
 /**
  * @brief 初始化并返回一个零值生命周期通信接口结构体
- *
  * @return rcl_lifecycle_com_interface_t 返回一个初始化为零值的生命周期通信接口结构体
  */
 rcl_lifecycle_com_interface_t rcl_lifecycle_get_zero_initialized_com_interface()

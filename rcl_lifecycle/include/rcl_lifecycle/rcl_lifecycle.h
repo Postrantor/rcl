@@ -57,8 +57,8 @@ rcl_lifecycle_state_t rcl_lifecycle_get_zero_initialized_state();
 /**
  * 此函数根据 `id` 和 `label` 初始化一个状态。
  *
- * 给定的 `rcl_lifecycle_state_t` 必须使用函数 `rcl_lifecycle_get_zero_initialized_state()` 进行零初始化，
- * 并且不能已经由此函数初始化。分配器将用于分配标签字符串。
+ * 给定的 `rcl_lifecycle_state_t` 必须使用函数 `rcl_lifecycle_get_zero_initialized_state()`
+ * 进行零初始化， 并且不能已经由此函数初始化。分配器将用于分配标签字符串。
  *
  * <hr>
  * 属性              | 遵循
@@ -79,13 +79,13 @@ rcl_lifecycle_state_t rcl_lifecycle_get_zero_initialized_state();
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_state_init(
-  rcl_lifecycle_state_t * state, uint8_t id, const char * label, const rcl_allocator_t * allocator);
+    rcl_lifecycle_state_t* state, uint8_t id, const char* label, const rcl_allocator_t* allocator);
 
 /// 结束一个 rcl_lifecycle_state_t.
 /**
  *
- * 调用此函数将使 rcl_lifecycle_state_t 结构进入未初始化状态，该状态在功能上与调用 rcl_lifecycle_state_init 之前相同。此函数使
- * rcl_lifecycle_state_t 无效。
+ * 调用此函数将使 rcl_lifecycle_state_t 结构进入未初始化状态，该状态在功能上与调用
+ * rcl_lifecycle_state_init 之前相同。此函数使 rcl_lifecycle_state_t 无效。
  *
  * <hr>
  * 属性              | 遵循
@@ -102,19 +102,20 @@ rcl_ret_t rcl_lifecycle_state_init(
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-rcl_ret_t rcl_lifecycle_state_fini(
-  rcl_lifecycle_state_t * state, const rcl_allocator_t * allocator);
+rcl_ret_t rcl_lifecycle_state_fini(rcl_lifecycle_state_t* state, const rcl_allocator_t* allocator);
 
 /// 返回一个成员设置为 `NULL` 或 0 的 rcl_lifecycle_transition_t 结构。
 /**
- * 在传递给 rcl_lifecycle_transition_init() 之前，应调用此函数以获取空的 rcl_lifecycle_transition_t。
+ * 在传递给 rcl_lifecycle_transition_init() 之前，应调用此函数以获取空的
+ * rcl_lifecycle_transition_t。
  */
 RCL_LIFECYCLE_PUBLIC
 rcl_lifecycle_transition_t rcl_lifecycle_get_zero_initialized_transition();
 
 /// 从开始状态初始化到目标状态的过渡。
 /**
- * 给定的 `rcl_lifecycle_transition_t` 必须使用函数 `rcl_lifecycle_get_zero_initialized_transition()` 进行零初始化，并且不能已经由此函数初始化。
+ * 给定的 `rcl_lifecycle_transition_t` 必须使用函数
+ * `rcl_lifecycle_get_zero_initialized_transition()` 进行零初始化，并且不能已经由此函数初始化。
  * 分配器将用于分配标签字符串和 rcl_lifecycle_state_t 结构。
  *
  * 注意：过渡指针将拥有开始和目标状态。当调用
@@ -143,13 +144,17 @@ rcl_lifecycle_transition_t rcl_lifecycle_get_zero_initialized_transition();
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_transition_init(
-  rcl_lifecycle_transition_t * transition, unsigned int id, const char * label,
-  rcl_lifecycle_state_t * start, rcl_lifecycle_state_t * goal, const rcl_allocator_t * allocator);
+    rcl_lifecycle_transition_t* transition,
+    unsigned int id,
+    const char* label,
+    rcl_lifecycle_state_t* start,
+    rcl_lifecycle_state_t* goal,
+    const rcl_allocator_t* allocator);
 
 /// 结束一个 rcl_lifecycle_transition_t.
 /**
- * 调用此函数将使 rcl_lifecycle_transition_t 结构进入未初始化状态，该状态在功能上与调用 rcl_lifecycle_transition_init 之前相同。此函数使
- * rcl_lifecycle_transition_t 无效。
+ * 调用此函数将使 rcl_lifecycle_transition_t 结构进入未初始化状态，该状态在功能上与调用
+ * rcl_lifecycle_transition_init 之前相同。此函数使 rcl_lifecycle_transition_t 无效。
  *
  * <hr>
  * 属性              | 遵循
@@ -168,7 +173,7 @@ rcl_ret_t rcl_lifecycle_transition_init(
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_transition_fini(
-  rcl_lifecycle_transition_t * transition, const rcl_allocator_t * allocator);
+    rcl_lifecycle_transition_t* transition, const rcl_allocator_t* allocator);
 
 /// 返回默认初始化的状态机选项结构。
 RCL_LIFECYCLE_PUBLIC
@@ -176,7 +181,8 @@ rcl_lifecycle_state_machine_options_t rcl_lifecycle_get_default_state_machine_op
 
 /// 返回一个成员设置为 `NULL` 或 0 的 rcl_lifecycle_state_machine_t 结构。
 /**
- * 在传递给 rcl_lifecycle_state_machine_init() 之前，应该调用它以获取空的 rcl_lifecycle_state_machine_t。
+ * 在传递给 rcl_lifecycle_state_machine_init() 之前，应该调用它以获取空的
+ * rcl_lifecycle_state_machine_t。
  */
 RCL_LIFECYCLE_PUBLIC
 rcl_lifecycle_state_machine_t rcl_lifecycle_get_zero_initialized_state_machine();
@@ -210,19 +216,20 @@ rcl_lifecycle_state_machine_t rcl_lifecycle_get_zero_initialized_state_machine()
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_state_machine_init(
-  rcl_lifecycle_state_machine_t * state_machine, rcl_node_t * node_handle,
-  const rosidl_message_type_support_t * ts_pub_notify,
-  const rosidl_service_type_support_t * ts_srv_change_state,
-  const rosidl_service_type_support_t * ts_srv_get_state,
-  const rosidl_service_type_support_t * ts_srv_get_available_states,
-  const rosidl_service_type_support_t * ts_srv_get_available_transitions,
-  const rosidl_service_type_support_t * ts_srv_get_transition_graph,
-  const rcl_lifecycle_state_machine_options_t * state_machine_options);
+    rcl_lifecycle_state_machine_t* state_machine,
+    rcl_node_t* node_handle,
+    const rosidl_message_type_support_t* ts_pub_notify,
+    const rosidl_service_type_support_t* ts_srv_change_state,
+    const rosidl_service_type_support_t* ts_srv_get_state,
+    const rosidl_service_type_support_t* ts_srv_get_available_states,
+    const rosidl_service_type_support_t* ts_srv_get_available_transitions,
+    const rosidl_service_type_support_t* ts_srv_get_transition_graph,
+    const rcl_lifecycle_state_machine_options_t* state_machine_options);
 
 /// 结束一个 rcl_lifecycle_state_machine_t.
 /**
- * 调用此函数将使 rcl_lifecycle_state_machine_t 结构进入未初始化状态，该状态在功能上与调用 rcl_lifecycle_state_machine_init 之前相同。此函数使
- * rcl_lifecycle_state_machine_t 无效。
+ * 调用此函数将使 rcl_lifecycle_state_machine_t 结构进入未初始化状态，该状态在功能上与调用
+ * rcl_lifecycle_state_machine_init 之前相同。此函数使 rcl_lifecycle_state_machine_t 无效。
  *
  * <hr>
  * 属性              | 遵循
@@ -241,7 +248,7 @@ rcl_ret_t rcl_lifecycle_state_machine_init(
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_state_machine_fini(
-  rcl_lifecycle_state_machine_t * state_machine, rcl_node_t * node_handle);
+    rcl_lifecycle_state_machine_t* state_machine, rcl_node_t* node_handle);
 
 /// 检查状态机是否处于活动状态。
 /**
@@ -264,7 +271,7 @@ rcl_ret_t rcl_lifecycle_state_machine_fini(
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_state_machine_is_initialized(
-  const rcl_lifecycle_state_machine_t * state_machine);
+    const rcl_lifecycle_state_machine_t* state_machine);
 
 /// 通过id获取状态。
 /**
@@ -285,8 +292,8 @@ rcl_ret_t rcl_lifecycle_state_machine_is_initialized(
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_id(
-  const rcl_lifecycle_state_t * state, uint8_t id);
+const rcl_lifecycle_transition_t* rcl_lifecycle_get_transition_by_id(
+    const rcl_lifecycle_state_t* state, uint8_t id);
 
 /// 通过id获取状态。
 /**
@@ -307,8 +314,8 @@ const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_id(
  */
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
-const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_label(
-  const rcl_lifecycle_state_t * state, const char * label);
+const rcl_lifecycle_transition_t* rcl_lifecycle_get_transition_by_label(
+    const rcl_lifecycle_state_t* state, const char* label);
 
 /// 通过id触发状态。
 /**
@@ -335,7 +342,7 @@ const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_label(
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_trigger_transition_by_id(
-  rcl_lifecycle_state_machine_t * state_machine, uint8_t id, bool publish_notification);
+    rcl_lifecycle_state_machine_t* state_machine, uint8_t id, bool publish_notification);
 
 /// 通过标签触发状态。
 /**
@@ -362,7 +369,7 @@ rcl_ret_t rcl_lifecycle_trigger_transition_by_id(
 RCL_LIFECYCLE_PUBLIC
 RCL_WARN_UNUSED
 rcl_ret_t rcl_lifecycle_trigger_transition_by_label(
-  rcl_lifecycle_state_machine_t * state_machine, const char * label, bool publish_notification);
+    rcl_lifecycle_state_machine_t* state_machine, const char* label, bool publish_notification);
 
 /// 打印状态机数据
 /**
@@ -380,7 +387,7 @@ rcl_ret_t rcl_lifecycle_trigger_transition_by_label(
  * \param[in] state_machine 要打印的状态机结构的指针
  */
 RCL_LIFECYCLE_PUBLIC
-void rcl_print_state_machine(const rcl_lifecycle_state_machine_t * state_machine);
+void rcl_print_state_machine(const rcl_lifecycle_state_machine_t* state_machine);
 
 #ifdef __cplusplus
 }

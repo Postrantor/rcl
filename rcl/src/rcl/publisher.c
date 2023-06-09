@@ -35,7 +35,6 @@ extern "C" {
 
 /**
  * @brief 获取一个零初始化的发布者对象
- *
  * @return 返回一个零初始化的rcl_publisher_t对象
  */
 rcl_publisher_t rcl_get_zero_initialized_publisher() {
@@ -47,7 +46,6 @@ rcl_publisher_t rcl_get_zero_initialized_publisher() {
 
 /**
  * @brief 初始化发布者
- *
  * @param[in,out] publisher 指向待初始化的发布者对象的指针
  * @param[in] node 指向关联节点的指针
  * @param[in] type_support 消息类型支持

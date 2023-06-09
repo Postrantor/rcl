@@ -37,8 +37,7 @@ extern "C" {
  *
  * @return 返回一个初始化为零的 rcl_lifecycle_state_t 对象
  */
-rcl_lifecycle_state_t rcl_lifecycle_get_zero_initialized_state()
-{
+rcl_lifecycle_state_t rcl_lifecycle_get_zero_initialized_state() {
   rcl_lifecycle_state_t state;      // 定义一个生命周期状态对象
   state.id = 0;                     // 将状态 ID 设置为 0
   state.label = NULL;               // 将状态标签设置为空
@@ -57,11 +56,10 @@ rcl_lifecycle_state_t rcl_lifecycle_get_zero_initialized_state()
  * @return 返回操作结果，成功返回 RCL_RET_OK
  */
 rcl_ret_t rcl_lifecycle_state_init(
-  rcl_lifecycle_state_t * state, uint8_t id, const char * label, const rcl_allocator_t * allocator)
-{
+    rcl_lifecycle_state_t *state, uint8_t id, const char *label, const rcl_allocator_t *allocator) {
   // 检查分配器是否存在
   RCL_CHECK_ALLOCATOR_WITH_MSG(
-    allocator, "can't initialize state, no allocator given\n", return RCL_RET_INVALID_ARGUMENT);
+      allocator, "can't initialize state, no allocator given\n", return RCL_RET_INVALID_ARGUMENT);
 
   // 检查状态指针是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(state, "state pointer is null\n", return RCL_RET_INVALID_ARGUMENT);
@@ -74,7 +72,7 @@ rcl_ret_t rcl_lifecycle_state_init(
   state->label = rcutils_strndup(label, strlen(label), *allocator);
   // 检查标签复制是否成功
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    state->label, "failed to duplicate label for rcl_lifecycle_state_t\n", return RCL_RET_ERROR);
+      state->label, "failed to duplicate label for rcl_lifecycle_state_t\n", return RCL_RET_ERROR);
 
   return RCL_RET_OK;  // 返回操作成功
 }
@@ -86,13 +84,12 @@ rcl_ret_t rcl_lifecycle_state_init(
  * @param[in] allocator 分配器指针
  * @return 返回操作结果，成功返回 RCL_RET_OK
  */
-rcl_ret_t rcl_lifecycle_state_fini(rcl_lifecycle_state_t * state, const rcl_allocator_t * allocator)
-{
+rcl_ret_t rcl_lifecycle_state_fini(rcl_lifecycle_state_t *state, const rcl_allocator_t *allocator) {
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RCL_RET_INVALID_ARGUMENT);
 
   // 检查分配器是否存在
   RCL_CHECK_ALLOCATOR_WITH_MSG(
-    allocator, "can't free state, no allocator given\n", return RCL_RET_INVALID_ARGUMENT);
+      allocator, "can't free state, no allocator given\n", return RCL_RET_INVALID_ARGUMENT);
   // 如果状态指针为空，则直接返回成功
   if (!state) {
     return RCL_RET_OK;
@@ -112,8 +109,7 @@ rcl_ret_t rcl_lifecycle_state_fini(rcl_lifecycle_state_t * state, const rcl_allo
  *
  * @return 返回一个初始化为零的 rcl_lifecycle_transition_t 对象
  */
-rcl_lifecycle_transition_t rcl_lifecycle_get_zero_initialized_transition()
-{
+rcl_lifecycle_transition_t rcl_lifecycle_get_zero_initialized_transition() {
   rcl_lifecycle_transition_t transition;  // 定义一个生命周期转换对象
   transition.id = 0;                      // 将转换 ID 设置为 0
   transition.label = NULL;                // 将转换标签设置为空
@@ -134,17 +130,20 @@ rcl_lifecycle_transition_t rcl_lifecycle_get_zero_initialized_transition()
  * @return 返回rcl_ret_t类型的结果，成功返回RCL_RET_OK，否则返回相应的错误代码
  */
 rcl_ret_t rcl_lifecycle_transition_init(
-  rcl_lifecycle_transition_t * transition, unsigned int id, const char * label,
-  rcl_lifecycle_state_t * start, rcl_lifecycle_state_t * goal, const rcl_allocator_t * allocator)
-{
+    rcl_lifecycle_transition_t *transition,
+    unsigned int id,
+    const char *label,
+    rcl_lifecycle_state_t *start,
+    rcl_lifecycle_state_t *goal,
+    const rcl_allocator_t *allocator) {
   // 检查分配器是否有效
   RCL_CHECK_ALLOCATOR_WITH_MSG(
-    allocator, "can't initialize transition, no allocator given\n",
-    return RCL_RET_INVALID_ARGUMENT);
+      allocator, "can't initialize transition, no allocator given\n",
+      return RCL_RET_INVALID_ARGUMENT);
 
   // 检查transition指针是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    transition, "transition pointer is null\n", return RCL_RET_INVALID_ARGUMENT);
+      transition, "transition pointer is null\n", return RCL_RET_INVALID_ARGUMENT);
 
   // 检查label指针是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(label, "label pointer is null\n", return RCL_RET_INVALID_ARGUMENT);
@@ -158,8 +157,8 @@ rcl_ret_t rcl_lifecycle_transition_init(
   transition->label = rcutils_strndup(label, strlen(label), *allocator);
   // 检查标签是否复制成功
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    transition->label, "failed to duplicate label for rcl_lifecycle_transition_t\n",
-    return RCL_RET_ERROR);
+      transition->label, "failed to duplicate label for rcl_lifecycle_transition_t\n",
+      return RCL_RET_ERROR);
 
   // 返回成功
   return RCL_RET_OK;
@@ -173,11 +172,11 @@ rcl_ret_t rcl_lifecycle_transition_init(
  * @return 返回rcl_ret_t类型的结果，成功返回RCL_RET_OK，否则返回相应的错误代码
  */
 rcl_ret_t rcl_lifecycle_transition_fini(
-  rcl_lifecycle_transition_t * transition, const rcl_allocator_t * allocator)
-{
+    rcl_lifecycle_transition_t *transition, const rcl_allocator_t *allocator) {
   // 检查分配器是否有效
   RCL_CHECK_ALLOCATOR_WITH_MSG(
-    allocator, "can't finalize transition, no allocator given\n", return RCL_RET_INVALID_ARGUMENT);
+      allocator, "can't finalize transition, no allocator given\n",
+      return RCL_RET_INVALID_ARGUMENT);
   // 如果transition为空，则已经完成
   if (!transition) {
     return RCL_RET_OK;
@@ -212,8 +211,7 @@ rcl_ret_t rcl_lifecycle_transition_fini(
  *
  * @return 返回rcl_lifecycle_state_machine_options_t类型的默认选项
  */
-rcl_lifecycle_state_machine_options_t rcl_lifecycle_get_default_state_machine_options()
-{
+rcl_lifecycle_state_machine_options_t rcl_lifecycle_get_default_state_machine_options() {
   rcl_lifecycle_state_machine_options_t options;
   // 启用通信接口
   options.enable_com_interface = true;
@@ -228,35 +226,26 @@ rcl_lifecycle_state_machine_options_t rcl_lifecycle_get_default_state_machine_op
 
 /**
  * @brief 获取一个零初始化的状态机
- *
  * 该函数用于创建一个零初始化的生命周期状态机。
- *
  * @return 返回一个零初始化的生命周期状态机
  */
-rcl_lifecycle_state_machine_t rcl_lifecycle_get_zero_initialized_state_machine()
-{
+rcl_lifecycle_state_machine_t rcl_lifecycle_get_zero_initialized_state_machine() {
   // 创建一个生命周期状态机变量
   rcl_lifecycle_state_machine_t state_machine;
-
   // 将当前状态设置为 NULL
   state_machine.current_state = NULL;
-
   // 获取并设置一个零初始化的转换映射
   state_machine.transition_map = rcl_lifecycle_get_zero_initialized_transition_map();
-
   // 获取并设置一个零初始化的通信接口
   state_machine.com_interface = rcl_lifecycle_get_zero_initialized_com_interface();
-
   // 获取并设置默认的状态机选项
   state_machine.options = rcl_lifecycle_get_default_state_machine_options();
-
   // 返回零初始化的状态机
   return state_machine;
 }
 
 /**
  * @brief 初始化生命周期状态机
- *
  * @param[out] state_machine 指向要初始化的生命周期状态机的指针
  * @param[in] node_handle 指向节点句柄的指针
  * @param[in] ts_pub_notify 指向发布通知消息类型支持的指针
@@ -270,27 +259,27 @@ rcl_lifecycle_state_machine_t rcl_lifecycle_get_zero_initialized_state_machine()
  * @return 返回初始化结果，成功返回 RCL_RET_OK，否则返回相应的错误代码
  */
 rcl_ret_t rcl_lifecycle_state_machine_init(
-  rcl_lifecycle_state_machine_t * state_machine, rcl_node_t * node_handle,
-  const rosidl_message_type_support_t * ts_pub_notify,
-  const rosidl_service_type_support_t * ts_srv_change_state,
-  const rosidl_service_type_support_t * ts_srv_get_state,
-  const rosidl_service_type_support_t * ts_srv_get_available_states,
-  const rosidl_service_type_support_t * ts_srv_get_available_transitions,
-  const rosidl_service_type_support_t * ts_srv_get_transition_graph,
-  const rcl_lifecycle_state_machine_options_t * state_machine_options)
-{
+    rcl_lifecycle_state_machine_t *state_machine,
+    rcl_node_t *node_handle,
+    const rosidl_message_type_support_t *ts_pub_notify,
+    const rosidl_service_type_support_t *ts_srv_change_state,
+    const rosidl_service_type_support_t *ts_srv_get_state,
+    const rosidl_service_type_support_t *ts_srv_get_available_states,
+    const rosidl_service_type_support_t *ts_srv_get_available_transitions,
+    const rosidl_service_type_support_t *ts_srv_get_transition_graph,
+    const rcl_lifecycle_state_machine_options_t *state_machine_options) {
   // 检查状态机是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    state_machine, "State machine is null\n", return RCL_RET_INVALID_ARGUMENT);
+      state_machine, "State machine is null\n", return RCL_RET_INVALID_ARGUMENT);
 
   // 检查节点句柄是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    node_handle, "Node handle is null\n", return RCL_RET_INVALID_ARGUMENT);
+      node_handle, "Node handle is null\n", return RCL_RET_INVALID_ARGUMENT);
 
   // 检查分配器是否为空
   RCL_CHECK_ALLOCATOR_WITH_MSG(
-    &state_machine_options->allocator, "can't initialize state machine, no allocator given\n",
-    return RCL_RET_INVALID_ARGUMENT);
+      &state_machine_options->allocator, "can't initialize state machine, no allocator given\n",
+      return RCL_RET_INVALID_ARGUMENT);
 
   // 设置状态机选项
   state_machine->options = *state_machine_options;
@@ -299,9 +288,9 @@ rcl_ret_t rcl_lifecycle_state_machine_init(
   if (state_machine->options.enable_com_interface) {
     // 初始化通信接口
     rcl_ret_t ret = rcl_lifecycle_com_interface_init(
-      &state_machine->com_interface, node_handle, ts_pub_notify, ts_srv_change_state,
-      ts_srv_get_state, ts_srv_get_available_states, ts_srv_get_available_transitions,
-      ts_srv_get_transition_graph);
+        &state_machine->com_interface, node_handle, ts_pub_notify, ts_srv_change_state,
+        ts_srv_get_state, ts_srv_get_available_states, ts_srv_get_available_transitions,
+        ts_srv_get_transition_graph);
     // 如果初始化失败，返回错误
     if (ret != RCL_RET_OK) {
       return RCL_RET_ERROR;
@@ -309,7 +298,7 @@ rcl_ret_t rcl_lifecycle_state_machine_init(
   } else {
     // 否则，仅初始化发布器
     rcl_ret_t ret = rcl_lifecycle_com_interface_publisher_init(
-      &state_machine->com_interface, node_handle, ts_pub_notify);
+        &state_machine->com_interface, node_handle, ts_pub_notify);
     // 如果初始化失败，返回错误
     if (ret != RCL_RET_OK) {
       return RCL_RET_ERROR;
@@ -320,7 +309,7 @@ rcl_ret_t rcl_lifecycle_state_machine_init(
   if (state_machine->options.initialize_default_states) {
     // 初始化默认状态机
     rcl_ret_t ret =
-      rcl_lifecycle_init_default_state_machine(state_machine, &state_machine->options.allocator);
+        rcl_lifecycle_init_default_state_machine(state_machine, &state_machine->options.allocator);
     // 如果初始化失败
     if (ret != RCL_RET_OK) {
       // 可能已分配内存，因此需要调用 fini
@@ -328,7 +317,7 @@ rcl_ret_t rcl_lifecycle_state_machine_init(
       // 如果释放失败，输出警告并泄漏内存
       if (ret != RCL_RET_OK) {
         RCUTILS_SAFE_FWRITE_TO_STDERR(
-          "Freeing state machine failed while handling a previous error. Leaking memory!\n");
+            "Freeing state machine failed while handling a previous error. Leaking memory!\n");
       }
       // 返回错误
       return RCL_RET_ERROR;
@@ -337,7 +326,7 @@ rcl_ret_t rcl_lifecycle_state_machine_init(
 
   // 添加跟踪点
   TRACEPOINT(
-    rcl_lifecycle_state_machine_init, (const void *)node_handle, (const void *)state_machine);
+      rcl_lifecycle_state_machine_init, (const void *)node_handle, (const void *)state_machine);
 
   // 返回成功
   return RCL_RET_OK;
@@ -351,8 +340,7 @@ rcl_ret_t rcl_lifecycle_state_machine_init(
  * @return 返回 rcl_ret_t 类型的结果，成功返回 RCL_RET_OK，失败返回相应的错误代码
  */
 rcl_ret_t rcl_lifecycle_state_machine_fini(
-  rcl_lifecycle_state_machine_t * state_machine, rcl_node_t * node_handle)
-{
+    rcl_lifecycle_state_machine_t *state_machine, rcl_node_t *node_handle) {
   // 初始化函数返回值为 RCL_RET_OK
   rcl_ret_t fcn_ret = RCL_RET_OK;
 
@@ -361,18 +349,17 @@ rcl_ret_t rcl_lifecycle_state_machine_fini(
     rcl_error_string_t error_string = rcl_get_error_string();
     rcutils_reset_error();
     RCL_SET_ERROR_MSG_WITH_FORMAT_STRING(
-      "could not free lifecycle com interface. Leaking memory!\n%s", error_string.str);
+        "could not free lifecycle com interface. Leaking memory!\n%s", error_string.str);
     fcn_ret = RCL_RET_ERROR;
   }
 
   // 如果转换映射销毁失败，则设置错误信息并更新函数返回值
-  if (
-    rcl_lifecycle_transition_map_fini(
-      &state_machine->transition_map, &state_machine->options.allocator) != RCL_RET_OK) {
+  if (rcl_lifecycle_transition_map_fini(
+          &state_machine->transition_map, &state_machine->options.allocator) != RCL_RET_OK) {
     rcl_error_string_t error_string = rcl_get_error_string();
     rcutils_reset_error();
     RCL_SET_ERROR_MSG_WITH_FORMAT_STRING(
-      "could not free lifecycle transition map. Leaking memory!\n%s", error_string.str);
+        "could not free lifecycle transition map. Leaking memory!\n%s", error_string.str);
     fcn_ret = RCL_RET_ERROR;
   }
 
@@ -387,17 +374,16 @@ rcl_ret_t rcl_lifecycle_state_machine_fini(
  * @return 返回 rcl_ret_t 类型的结果，成功返回 RCL_RET_OK，失败返回相应的错误代码
  */
 rcl_ret_t rcl_lifecycle_state_machine_is_initialized(
-  const rcl_lifecycle_state_machine_t * state_machine)
-{
+    const rcl_lifecycle_state_machine_t *state_machine) {
   // 如果启用了通信接口，则检查 get_state 和 change_state 服务是否为空
   if (state_machine->options.enable_com_interface) {
     RCL_CHECK_FOR_NULL_WITH_MSG(
-      state_machine->com_interface.srv_get_state.impl, "get_state service is null\n",
-      return RCL_RET_INVALID_ARGUMENT);
+        state_machine->com_interface.srv_get_state.impl, "get_state service is null\n",
+        return RCL_RET_INVALID_ARGUMENT);
 
     RCL_CHECK_FOR_NULL_WITH_MSG(
-      state_machine->com_interface.srv_change_state.impl, "change_state service is null\n",
-      return RCL_RET_INVALID_ARGUMENT);
+        state_machine->com_interface.srv_change_state.impl, "change_state service is null\n",
+        return RCL_RET_INVALID_ARGUMENT);
   }
 
   // 检查转换映射是否已初始化
@@ -417,9 +403,8 @@ rcl_ret_t rcl_lifecycle_state_machine_is_initialized(
  * @param[in] id 转换的 ID
  * @return 返回 rcl_lifecycle_transition_t 类型的指针，找到则返回对应指针，未找到则返回 NULL
  */
-const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_id(
-  const rcl_lifecycle_state_t * state, uint8_t id)
-{
+const rcl_lifecycle_transition_t *rcl_lifecycle_get_transition_by_id(
+    const rcl_lifecycle_state_t *state, uint8_t id) {
   // 检查状态指针是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(state, "state pointer is null", return NULL);
 
@@ -432,7 +417,7 @@ const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_id(
 
   // 如果未找到匹配的转换，记录警告信息
   RCUTILS_LOG_WARN_NAMED(
-    ROS_PACKAGE_NAME, "No transition matching %d found for current state %s", id, state->label);
+      ROS_PACKAGE_NAME, "No transition matching %d found for current state %s", id, state->label);
 
   // 返回 NULL
   return NULL;
@@ -445,9 +430,8 @@ const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_id(
  * @param[in] label 转换的标签
  * @return 返回 rcl_lifecycle_transition_t 类型的指针，找到则返回对应指针，未找到则返回 NULL
  */
-const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_label(
-  const rcl_lifecycle_state_t * state, const char * label)
-{
+const rcl_lifecycle_transition_t *rcl_lifecycle_get_transition_by_label(
+    const rcl_lifecycle_state_t *state, const char *label) {
   // 检查状态指针是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(state, "state pointer is null", return NULL);
 
@@ -460,7 +444,8 @@ const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_label(
 
   // 如果未找到匹配的转换，记录警告信息
   RCUTILS_LOG_WARN_NAMED(
-    ROS_PACKAGE_NAME, "No transition matching %s found for current state %s", label, state->label);
+      ROS_PACKAGE_NAME, "No transition matching %s found for current state %s", label,
+      state->label);
 
   // 返回 NULL
   return NULL;
@@ -475,16 +460,16 @@ const rcl_lifecycle_transition_t * rcl_lifecycle_get_transition_by_label(
  * @return rcl_ret_t 返回执行结果
  */
 rcl_ret_t _trigger_transition(
-  rcl_lifecycle_state_machine_t * state_machine, const rcl_lifecycle_transition_t * transition,
-  bool publish_notification)
-{
+    rcl_lifecycle_state_machine_t *state_machine,
+    const rcl_lifecycle_transition_t *transition,
+    bool publish_notification) {
   // 如果我们有一个错误的转换指针
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    transition, "Transition is not registered.", return RCL_RET_INVALID_ARGUMENT);
+      transition, "Transition is not registered.", return RCL_RET_INVALID_ARGUMENT);
 
   // 检查目标状态是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    transition->goal, "No valid goal is set.", return RCL_RET_INVALID_ARGUMENT);
+      transition->goal, "No valid goal is set.", return RCL_RET_INVALID_ARGUMENT);
   // 更新当前状态为目标状态
   state_machine->current_state = transition->goal;
 
@@ -492,7 +477,7 @@ rcl_ret_t _trigger_transition(
   if (publish_notification) {
     // 发布通知
     rcl_ret_t fcn_ret = rcl_lifecycle_com_interface_publish_notification(
-      &state_machine->com_interface, transition->start, state_machine->current_state);
+        &state_machine->com_interface, transition->start, state_machine->current_state);
     // 如果发布失败
     if (fcn_ret != RCL_RET_OK) {
       rcl_error_string_t error_string = rcl_get_error_string();
@@ -504,8 +489,8 @@ rcl_ret_t _trigger_transition(
 
   // 记录跟踪点
   TRACEPOINT(
-    rcl_lifecycle_transition, (const void *)state_machine, transition->start->label,
-    state_machine->current_state->label);
+      rcl_lifecycle_transition, (const void *)state_machine, transition->start->label,
+      state_machine->current_state->label);
   return RCL_RET_OK;
 }
 
@@ -518,15 +503,14 @@ rcl_ret_t _trigger_transition(
  * @return rcl_ret_t 返回执行结果
  */
 rcl_ret_t rcl_lifecycle_trigger_transition_by_id(
-  rcl_lifecycle_state_machine_t * state_machine, uint8_t id, bool publish_notification)
-{
+    rcl_lifecycle_state_machine_t *state_machine, uint8_t id, bool publish_notification) {
   // 检查状态机指针是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    state_machine, "state machine pointer is null.", return RCL_RET_INVALID_ARGUMENT);
+      state_machine, "state machine pointer is null.", return RCL_RET_INVALID_ARGUMENT);
 
   // 根据ID获取转换
-  const rcl_lifecycle_transition_t * transition =
-    rcl_lifecycle_get_transition_by_id(state_machine->current_state, id);
+  const rcl_lifecycle_transition_t *transition =
+      rcl_lifecycle_get_transition_by_id(state_machine->current_state, id);
 
   // 触发转换
   return _trigger_transition(state_machine, transition, publish_notification);
@@ -541,15 +525,14 @@ rcl_ret_t rcl_lifecycle_trigger_transition_by_id(
  * @return rcl_ret_t 返回执行结果
  */
 rcl_ret_t rcl_lifecycle_trigger_transition_by_label(
-  rcl_lifecycle_state_machine_t * state_machine, const char * label, bool publish_notification)
-{
+    rcl_lifecycle_state_machine_t *state_machine, const char *label, bool publish_notification) {
   // 检查状态机指针是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(
-    state_machine, "state machine pointer is null.", return RCL_RET_INVALID_ARGUMENT);
+      state_machine, "state machine pointer is null.", return RCL_RET_INVALID_ARGUMENT);
 
   // 根据标签获取转换
-  const rcl_lifecycle_transition_t * transition =
-    rcl_lifecycle_get_transition_by_label(state_machine->current_state, label);
+  const rcl_lifecycle_transition_t *transition =
+      rcl_lifecycle_get_transition_by_label(state_machine->current_state, label);
 
   // 触发转换
   return _trigger_transition(state_machine, transition, publish_notification);
@@ -560,20 +543,19 @@ rcl_ret_t rcl_lifecycle_trigger_transition_by_label(
  *
  * @param state_machine 指向状态机的指针
  */
-void rcl_print_state_machine(const rcl_lifecycle_state_machine_t * state_machine)
-{
-  const rcl_lifecycle_transition_map_t * map = &state_machine->transition_map;
+void rcl_print_state_machine(const rcl_lifecycle_state_machine_t *state_machine) {
+  const rcl_lifecycle_transition_map_t *map = &state_machine->transition_map;
   // 遍历所有状态
   for (size_t i = 0; i < map->states_size; ++i) {
     // 打印主要状态和有效转换数量
     RCUTILS_LOG_INFO_NAMED(
-      ROS_PACKAGE_NAME, "Primary State: %s(%u)\n# of valid transitions: %u", map->states[i].label,
-      map->states[i].id, map->states[i].valid_transition_size);
+        ROS_PACKAGE_NAME, "Primary State: %s(%u)\n# of valid transitions: %u", map->states[i].label,
+        map->states[i].id, map->states[i].valid_transition_size);
     // 遍历并打印每个状态的有效转换
     for (size_t j = 0; j < map->states[i].valid_transition_size; ++j) {
       RCUTILS_LOG_INFO_NAMED(
-        ROS_PACKAGE_NAME, "\tNode %s: Transition: %s", map->states[i].label,
-        map->states[i].valid_transitions[j].label);
+          ROS_PACKAGE_NAME, "\tNode %s: Transition: %s", map->states[i].label,
+          map->states[i].valid_transitions[j].label);
     }
   }
 }

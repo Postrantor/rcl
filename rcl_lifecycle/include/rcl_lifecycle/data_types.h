@@ -27,51 +27,47 @@ extern "C" {
 typedef struct rcl_lifecycle_transition_s rcl_lifecycle_transition_t;
 
 /// 生命周期状态机的状态结构体定义
-typedef struct rcl_lifecycle_state_s
-{
+typedef struct rcl_lifecycle_state_s {
   /// 状态名称字符串：Unconfigured, Inactive, Active 或 Finalized
-  const char * label;
+  const char* label;
   /// 状态标识符
   uint8_t id;
 
   /// 指向有效转换结构体的指针
-  rcl_lifecycle_transition_t * valid_transitions;
+  rcl_lifecycle_transition_t* valid_transitions;
   /// 有效转换的数量
   unsigned int valid_transition_size;
 } rcl_lifecycle_state_t;
 
 /// 生命周期状态机的转换结构体定义
-typedef struct rcl_lifecycle_transition_s
-{
+typedef struct rcl_lifecycle_transition_s {
   /// 转换名称字符串：configuring, cleaningup, activating, deactivating,
   /// errorprocessing 或 shuttingdown.
-  const char * label;
+  const char* label;
   /// 转换标识符
   unsigned int id;
   /// 转换初始化的值
-  rcl_lifecycle_state_t * start;
+  rcl_lifecycle_state_t* start;
   /// 转换的目标
-  rcl_lifecycle_state_t * goal;
+  rcl_lifecycle_state_t* goal;
 } rcl_lifecycle_transition_t;
 
 /// 包含状态和转换的转换映射结构体定义
-typedef struct rcl_lifecycle_transition_map_s
-{
+typedef struct rcl_lifecycle_transition_map_s {
   /// 用于生成转换映射的状态
-  rcl_lifecycle_state_t * states;
+  rcl_lifecycle_state_t* states;
   /// 状态数量
   unsigned int states_size;
   /// 用于生成转换映射的转换
-  rcl_lifecycle_transition_t * transitions;
+  rcl_lifecycle_transition_t* transitions;
   /// 转换数量
   unsigned int transitions_size;
 } rcl_lifecycle_transition_map_t;
 
 /// 包含与ROS世界通信接口的结构体定义
-typedef struct rcl_lifecycle_com_interface_s
-{
+typedef struct rcl_lifecycle_com_interface_s {
   /// 用于创建发布者和服务的节点句柄
-  rcl_node_t * node_handle;
+  rcl_node_t* node_handle;
   /// 用于发布转换事件的事件
   rcl_publisher_t pub_transition_event;
   /// 允许触发状态更改的服务
@@ -89,8 +85,7 @@ typedef struct rcl_lifecycle_com_interface_s
 } rcl_lifecycle_com_interface_t;
 
 /// 包含用于配置rcl_lifecycle_state_machine_t实例的各种选项的结构体定义
-typedef struct rcl_lifecycle_state_machine_options_s
-{
+typedef struct rcl_lifecycle_state_machine_options_s {
   /// 标志，指示状态机是否使用默认状态进行初始化
   bool initialize_default_states;
   /// 标志，指示是否使用com接口
@@ -100,10 +95,9 @@ typedef struct rcl_lifecycle_state_machine_options_s
 } rcl_lifecycle_state_machine_options_t;
 
 /// 包含状态机数据的结构体定义
-typedef struct rcl_lifecycle_state_machine_s
-{
+typedef struct rcl_lifecycle_state_machine_s {
   /// 状态机的当前状态
-  const rcl_lifecycle_state_t * current_state;
+  const rcl_lifecycle_state_t* current_state;
   /// 注册状态和转换的映射/关联数组
   rcl_lifecycle_transition_map_t transition_map;
   /// 通向ROS世界的通信接口
