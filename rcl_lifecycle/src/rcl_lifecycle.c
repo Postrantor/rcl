@@ -34,7 +34,6 @@ extern "C" {
 
 /**
  * @brief 获取一个初始化为零的生命周期状态对象
- *
  * @return 返回一个初始化为零的 rcl_lifecycle_state_t 对象
  */
 rcl_lifecycle_state_t rcl_lifecycle_get_zero_initialized_state() {
@@ -48,7 +47,6 @@ rcl_lifecycle_state_t rcl_lifecycle_get_zero_initialized_state() {
 
 /**
  * @brief 初始化生命周期状态对象
- *
  * @param[out] state 生命周期状态对象指针
  * @param[in] id 状态 ID
  * @param[in] label 状态标签
@@ -60,10 +58,8 @@ rcl_ret_t rcl_lifecycle_state_init(
   // 检查分配器是否存在
   RCL_CHECK_ALLOCATOR_WITH_MSG(
       allocator, "can't initialize state, no allocator given\n", return RCL_RET_INVALID_ARGUMENT);
-
   // 检查状态指针是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(state, "state pointer is null\n", return RCL_RET_INVALID_ARGUMENT);
-
   // 检查状态标签是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(label, "State label is null\n", return RCL_RET_INVALID_ARGUMENT);
 
@@ -79,7 +75,6 @@ rcl_ret_t rcl_lifecycle_state_init(
 
 /**
  * @brief 清理生命周期状态对象
- *
  * @param[out] state 生命周期状态对象指针
  * @param[in] allocator 分配器指针
  * @return 返回操作结果，成功返回 RCL_RET_OK
@@ -106,7 +101,6 @@ rcl_ret_t rcl_lifecycle_state_fini(rcl_lifecycle_state_t *state, const rcl_alloc
 
 /**
  * @brief 获取一个初始化为零的生命周期转换对象
- *
  * @return 返回一个初始化为零的 rcl_lifecycle_transition_t 对象
  */
 rcl_lifecycle_transition_t rcl_lifecycle_get_zero_initialized_transition() {
@@ -120,7 +114,6 @@ rcl_lifecycle_transition_t rcl_lifecycle_get_zero_initialized_transition() {
 
 /**
  * @brief 初始化生命周期转换
- *
  * @param[out] transition 生命周期转换指针
  * @param[in] id 转换的唯一标识符
  * @param[in] label 转换的标签
@@ -166,7 +159,6 @@ rcl_ret_t rcl_lifecycle_transition_init(
 
 /**
  * @brief 结束生命周期转换
- *
  * @param[out] transition 生命周期转换指针
  * @param[in] allocator 分配器指针
  * @return 返回rcl_ret_t类型的结果，成功返回RCL_RET_OK，否则返回相应的错误代码
@@ -208,7 +200,6 @@ rcl_ret_t rcl_lifecycle_transition_fini(
 
 /**
  * @brief 获取默认的生命周期状态机选项
- *
  * @return 返回rcl_lifecycle_state_machine_options_t类型的默认选项
  */
 rcl_lifecycle_state_machine_options_t rcl_lifecycle_get_default_state_machine_options() {
@@ -246,8 +237,10 @@ rcl_lifecycle_state_machine_t rcl_lifecycle_get_zero_initialized_state_machine()
 
 /**
  * @brief 初始化生命周期状态机
+ *
  * @param[out] state_machine 指向要初始化的生命周期状态机的指针
  * @param[in] node_handle 指向节点句柄的指针
+ *
  * @param[in] ts_pub_notify 指向发布通知消息类型支持的指针
  * @param[in] ts_srv_change_state 指向更改状态服务类型支持的指针
  * @param[in] ts_srv_get_state 指向获取状态服务类型支持的指针
@@ -271,11 +264,9 @@ rcl_ret_t rcl_lifecycle_state_machine_init(
   // 检查状态机是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(
       state_machine, "State machine is null\n", return RCL_RET_INVALID_ARGUMENT);
-
   // 检查节点句柄是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(
       node_handle, "Node handle is null\n", return RCL_RET_INVALID_ARGUMENT);
-
   // 检查分配器是否为空
   RCL_CHECK_ALLOCATOR_WITH_MSG(
       &state_machine_options->allocator, "can't initialize state machine, no allocator given\n",
@@ -466,7 +457,6 @@ rcl_ret_t _trigger_transition(
   // 如果我们有一个错误的转换指针
   RCL_CHECK_FOR_NULL_WITH_MSG(
       transition, "Transition is not registered.", return RCL_RET_INVALID_ARGUMENT);
-
   // 检查目标状态是否为空
   RCL_CHECK_FOR_NULL_WITH_MSG(
       transition->goal, "No valid goal is set.", return RCL_RET_INVALID_ARGUMENT);
@@ -540,7 +530,6 @@ rcl_ret_t rcl_lifecycle_trigger_transition_by_label(
 
 /**
  * @brief 打印状态机信息
- *
  * @param state_machine 指向状态机的指针
  */
 void rcl_print_state_machine(const rcl_lifecycle_state_machine_t *state_machine) {
