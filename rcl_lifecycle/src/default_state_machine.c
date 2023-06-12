@@ -30,10 +30,8 @@ extern "C" {
 #endif
 
 /**
- * @file lifecycle_labels.h
  * @brief 生命周期标签定义
  */
-
 // 定义生命周期配置标签
 const char* rcl_lifecycle_configure_label = "configure";
 // 定义生命周期清理标签
@@ -53,15 +51,18 @@ const char* rcl_lifecycle_transition_failure_label = "transition_failure";
 const char* rcl_lifecycle_transition_error_label = "transition_error";
 
 /**
- * @brief 注册主要状态
- * 为生命周期节点注册一组预定义的主要状态。
- *
+ * @brief 为生命周期节点注册一组预定义的主要状态。
+ *   - 初始化 unknown、 unconfigured、inactive、active 和 finalized 等主要状态对象
+ *   - 调用`rcl_lifecycle_register_state()`将这些状态注册到`transition_map`中
+ *   - 如果注册失败,返回错误
+ *   通过注册这些基本状态,为后续注册转换提供基础。
  * @param[in] transition_map 转换映射，用于存储状态和转换信息
  * @param[in] allocator 分配器，用于分配内存
  * @return rcl_ret_t 返回RCL_RET_OK表示成功，其他值表示失败
  */
 rcl_ret_t _register_primary_states(
-    rcl_lifecycle_transition_map_t* transition_map, const rcutils_allocator_t* allocator) {
+    rcl_lifecycle_transition_map_t* transition_map,  //
+    const rcutils_allocator_t* allocator) {
   rcl_ret_t ret = RCL_RET_ERROR;
 
   // 当注册状态时使用的默认值

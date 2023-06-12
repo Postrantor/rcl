@@ -32,7 +32,6 @@ typedef struct rcl_lifecycle_state_s {
   const char* label;
   /// 状态标识符
   uint8_t id;
-
   /// 指向有效转换结构体的指针
   rcl_lifecycle_transition_t* valid_transitions;
   /// 有效转换的数量
@@ -63,6 +62,8 @@ typedef struct rcl_lifecycle_transition_map_s {
   /// 转换数量
   unsigned int transitions_size;
 } rcl_lifecycle_transition_map_t;
+
+// ========= ========= ========= //
 
 /// 包含与ROS世界通信接口的结构体定义
 typedef struct rcl_lifecycle_com_interface_s {
